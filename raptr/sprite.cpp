@@ -78,7 +78,9 @@ std::shared_ptr<Sprite> Sprite::from_json(const std::string& path)
   sprite->current_animation = &sprite->animations["Idle"];
   sprite->last_frame_tick = SDL_GetTicks();
   sprite->scale = 1.0;
-
+  sprite->flip_x = false;
+  sprite->flip_y = false;
+  sprite->angle = 0.0;
 
   return sprite;
 }
@@ -101,17 +103,21 @@ void Sprite::render(std::shared_ptr<Renderer> renderer)
   src.x = frame.x;
   src.y = frame.y;
 
-  dst.w = frame.w * scale;
-  dst.h = frame.h * scale;
-  dst.x = x;
-  dst.y = y;
+  dst.w = static_cast<int32_t>(frame.w * scale);
+  dst.h = static_cast<int32_t>(frame.h * scale);
+  dst.x = static_cast<int32_t>(x);
+  dst.y = static_cast<int32_t>(y);
 
-  renderer->add(texture, src, dst);
+  renderer->add(texture, src, dst, angle, flip_x, flip_y);
 }
 
 
 void Sprite::set_animation(const std::string& name)
 {
+  if (current_animation->name == name) {
+    return;
+  }
+
   current_animation = &animations[name];
   current_animation->frame = 0;
 }

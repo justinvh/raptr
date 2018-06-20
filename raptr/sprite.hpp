@@ -7,6 +7,7 @@
 #include <memory>
 #include <iostream>
 
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_surface.h>
 
 namespace raptr {
@@ -93,7 +94,9 @@ public:
   std::shared_ptr<SDL_Surface> surface;
   std::shared_ptr<SDL_Texture> texture;
   Animation* current_animation;
-  int32_t x, y;
+  float angle;
+  bool flip_x, flip_y;
+  double x, y;
   double scale;
   uint32_t last_frame_tick;
 };
