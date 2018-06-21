@@ -1,5 +1,10 @@
 #include <iostream>
 #include <string>
+#include <limits>
+#include <algorithm>
+
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 #include "controller.hpp"
 
@@ -27,40 +32,37 @@ void Controller::on_right_joy(const JoyCallback& callback)
 
 void Controller::process_event(const SDL_Event& e)
 {
-  Uint32 timestamp = 0;
-  std::string eventType;
-  int index;
-  std::string otherData;
-
   switch (e.type) {
-    case SDL_JOYBUTTONUP:
-      timestamp = e.jbutton.timestamp;
-      eventType = "RELEASE";
-      index = e.jbutton.button;
-      otherData = "";
-      break;
-    case SDL_JOYBUTTONDOWN:
-      timestamp = e.jbutton.timestamp;
-      eventType = "PRESS";
-      index = e.jbutton.button;
-      otherData = "";
-      break;
-    case SDL_JOYHATMOTION:
-      timestamp = e.jhat.timestamp;
-      eventType = "POV";
-      index = e.jhat.hat;
-      break;
-    case SDL_JOYAXISMOTION:
-      timestamp = e.jaxis.timestamp;
-      eventType = "STICK";
-      index = e.jaxis.value;
+    case SDL_CONTROLLERAXISMOTION:
+    {
+      int16_t axis = static_cast<int16_t>(e.caxis.axis);
 
-      std::clog << timestamp << "\t" << static_cast<int32_t>(e.jaxis.axis) << "\t" << eventType << "\t" << index << "\t" << otherData << "\n";
-      for (auto func : right_joy_callbacks) {
-        func(e.jaxis.axis, e.jaxis.value);
+      int16_t primary_axis = axis / 2;
+      float mag[2] = {0, 0};
+      float angle = 0.0;
+      for (int i = primary_axis; i <= primary_axis + 1; ++i) {
+        SDL_GameControllerAxis axis = static_cast<SDL_GameControllerAxis>(i);
+        const int16_t deadzone = 8000;
+        const int16_t value = SDL_GameControllerGetAxis(sdl.controller, axis);
+        if (value < -deadzone || value > deadzone) {
+          mag[i] = std::max(-1.0f, std::min(value / float(std::numeric_limits<int16_t>::max()), 1.0f));
+        }
+      }
+
+      float x = mag[0];
+      float y = mag[1]; 
+      float magnitude = sqrt(x * x + y * y);
+      angle = atan2(y, x)  * 180.0f / M_PI;
+      if (angle < 0) {
+        angle += 360.0f;
+      }
+
+      for (auto& callback : right_joy_callbacks) {
+        callback(primary_axis, angle, magnitude, x, y);
       }
 
       break;
+    }
   }
 }
 

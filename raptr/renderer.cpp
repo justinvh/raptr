@@ -10,7 +10,7 @@ bool Renderer::init(std::shared_ptr<Config> config_)
   config = config_;
 
   // Initialize SDL with some basics
-  sdl.window = SDL_CreateWindow("RAPTR", 100, 100, 1000, 1000, 0);
+  sdl.window = SDL_CreateWindow("RAPTR", 100, 100, 512, 512, 0);
   sdl.renderer = SDL_CreateRenderer(sdl.window, -1, SDL_RENDERER_ACCELERATED);
   return true;
 }

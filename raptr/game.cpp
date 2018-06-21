@@ -24,12 +24,12 @@ bool Game::run()
   {
     std::shared_ptr<Character> character(new Character());
     character->sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/raptor.json");
-    //character->sprite->scale = 5.0;
+    character->sprite->scale = 2.0;
     character->sprite->set_animation("Idle");
     character->last_think_time = SDL_GetTicks();
     character->walk_ups = 500;
-    character->sprite->x = rand() % 1024;
-    character->sprite->y = 100;
+    character->sprite->x = 0;
+    character->sprite->y = 0;
     character->attach_controller(controllers.begin()->second);
     character->_id = -1;
 
@@ -44,16 +44,16 @@ bool Game::run()
     characters.push_back(character);
   }
 
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < 25; ++i) {
     std::shared_ptr<Character> character(new Character());
     character->sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/raptor.json");
     character->_id = i;
     //character->sprite->scale = 10.0;
     character->sprite->set_animation("Idle");
     character->last_think_time = SDL_GetTicks();
-    character->walk_ups = rand() % 1000;
-    character->sprite->x = rand() % 1024;
-    character->sprite->y = 100;
+    character->walk_ups = 100;
+    character->sprite->x = rand() % 1024 + 64;
+    character->sprite->y = rand() % 1024 + 64;
     //character->attach_controller(controllers.begin()->second);
 
     SDL_Rect bbox = character->bbox();
@@ -71,9 +71,7 @@ bool Game::run()
   while (true) {
     
     if (SDL_PollEvent(&e)) {
-      if (e.type == SDL_JOYBUTTONUP || e.type == SDL_JOYBUTTONDOWN ||
-          e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYHATMOTION) 
-      {
+      if (e.type == SDL_CONTROLLERAXISMOTION) {
         int32_t controller_id = e.jdevice.which;
         controllers[controller_id]->process_event(e);
       }
@@ -92,6 +90,7 @@ bool Game::run()
         float old_max_bounds[2] = {old_bbox.x + old_bbox.w, old_bbox.y + old_bbox.h};
         rtree.Remove(old_min_bounds, old_max_bounds, entity);
         rtree.Insert(new_min_bounds, new_max_bounds, entity);
+        last_known_entity_loc[entity] = new_bbox;
       }
     }
 
@@ -108,11 +107,13 @@ bool Game::entity_can_move_to(Entity* entity, const SDL_Rect& bbox)
 
   struct ConditionMet {
     Entity* check;
+    SDL_Rect bbox;
     bool intersected;
   } condition_met;
 
   condition_met.check = entity;
   condition_met.intersected = false;
+  condition_met.bbox = bbox;
 
   rtree.Search(min_bounds, max_bounds, [](Entity* found, void* context) -> bool {
     ConditionMet* condition = reinterpret_cast<ConditionMet*>(context);
@@ -121,7 +122,7 @@ bool Game::entity_can_move_to(Entity* entity, const SDL_Rect& bbox)
       return true;
     }
 
-    if (self->intersects(found)) {
+    if (SDL_HasIntersection(&condition->bbox, &found->bbox())) {
       condition->intersected = true;
       return false;
     }

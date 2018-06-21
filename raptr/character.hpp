@@ -30,7 +30,7 @@ public:
   virtual void attach_controller(std::shared_ptr<Controller> controller);
 
 private:
-  virtual bool on_right_joy(int32_t axis, int32_t angle);
+  virtual bool on_right_joy(int32_t joystick, float angle, float magnitude, float x, float y);
 
 public:
   std::shared_ptr<Sprite> sprite;

@@ -22,7 +22,7 @@ enum class Button {
 };
 
 using ButtonCallback = std::function<bool(const Button& button)>;
-using JoyCallback = std::function<bool(int32_t axis, int32_t direction)>;
+using JoyCallback = std::function<bool(int32_t joystick, float angle, float magnitude, float x, float y)>;
 
 class Controller : public std::enable_shared_from_this<Controller> {
 public:

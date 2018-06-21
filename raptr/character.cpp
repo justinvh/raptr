@@ -55,14 +55,21 @@ void Character::think(std::shared_ptr<Game> game)
 
   if (!moved_x && !moved_y) {
     sprite->set_animation("Idle");
-  } else {
+  } else if (units_moved) {
     SDL_Rect desired;
     desired.x = want_x;
     desired.y = want_y;
-    desired.w = sprite->current_animation->current_frame().w;
-    desired.h = sprite->current_animation->current_frame().h;
+    desired.w = sprite->current_animation->current_frame().w * sprite->scale;
+    desired.h = sprite->current_animation->current_frame().h * sprite->scale;
 
     if (game->entity_can_move_to(static_cast<Entity*>(this), desired)) {
+      double delta_x = sprite->x - want_x;
+      if (delta_x > 0.0) {
+        sprite->flip_x = false;
+      } else {
+        sprite->flip_x = true;
+      }
+
       sprite->x = want_x;
       sprite->y = want_y;
     }
@@ -109,25 +116,14 @@ void Character::stop()
   ny = 0;
 }
 
-bool Character::on_right_joy(int32_t axis, int32_t angle)
+bool Character::on_right_joy(int32_t joystick, float angle, float magnitude, float x, float y)
 {
-  if (axis == 0) {
-    if (angle < -4000) {
-      this->walk_left();
-    } else if (angle > 4000) {
-      this->walk_right();
-    } else {
-      this->stop();
-    }
-  } else if (axis == 1) {
-    if (angle < -4000) {
-      this->walk_up();
-    } else if (angle > 4000) {
-      this->walk_down();
-    } else {
-      this->stop();
-    }
+  if (magnitude > 0) {
+    this->walk(x * walk_ups, y * walk_ups);
+  } else {
+    this->stop();
   }
+
   return true;
 }
 
@@ -136,7 +132,7 @@ void Character::attach_controller(std::shared_ptr<Controller> controller_)
   using namespace std::placeholders;
 
   controller = controller_;
-  controller->on_right_joy(std::bind(&Character::on_right_joy, this, _1, _2));
+  controller->on_right_joy(std::bind(&Character::on_right_joy, this, _1, _2, _3, _4, _5));
 }
 
 bool Character::intersects(const Entity* other) const
@@ -152,6 +148,8 @@ bool Character::intersects(const Entity* other) const
     return false;
   }
 
+  std::clog << other->id() << " is intersecting with " << this->id() << "\n";
+
   return true;
 }
 
@@ -161,8 +159,8 @@ SDL_Rect Character::bbox() const
   auto& current_frame = sprite->current_animation->current_frame();
   box.x = static_cast<int32_t>(sprite->x);
   box.y = static_cast<int32_t>(sprite->y);
-  box.w = current_frame.w;
-  box.h = current_frame.h;
+  box.w = current_frame.w * sprite->scale;
+  box.h = current_frame.h * sprite->scale;
   return box;
 }
 
