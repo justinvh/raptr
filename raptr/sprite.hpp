@@ -19,7 +19,9 @@ struct SDLDeleter {
 
   void operator()(SDL_Surface* p) const
   {
-    SDL_FreeSurface(p);
+    if (p->refcount == 0) {
+      SDL_FreeSurface(p);
+    }
   }
 };
 
@@ -37,6 +39,7 @@ enum class AnimationDirection {
 
 struct Animation {
   std::string name;
+  bool hold_last_frame;
   int32_t frame, from, to;
   std::vector<AnimationFrame> frames;
   AnimationDirection direction;
@@ -54,7 +57,11 @@ struct Animation {
     }
 
     if (frame > to) {
-      frame = from;
+      if (hold_last_frame) {
+        frame = to;
+      } else {
+        frame = from;
+      }
     }
 
     return true;
@@ -86,7 +93,7 @@ class Sprite {
 public:
   static std::shared_ptr<Sprite> from_json(const std::string& path);
   void render(std::shared_ptr<Renderer> renderer);
-  void set_animation(const std::string& name);
+  void set_animation(const std::string& name, bool hold_last_frame = false);
 
 public:
   AnimationTable animations;

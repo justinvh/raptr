@@ -124,6 +124,7 @@
   <ItemGroup>
     <ClCompile Include="character.cpp" />
     <ClCompile Include="config.cpp" />
+    <ClCompile Include="controller.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="renderer.cpp" />
@@ -134,6 +135,7 @@
     <ClInclude Include="character.hpp" />
     <ClInclude Include="config.hpp" />
     <ClInclude Include="game.hpp" />
+    <ClInclude Include="controller.hpp" />
     <ClInclude Include="renderer.hpp" />
     <ClInclude Include="sound.hpp" />
     <ClInclude Include="sprite.hpp" />

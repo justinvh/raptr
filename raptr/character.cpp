@@ -1,8 +1,16 @@
+#include <functional>
+
 #include "sprite.hpp"
 #include "character.hpp"
 #include "game.hpp"
+#include "controller.hpp"
 
 namespace raptr {
+
+void Character::crouch()
+{
+  sprite->set_animation("Crouch", true);
+}
 
 void Character::full_hop()
 {
@@ -17,10 +25,6 @@ void Character::short_hop()
 }
 
 
-bool Character::is_moving()
-{
-  return (sprite->x != nx || sprite->y != ny);
-}
 
 void Character::think(std::shared_ptr<Game> game)
 {
@@ -29,32 +33,18 @@ void Character::think(std::shared_ptr<Game> game)
   bool moved_x = true;
   bool moved_y = true;
 
-  if (sprite->x < nx) {
+  if (nx > 0) {
     sprite->x += units_moved;
-    sprite->flip_x = true;
-    if (sprite->x > nx) {
-      sprite->x = nx;
-    }
-  } else if (sprite->x > nx) {
+  } else if (nx < 0) {
     sprite->x -= units_moved;
-    sprite->flip_x = false;
-    if (sprite->x < nx) {
-      sprite->x = nx;
-    }
   } else {
     moved_x = false;
   }
-  
-  if (sprite->y < ny) {
+
+  if (ny > 0) {
     sprite->y += units_moved;
-    if (sprite->y > ny) {
-      sprite->y = ny;
-    }
-  } else if (sprite->y > ny) {
+  } else if (ny < 0) {
     sprite->y -= units_moved;
-    if (sprite->y < ny) {
-      sprite->y = ny;
-    }
   } else {
     moved_y = false;
   }
@@ -69,39 +59,60 @@ void Character::think(std::shared_ptr<Game> game)
 
 void Character::walk(double dx, double dy)
 {
-  nx = sprite->x + dx;
-  ny = sprite->y + dy;
+  nx = dx;
+  ny = dy;
   sprite->set_animation("Walk Forward");
 }
 
-void Character::walk_right(double secs)
+void Character::walk_right()
 {
   curr_ups = walk_ups;
-  this->walk(walk_ups * secs, 0);
+  this->walk(walk_ups, 0);
 }
 
-void Character::walk_left(double secs)
+void Character::walk_left()
 {
   curr_ups = walk_ups;
-  this->walk(-walk_ups * secs, 0);
+  this->walk(-walk_ups, 0);
 }
 
-void Character::walk_down(double secs)
+void Character::walk_down()
 {
   curr_ups = walk_ups;
-  this->walk(0, walk_ups * secs);
+  this->walk(0, walk_ups);
 }
 
-void Character::walk_up(double secs)
+void Character::walk_up()
 {
   curr_ups = walk_ups;
-  this->walk(0, -walk_ups * secs);
+  this->walk(0, -walk_ups);
 }
 
 void Character::stop()
 {
-  nx = sprite->x;
-  ny = sprite->y;
+  nx = 0;
+  ny = 0;
+}
+
+bool Character::on_right_joy(int32_t angle)
+{
+  if (angle < -4000) {
+    this->walk_left();
+  } else if (angle > 4000) {
+    this->walk_right();
+  } else {
+    this->stop();
+  }
+
+  return true;
+}
+
+void Character::attach_controller(std::shared_ptr<Controller> controller_)
+{
+  using namespace std::placeholders;
+
+  controller = controller_;
+  controller->on_right_joy(std::bind(&Character::on_right_joy, this, _1));
 }
 
 }

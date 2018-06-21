@@ -112,7 +112,7 @@ void Sprite::render(std::shared_ptr<Renderer> renderer)
 }
 
 
-void Sprite::set_animation(const std::string& name)
+void Sprite::set_animation(const std::string& name, bool hold_last_frame)
 {
   if (current_animation->name == name) {
     return;
@@ -120,6 +120,7 @@ void Sprite::set_animation(const std::string& name)
 
   current_animation = &animations[name];
   current_animation->frame = 0;
+  current_animation->hold_last_frame = hold_last_frame;
 }
 
 }
