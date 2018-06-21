@@ -19,7 +19,7 @@ enum class Button {
 using ButtonCallback = std::function<bool(const Button& button)>;
 using JoyCallback = std::function<bool(int32_t direction)>;
 
-class Controller {
+class Controller : public std::enable_shared_from_this<Controller> {
 public:
   void on_button_down(const ButtonCallback& callback);
   void on_button_up(const ButtonCallback& callback);

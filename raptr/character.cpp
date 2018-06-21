@@ -24,8 +24,6 @@ void Character::short_hop()
 {
 }
 
-
-
 void Character::think(std::shared_ptr<Game> game)
 {
   uint32_t think_delta_ms = SDL_GetTicks() - last_think_time;

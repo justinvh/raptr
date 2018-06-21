@@ -19,13 +19,20 @@ bool Game::run()
     }
   }
 
-  auto character = Character();
-  character.sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/raptor.json");
-  character.sprite->scale = 10.0;
-  character.sprite->set_animation("Idle");
-  character.last_think_time = SDL_GetTicks();
-  character.walk_ups = 500.0;
-  character.attach_controller(controllers.begin()->second);
+  std::vector<std::shared_ptr<Character>> characters;
+
+  for (int i = 0; i < 100; ++i) {
+    std::shared_ptr<Character> character(new Character());
+    character->sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/raptor.json");
+    //character->sprite->scale = 10.0;
+    character->sprite->set_animation("Idle");
+    character->last_think_time = SDL_GetTicks();
+    character->walk_ups = rand() % 1000;
+    character->sprite->x = rand() % 1024;
+    character->sprite->y = rand() % 1024;
+    character->attach_controller(controllers.begin()->second);
+    characters.push_back(character);
+  }
 
   SDL_Event e;
   while (true) {
@@ -39,7 +46,10 @@ bool Game::run()
       }
     }
 
-    character.think(this->shared_from_this());
+    for (auto& character : characters) {
+      character->think(this->shared_from_this());
+    }
+
     renderer->run_frame();
   }
 

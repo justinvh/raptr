@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <picojson/picojson.h>
 #include <SDL2/SDL_image.h>
 
@@ -7,6 +8,9 @@
 #include "sprite.hpp"
 
 namespace raptr {
+
+std::map<std::string, std::shared_ptr<SDL_Surface>> SURFACE_CACHE;
+std::map<std::shared_ptr<SDL_Surface>, std::shared_ptr<SDL_Texture>> TEXTURE_CACHE;
 
 int32_t p_int(const picojson::value& v, const std::string& name)
 {
@@ -35,7 +39,14 @@ std::shared_ptr<Sprite> Sprite::from_json(const std::string& path)
   sprite->height = p_int(size, "h");
 
   auto image_path = p_string(meta, "image");
-  sprite->surface.reset(IMG_Load(image_path.c_str()), SDLDeleter());
+
+  auto exists = SURFACE_CACHE.find(image_path);
+  if (exists != SURFACE_CACHE.end()) {
+    sprite->surface = exists->second;
+  } else {
+    SURFACE_CACHE[image_path].reset(IMG_Load(image_path.c_str()), SDLDeleter());
+    sprite->surface = SURFACE_CACHE[image_path];
+  }
 
   for (auto tag : tags) {
     auto tag_name = p_string(tag, "name");
@@ -88,7 +99,13 @@ std::shared_ptr<Sprite> Sprite::from_json(const std::string& path)
 void Sprite::render(std::shared_ptr<Renderer> renderer)
 {
   if (!texture) {
-    texture.reset(renderer->create_texture(surface), SDLDeleter());
+    auto exists = TEXTURE_CACHE.find(surface);
+    if (exists == TEXTURE_CACHE.end()) {
+      TEXTURE_CACHE[surface].reset(renderer->create_texture(surface), SDLDeleter());
+      texture = TEXTURE_CACHE[surface];
+    } else {
+      texture = exists->second;
+    }
   }
 
   auto frame = current_animation->frames[current_animation->frame];
