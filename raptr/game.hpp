@@ -9,6 +9,8 @@
 #include "renderer.hpp"
 #include "sound.hpp"
 #include "controller.hpp"
+#include "rtree.hpp"
+#include "entity.hpp"
 
 namespace raptr {
 
@@ -28,6 +30,8 @@ public:
     return std::shared_ptr<Game>(new Game());
   }
 
+  bool entity_can_move_to(Entity* entity, const SDL_Rect& bbox);
+
   bool run();
 
 private:
@@ -36,11 +40,14 @@ private:
   bool init_sound();
   bool init_controllers();
 
+
 public:
   std::shared_ptr<Renderer> renderer;
   std::map<int32_t, std::shared_ptr<Controller>> controllers;
   std::shared_ptr<Sound> sound;
   std::shared_ptr<Config> config;
+  std::map<Entity*, SDL_Rect> last_known_entity_loc;
+  RTree<Entity*, float, 2> rtree;
 
 public:
   bool is_init;

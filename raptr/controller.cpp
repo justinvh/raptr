@@ -55,11 +55,9 @@ void Controller::process_event(const SDL_Event& e)
       eventType = "STICK";
       index = e.jaxis.value;
 
-      if (e.jaxis.axis == 0) {
-        std::clog << timestamp << "\t" << eventType << "\t" << index << "\t" << otherData << "\n";
-        for (auto func : right_joy_callbacks) {
-          func(e.jaxis.value);
-        }
+      std::clog << timestamp << "\t" << static_cast<int32_t>(e.jaxis.axis) << "\t" << eventType << "\t" << index << "\t" << otherData << "\n";
+      for (auto func : right_joy_callbacks) {
+        func(e.jaxis.axis, e.jaxis.value);
       }
 
       break;

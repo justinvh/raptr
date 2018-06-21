@@ -1,5 +1,10 @@
 #pragma once
 
+#undef SDL_JOYSTICK_DINPUT
+#define SDL_JOYSTICK_WINMM 1
+#undef SDL_HAPTIC_DINPUT
+#define SDL_HAPTIC_DISABLED 1
+
 #include <SDL2/SDL_joystick.h>
 #include <SDL2/SDL_gamecontroller.h>
 #include <SDL2/SDL_events.h>
@@ -17,7 +22,7 @@ enum class Button {
 };
 
 using ButtonCallback = std::function<bool(const Button& button)>;
-using JoyCallback = std::function<bool(int32_t direction)>;
+using JoyCallback = std::function<bool(int32_t axis, int32_t direction)>;
 
 class Controller : public std::enable_shared_from_this<Controller> {
 public:

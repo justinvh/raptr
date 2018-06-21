@@ -71,11 +71,18 @@
     <ClInclude Include="controller.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="entity.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rtree.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\game\textures\raptor.json">
       <Filter>Game\texture</Filter>
     </None>
+    <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\game\textures\raptor-spritesheet.png">

@@ -134,9 +134,11 @@
   <ItemGroup>
     <ClInclude Include="character.hpp" />
     <ClInclude Include="config.hpp" />
+    <ClInclude Include="entity.hpp" />
     <ClInclude Include="game.hpp" />
     <ClInclude Include="controller.hpp" />
     <ClInclude Include="renderer.hpp" />
+    <ClInclude Include="rtree.hpp" />
     <ClInclude Include="sound.hpp" />
     <ClInclude Include="sprite.hpp" />
   </ItemGroup>
@@ -145,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\game\textures\raptor.json" />
+    <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\game\textures\raptor-spritesheet.png" />

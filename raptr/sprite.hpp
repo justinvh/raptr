@@ -44,6 +44,11 @@ struct Animation {
   std::vector<AnimationFrame> frames;
   AnimationDirection direction;
 
+  AnimationFrame& current_frame()
+  {
+    return frames[frame];
+  }
+
   bool next(uint32_t clock)
   {
     uint32_t curr = SDL_GetTicks();
@@ -94,6 +99,7 @@ public:
   static std::shared_ptr<Sprite> from_json(const std::string& path);
   void render(std::shared_ptr<Renderer> renderer);
   void set_animation(const std::string& name, bool hold_last_frame = false);
+  bool collides(const Sprite& other);
 
 public:
   AnimationTable animations;
@@ -103,6 +109,7 @@ public:
   Animation* current_animation;
   float angle;
   bool flip_x, flip_y;
+  bool solid;
   double x, y;
   double scale;
   uint32_t last_frame_tick;

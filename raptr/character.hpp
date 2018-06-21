@@ -2,14 +2,19 @@
 
 #include <cstdint>
 
+#include "entity.hpp"
+
 namespace raptr {
 
 class Game;
 class Sprite;
 class Controller;
 
-class Character {
+class Character : public Entity {
 public:
+  virtual bool intersects(const Entity* other) const;
+  virtual int32_t id() const;
+  virtual SDL_Rect bbox() const;
   virtual void walk(double dx, double dy);
   virtual void walk_left();
   virtual void walk_right();
@@ -25,11 +30,12 @@ public:
   virtual void attach_controller(std::shared_ptr<Controller> controller);
 
 private:
-  virtual bool on_right_joy(int32_t angle);
+  virtual bool on_right_joy(int32_t axis, int32_t angle);
 
 public:
   std::shared_ptr<Sprite> sprite;
   std::shared_ptr<Controller> controller;
+  int32_t _id;
   double nx, ny;
   double walk_ups; // units-per-s
   double run_ups; // units-per-s
