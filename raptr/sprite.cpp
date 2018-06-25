@@ -59,13 +59,17 @@ std::shared_ptr<Sprite> Sprite::from_json(const std::string& path)
     animation.frame = 0;
     animation.from = 0;
     animation.to = to - from;
+    animation.ping_backwards = false;
 
     if (direction == "forward") {
       animation.direction = AnimationDirection::forward;
     } else if (direction == "backward") {
       animation.direction = AnimationDirection::backward;
-    } else if (direction == "ping_pong") {
+    } else if (direction == "pingpong") {
       animation.direction = AnimationDirection::ping_pong;
+    } else {
+      std::cerr << direction << " is not a recognized animation direction\n";
+      throw std::runtime_error("Unknown animation direction");
     }
 
     for (int32_t frame_num = from; frame_num <= to; ++frame_num) {

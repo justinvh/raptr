@@ -7,6 +7,7 @@
 #include "character.hpp"
 #include "sprite.hpp"
 #include "controller.hpp"
+#include "static_mesh.hpp"
 
 namespace raptr {
 
@@ -19,15 +20,64 @@ bool Game::run()
     }
   }
 
-  std::vector<std::shared_ptr<Character>> characters;
 
+  {
+    std::shared_ptr<StaticMesh> mesh(new StaticMesh());
+    mesh->sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/platform.json");
+    mesh->sprite->set_animation("Idle");
+    mesh->sprite->x = 0;
+    mesh->sprite->y = 100;
+    mesh->_id = -2;
+
+    SDL_Rect bbox = mesh->bbox();
+    float min_bounds[2] = {bbox.x, bbox.y};
+    float max_bounds[2] = {bbox.x + bbox.w, bbox.y + bbox.h};
+    last_known_entity_loc[mesh] = bbox;
+    rtree.Insert(min_bounds, max_bounds, mesh.get());
+    entities.push_back(mesh);
+  }
+
+  {
+    std::shared_ptr<StaticMesh> mesh(new StaticMesh());
+    mesh->sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/platform.json");
+    mesh->sprite->set_animation("Idle");
+    mesh->sprite->x = 150;
+    mesh->sprite->y = 300;
+    mesh->_id = -3;
+
+    SDL_Rect bbox = mesh->bbox();
+    float min_bounds[2] = {bbox.x, bbox.y};
+    float max_bounds[2] = {bbox.x + bbox.w, bbox.y + bbox.h};
+    last_known_entity_loc[mesh] = bbox;
+    rtree.Insert(min_bounds, max_bounds, mesh.get());
+    entities.push_back(mesh);
+  }
+
+  {
+    std::shared_ptr<StaticMesh> mesh(new StaticMesh());
+    mesh->sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/platform.json");
+    mesh->sprite->set_animation("Idle");
+    mesh->sprite->x = 300;
+    mesh->sprite->y = 500;
+    mesh->_id = -4;
+
+    SDL_Rect bbox = mesh->bbox();
+    float min_bounds[2] = {bbox.x, bbox.y};
+    float max_bounds[2] = {bbox.x + bbox.w, bbox.y + bbox.h};
+    last_known_entity_loc[mesh] = bbox;
+    rtree.Insert(min_bounds, max_bounds, mesh.get());
+    entities.push_back(mesh);
+  }
+
+  std::vector<std::shared_ptr<Character>> characters;
   {
     std::shared_ptr<Character> character(new Character());
     character->sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/raptor.json");
-    character->sprite->scale = 2.0;
+    character->sprite->scale = 1.0;
     character->sprite->set_animation("Idle");
     character->last_think_time = SDL_GetTicks();
-    character->walk_ups = 500;
+    character->walk_ups = 200;
+    character->run_ups = 400;
     character->sprite->x = 0;
     character->sprite->y = 0;
     character->attach_controller(controllers.begin()->second);
@@ -36,15 +86,15 @@ bool Game::run()
     SDL_Rect bbox = character->bbox();
     float min_bounds[2] = {bbox.x, bbox.y};
     float max_bounds[2] = {bbox.x + bbox.w, bbox.y + bbox.h};
-    Entity* entity = static_cast<Entity*>(character.get());
 
-    last_known_entity_loc[entity] = bbox;
-    rtree.Insert(min_bounds, max_bounds, entity);
+    last_known_entity_loc[character] = bbox;
+    rtree.Insert(min_bounds, max_bounds, character.get());
 
     characters.push_back(character);
+    entities.push_back(character);
   }
 
-  for (int i = 0; i < 25; ++i) {
+  for (int i = 0; i < 0; ++i) {
     std::shared_ptr<Character> character(new Character());
     character->sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/raptor.json");
     character->_id = i;
@@ -59,12 +109,12 @@ bool Game::run()
     SDL_Rect bbox = character->bbox();
     float min_bounds[2] = {bbox.x, bbox.y};
     float max_bounds[2] = {bbox.x + bbox.w, bbox.y + bbox.h};
-    Entity* entity = static_cast<Entity*>(character.get());
 
-    last_known_entity_loc[entity] = bbox;
-    rtree.Insert(min_bounds, max_bounds, entity);
+    last_known_entity_loc[character] = bbox;
+    rtree.Insert(min_bounds, max_bounds, character.get());
 
     characters.push_back(character);
+    entities.push_back(character);
   }
 
   SDL_Event e;
@@ -77,19 +127,18 @@ bool Game::run()
       }
     }
 
-    for (auto& character : characters) {
-      character->think(this->shared_from_this());
-      Entity* entity = static_cast<Entity*>(character.get());
+    for (auto& entity : entities) {
+      entity->think(this->shared_from_this());
 
       SDL_Rect& old_bbox = last_known_entity_loc[entity];
-      SDL_Rect new_bbox = character->bbox();
+      SDL_Rect new_bbox = entity->bbox();
       if (!SDL_RectEquals(&new_bbox, &old_bbox)) {
         float new_min_bounds[2] = {new_bbox.x, new_bbox.y};
         float new_max_bounds[2] = {new_bbox.x + new_bbox.w, new_bbox.y + new_bbox.h};
         float old_min_bounds[2] = {old_bbox.x, old_bbox.y};
         float old_max_bounds[2] = {old_bbox.x + old_bbox.w, old_bbox.y + old_bbox.h};
-        rtree.Remove(old_min_bounds, old_max_bounds, entity);
-        rtree.Insert(new_min_bounds, new_max_bounds, entity);
+        rtree.Remove(old_min_bounds, old_max_bounds, entity.get());
+        rtree.Insert(new_min_bounds, new_max_bounds, entity.get());
         last_known_entity_loc[entity] = new_bbox;
       }
     }

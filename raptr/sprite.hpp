@@ -39,7 +39,7 @@ enum class AnimationDirection {
 
 struct Animation {
   std::string name;
-  bool hold_last_frame;
+  bool hold_last_frame, ping_backwards;
   int32_t frame, from, to;
   std::vector<AnimationFrame> frames;
   AnimationDirection direction;
@@ -56,17 +56,37 @@ struct Animation {
       return false;
     }
 
-    ++frame;
-    if (frame < from) {
-      frame = from;
-    }
+    switch (direction) {
+      case AnimationDirection::forward:
+        ++frame;
+        if (frame < from) {
+          frame = from;
+        }
 
-    if (frame > to) {
-      if (hold_last_frame) {
-        frame = to;
-      } else {
-        frame = from;
-      }
+        if (frame > to) {
+          if (hold_last_frame) {
+            frame = to;
+          } else {
+            frame = from;
+          }
+        }
+        break;
+
+      case AnimationDirection::ping_pong:
+        if (ping_backwards) {
+          --frame;
+        } else {
+          ++frame;
+        }
+
+        if (frame == to) {
+          frame = to - 1;
+          ping_backwards = true;
+        } else if (frame == -1) {
+          frame = 0;
+          ping_backwards = false;
+        }
+        break;
     }
 
     return true;
@@ -99,7 +119,6 @@ public:
   static std::shared_ptr<Sprite> from_json(const std::string& path);
   void render(std::shared_ptr<Renderer> renderer);
   void set_animation(const std::string& name, bool hold_last_frame = false);
-  bool collides(const Sprite& other);
 
 public:
   AnimationTable animations;

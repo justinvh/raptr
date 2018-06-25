@@ -42,7 +42,7 @@ void Controller::process_event(const SDL_Event& e)
       float angle = 0.0;
       for (int i = primary_axis; i <= primary_axis + 1; ++i) {
         SDL_GameControllerAxis axis = static_cast<SDL_GameControllerAxis>(i);
-        const int16_t deadzone = 8000;
+        const int16_t deadzone = 4000;
         const int16_t value = SDL_GameControllerGetAxis(sdl.controller, axis);
         if (value < -deadzone || value > deadzone) {
           mag[i] = std::max(-1.0f, std::min(value / float(std::numeric_limits<int16_t>::max()), 1.0f));

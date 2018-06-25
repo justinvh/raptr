@@ -48,6 +48,9 @@
     <ClCompile Include="controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="static_mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="renderer.hpp">
@@ -77,15 +80,27 @@
     <ClInclude Include="rtree.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="map.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="static_mesh.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\game\textures\raptor.json">
       <Filter>Game\texture</Filter>
     </None>
     <None Include="..\README.md" />
+    <None Include="..\game\textures\platform.json">
+      <Filter>Game\texture</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\game\textures\raptor-spritesheet.png">
+      <Filter>Game\texture</Filter>
+    </Image>
+    <Image Include="..\game\textures\platform.png">
       <Filter>Game\texture</Filter>
     </Image>
   </ItemGroup>

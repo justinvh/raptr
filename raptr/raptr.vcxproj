@@ -130,6 +130,7 @@
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="sprite.cpp" />
+    <ClCompile Include="static_mesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="character.hpp" />
@@ -137,19 +138,23 @@
     <ClInclude Include="entity.hpp" />
     <ClInclude Include="game.hpp" />
     <ClInclude Include="controller.hpp" />
+    <ClInclude Include="map.hpp" />
     <ClInclude Include="renderer.hpp" />
     <ClInclude Include="rtree.hpp" />
     <ClInclude Include="sound.hpp" />
     <ClInclude Include="sprite.hpp" />
+    <ClInclude Include="static_mesh.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="..\game\sound\opening.mp3" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\game\textures\platform.json" />
     <None Include="..\game\textures\raptor.json" />
     <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\game\textures\platform.png" />
     <Image Include="..\game\textures\raptor-spritesheet.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

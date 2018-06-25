@@ -21,10 +21,6 @@ void Character::full_hop()
 {
 }
 
-void Character::run(double dx, double dy)
-{
-}
-
 void Character::short_hop()
 {
 }
@@ -32,10 +28,21 @@ void Character::short_hop()
 void Character::think(std::shared_ptr<Game> game)
 {
   uint32_t think_delta_ms = SDL_GetTicks() - last_think_time;
-  double units_moved = walk_ups * think_delta_ms / 1000.0;
+  double units_moved = move_scale * think_delta_ms / 1000.0;
 
   bool moved_x = true, moved_y = true;
   double want_x = sprite->x, want_y = sprite->y;
+
+  // Can we fall?
+  SDL_Rect can_fall;
+  can_fall.x = sprite->x;
+  can_fall.y = sprite->y + 0.1;
+  can_fall.w = sprite->current_animation->current_frame().w * sprite->scale;
+  can_fall.h = sprite->current_animation->current_frame().h * sprite->scale;
+
+  if (game->entity_can_move_to(static_cast<Entity*>(this), can_fall)) {
+    sprite->y += 0.1;
+  }
 
   if (nx > 0) {
     want_x = sprite->x + units_moved;
@@ -56,13 +63,19 @@ void Character::think(std::shared_ptr<Game> game)
   if (!moved_x && !moved_y) {
     sprite->set_animation("Idle");
   } else if (units_moved) {
-    SDL_Rect desired;
-    desired.x = want_x;
-    desired.y = want_y;
-    desired.w = sprite->current_animation->current_frame().w * sprite->scale;
-    desired.h = sprite->current_animation->current_frame().h * sprite->scale;
+    SDL_Rect desired_x;
+    desired_x.x = want_x;
+    desired_x.y = sprite->y;
+    desired_x.w = sprite->current_animation->current_frame().w * sprite->scale;
+    desired_x.h = sprite->current_animation->current_frame().h * sprite->scale;
 
-    if (game->entity_can_move_to(static_cast<Entity*>(this), desired)) {
+    SDL_Rect desired_y;
+    desired_y.x = sprite->x;
+    desired_y.y = want_y;
+    desired_y.w = sprite->current_animation->current_frame().w * sprite->scale;
+    desired_y.h = sprite->current_animation->current_frame().h * sprite->scale;
+
+    if (game->entity_can_move_to(static_cast<Entity*>(this), desired_x)) {
       double delta_x = sprite->x - want_x;
       if (delta_x > 0.0) {
         sprite->flip_x = false;
@@ -71,6 +84,9 @@ void Character::think(std::shared_ptr<Game> game)
       }
 
       sprite->x = want_x;
+    }
+
+    if (game->entity_can_move_to(static_cast<Entity*>(this), desired_y)) {
       sprite->y = want_y;
     }
   }
@@ -83,31 +99,14 @@ void Character::walk(double dx, double dy)
 {
   nx = dx;
   ny = dy;
-  sprite->set_animation("Walk Forward");
+  sprite->set_animation("Walk");
 }
 
-void Character::walk_right()
+void Character::run(double dx, double dy)
 {
-  curr_ups = walk_ups;
-  this->walk(walk_ups, 0);
-}
-
-void Character::walk_left()
-{
-  curr_ups = walk_ups;
-  this->walk(-walk_ups, 0);
-}
-
-void Character::walk_down()
-{
-  curr_ups = walk_ups;
-  this->walk(0, walk_ups);
-}
-
-void Character::walk_up()
-{
-  curr_ups = walk_ups;
-  this->walk(0, -walk_ups);
+  nx = dx;
+  ny = dy;
+  sprite->set_animation("Run");
 }
 
 void Character::stop()
@@ -118,10 +117,16 @@ void Character::stop()
 
 bool Character::on_right_joy(int32_t joystick, float angle, float magnitude, float x, float y)
 {
-  if (magnitude > 0) {
-    this->walk(x * walk_ups, y * walk_ups);
-  } else {
+  if (magnitude < 0.01) {
     this->stop();
+  } else if (magnitude < 0.5) {
+    walk_scale = (magnitude / 0.5);
+    move_scale = walk_scale * walk_ups;
+    this->walk(x * walk_ups, y * walk_ups);
+  } else if (magnitude >= 0.5) {
+    run_scale = (magnitude / 1.0);
+    move_scale = run_scale * run_ups;
+    this->run(x * run_ups, y * run_ups);
   }
 
   return true;

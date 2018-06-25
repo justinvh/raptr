@@ -1,0 +1,37 @@
+{ "frames": [
+   {
+    "filename": "Sprite-0004 0.aseprite",
+    "frame": { "x": 1, "y": 1, "w": 1024, "h": 16 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 1024, "h": 16 },
+    "sourceSize": { "w": 1024, "h": 16 },
+    "duration": 150
+   },
+   {
+    "filename": "Sprite-0004 1.aseprite",
+    "frame": { "x": 1025, "y": 1, "w": 1024, "h": 16 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 1024, "h": 16 },
+    "sourceSize": { "w": 1024, "h": 16 },
+    "duration": 150
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.8-x64",
+  "image": "C:\\Users\\justi\\Desktop\\fire.png",
+  "format": "RGBA8888",
+  "size": { "w": 2050, "h": 18 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "Idle", "from": 0, "to": 1, "direction": "pingpong" }
+  ],
+  "layers": [
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}

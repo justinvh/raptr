@@ -1,6 +1,6 @@
 { "frames": [
    {
-    "filename": "raptor 0.aseprite",
+    "filename": "raptor2 0.aseprite",
     "frame": { "x": 1, "y": 1, "w": 64, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -9,16 +9,16 @@
     "duration": 500
    },
    {
-    "filename": "raptor 1.aseprite",
+    "filename": "raptor2 1.aseprite",
     "frame": { "x": 65, "y": 1, "w": 64, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
     "sourceSize": { "w": 64, "h": 32 },
-    "duration": 250
+    "duration": 500
    },
    {
-    "filename": "raptor 2.aseprite",
+    "filename": "raptor2 2.aseprite",
     "frame": { "x": 129, "y": 1, "w": 64, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -27,148 +27,67 @@
     "duration": 500
    },
    {
-    "filename": "raptor 3.aseprite",
+    "filename": "raptor2 3.aseprite",
     "frame": { "x": 193, "y": 1, "w": 64, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
     "sourceSize": { "w": 64, "h": 32 },
-    "duration": 250
+    "duration": 200
    },
    {
-    "filename": "raptor 4.aseprite",
+    "filename": "raptor2 4.aseprite",
     "frame": { "x": 257, "y": 1, "w": 64, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
     "sourceSize": { "w": 64, "h": 32 },
-    "duration": 250
+    "duration": 200
    },
    {
-    "filename": "raptor 5.aseprite",
+    "filename": "raptor2 5.aseprite",
     "frame": { "x": 321, "y": 1, "w": 64, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
     "sourceSize": { "w": 64, "h": 32 },
-    "duration": 250
+    "duration": 200
    },
    {
-    "filename": "raptor 6.aseprite",
+    "filename": "raptor2 6.aseprite",
     "frame": { "x": 385, "y": 1, "w": 64, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
     "sourceSize": { "w": 64, "h": 32 },
-    "duration": 250
+    "duration": 125
    },
    {
-    "filename": "raptor 7.aseprite",
+    "filename": "raptor2 7.aseprite",
     "frame": { "x": 449, "y": 1, "w": 64, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
     "sourceSize": { "w": 64, "h": 32 },
-    "duration": 250
+    "duration": 125
    },
    {
-    "filename": "raptor 8.aseprite",
+    "filename": "raptor2 8.aseprite",
     "frame": { "x": 513, "y": 1, "w": 64, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
     "sourceSize": { "w": 64, "h": 32 },
-    "duration": 250
-   },
-   {
-    "filename": "raptor 9.aseprite",
-    "frame": { "x": 577, "y": 1, "w": 64, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
-    "duration": 100
-   },
-   {
-    "filename": "raptor 10.aseprite",
-    "frame": { "x": 641, "y": 1, "w": 64, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
-    "duration": 100
-   },
-   {
-    "filename": "raptor 11.aseprite",
-    "frame": { "x": 705, "y": 1, "w": 64, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
-    "duration": 100
-   },
-   {
-    "filename": "raptor 12.aseprite",
-    "frame": { "x": 769, "y": 1, "w": 64, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
-    "duration": 100
-   },
-   {
-    "filename": "raptor 13.aseprite",
-    "frame": { "x": 833, "y": 1, "w": 64, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
-    "duration": 100
-   },
-   {
-    "filename": "raptor 14.aseprite",
-    "frame": { "x": 897, "y": 1, "w": 64, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
-    "duration": 100
-   },
-   {
-    "filename": "raptor 15.aseprite",
-    "frame": { "x": 961, "y": 1, "w": 64, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
-    "duration": 250
-   },
-   {
-    "filename": "raptor 16.aseprite",
-    "frame": { "x": 1025, "y": 1, "w": 64, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
-    "duration": 250
-   },
-   {
-    "filename": "raptor 17.aseprite",
-    "frame": { "x": 1089, "y": 1, "w": 64, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
-    "duration": 250
+    "duration": 125
    }
  ],
   "meta": {
     "app": "http://www.aseprite.org/",
     "version": "1.2.8-x64",
-    "image": "C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/raptor-spritesheet.png",
-    "format": "I8",
+    "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\textures\\raptor-spritesheet.png",
+    "format": "RGBA8888",
     "size": {
-      "w": 1154,
+      "w": 578,
       "h": 34
     },
     "scale": "1",
@@ -180,32 +99,26 @@
         "direction": "pingpong"
       },
       {
-        "name": "Walk Forward",
+        "name": "Walk",
         "from": 3,
+        "to": 5,
+        "direction": "pingpong"
+      },
+      {
+        "name": "Run",
+        "from": 6,
         "to": 8,
-        "direction": "forward"
-      },
-      {
-        "name": "Crouch",
-        "from": 9,
-        "to": 14,
-        "direction": "forward"
-      },
-      {
-        "name": "Crouch Walk",
-        "from": 15,
-        "to": 17,
         "direction": "pingpong"
       }
     ],
     "layers": [
       {
-        "name": "Torso",
+        "name": "Rear Leg",
         "opacity": 255,
         "blendMode": "normal"
       },
       {
-        "name": "Rear Leg",
+        "name": "Body",
         "opacity": 255,
         "blendMode": "normal"
       },
@@ -215,17 +128,22 @@
         "blendMode": "normal"
       },
       {
+        "name": "Tail",
+        "opacity": 255,
+        "blendMode": "normal"
+      },
+      {
+        "name": "Head + Neck",
+        "opacity": 255,
+        "blendMode": "normal"
+      },
+      {
         "name": "Arms",
         "opacity": 255,
         "blendMode": "normal"
       },
       {
-        "name": "Head",
-        "opacity": 255,
-        "blendMode": "normal"
-      },
-      {
-        "name": "Tail",
+        "name": "Layer 1",
         "opacity": 255,
         "blendMode": "normal"
       }

@@ -46,7 +46,8 @@ public:
   std::map<int32_t, std::shared_ptr<Controller>> controllers;
   std::shared_ptr<Sound> sound;
   std::shared_ptr<Config> config;
-  std::map<Entity*, SDL_Rect> last_known_entity_loc;
+  std::vector<std::shared_ptr<Entity>> entities;
+  std::map<std::shared_ptr<Entity>, SDL_Rect> last_known_entity_loc;
   RTree<Entity*, float, 2> rtree;
 
 public:
