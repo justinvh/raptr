@@ -1,8 +1,8 @@
 #pragma once
 
-#include <SDL2/SDL_rect.h>
+#include <SDL_rect.h>
 #include <iostream>
-#include "rect.hpp"
+#include <raptr/common/rect.hpp>
 
 namespace raptr {
 

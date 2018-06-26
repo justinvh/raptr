@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "entity.hpp"
+#include <raptr/game/entity.hpp>
 
 namespace raptr {
 

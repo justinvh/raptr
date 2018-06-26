@@ -5,12 +5,12 @@
 #include <memory>
 #include <map>
 
-#include "config.hpp"
-#include "renderer.hpp"
-#include "sound.hpp"
-#include "controller.hpp"
-#include "rtree.hpp"
-#include "entity.hpp"
+#include <raptr/config.hpp>
+#include <raptr/renderer/renderer.hpp>
+#include <raptr/sound/sound.hpp>
+#include <raptr/input/controller.hpp>
+#include <raptr/common/rtree.hpp>
+#include <raptr/game/entity.hpp>
 
 namespace raptr {
 

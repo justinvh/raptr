@@ -106,6 +106,7 @@ endforeach()
 # Imported target: SDL2
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image REQUIRED)
+find_package(Picojson REQUIRED)
 
 add_library(sdl2 INTERFACE IMPORTED)
 set_property(TARGET sdl2 PROPERTY
@@ -113,12 +114,12 @@ set_property(TARGET sdl2 PROPERTY
 set_property(TARGET sdl2 PROPERTY 
     INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS})
 
-target_include_directories(raptr PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include>"
+target_include_directories(raptr 
+	PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+	       "$<INSTALL_INTERFACE:include>"
 )
 
-target_link_libraries(raptr sdl2)
+target_link_libraries(raptr SDL2::SDL2 sdl2 Picojson::Picojson)
 
 # Add compiler requirements
 target_compile_features(raptr

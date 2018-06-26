@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <picojson/picojson.h>
+#include <picojson.h>
 #include <SDL_image.h>
 
 #include <raptr/renderer/renderer.hpp>

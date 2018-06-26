@@ -1,25 +1,44 @@
+# FindPicojson.cmake
+#
+# Finds the rapidjson library
+#
+# This will define the following variables
+#
+#    PICOJSON_FOUND
+#    PICOJSON_INCLUDE_DIRS
+#
+# and the following imported targets
+#
+#     Picojson::Picojson
+#
+# Author: Pablo Arias - pabloariasal@gmail.com
 
-# - Try to find picojson
-#
-# The following variables are optionally searched for defaults
-#  PICOJSON_ROOT_DIR:            Base directory where all picojson components are found
-#
-# The following are set after configuration is done:
-#  PICOJSON_FOUND
-#  PICOJSON_INCLUDE_DIRS
+find_package(PkgConfig)
+pkg_check_modules(Picojson QUIET Picojson)
+
+find_path(PICOJSON_INCLUDE_DIR
+    NAMES picojson.h
+    PATHS ${PC_PICOJSON_INCLUDE_DIRS}
+    PATH_SUFFIXES picojson
+)
+
+set(PICOJSON_VERSION ${PC_PICOJSON_VERSION})
+
+mark_as_advanced(PICOJSON_FOUND PICOJSON_INCLUDE_DIR PICOJSON_VERSION)
 
 include(FindPackageHandleStandardArgs)
-
-set(GLOG_ROOT_DIR "" CACHE PATH "Folder contains picojson")
-
-if(WIN32)
-    find_path(PICOJSON_INCLUDE_DIR picojson.h PATHS ${GLOG_ROOT_DIR}/src/windows)
-else()
-    find_path(PICOJSON_INCLUDE_DIR picojson.h PATHS ${GLOG_ROOT_DIR})
-endif()
-
-find_package_handle_standard_args(PICOJSON DEFAULT_MSG PICOJSON_INCLUDE_DIR)
+find_package_handle_standard_args(Picojson
+    REQUIRED_VARS PICOJSON_INCLUDE_DIR
+    VERSION_VAR PICOJSON_VERSION
+)
 
 if(PICOJSON_FOUND)
     set(PICOJSON_INCLUDE_DIRS ${PICOJSON_INCLUDE_DIR})
+endif()
+
+if(PICOJSON_FOUND AND NOT TARGET Picojson::Picojson)
+    add_library(Picojson::Picojson INTERFACE IMPORTED)
+    set_target_properties(Picojson::Picojson PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${PICOJSON_INCLUDE_DIR}"
+    )
 endif()

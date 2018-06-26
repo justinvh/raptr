@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "entity.hpp"
+#include <raptr/game/entity.hpp>
 
 namespace raptr {
 

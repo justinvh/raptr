@@ -5,9 +5,9 @@
 #undef SDL_HAPTIC_DINPUT
 #define SDL_HAPTIC_DISABLED 1
 
-#include <SDL2/SDL_joystick.h>
-#include <SDL2/SDL_gamecontroller.h>
-#include <SDL2/SDL_events.h>
+#include <SDL_joystick.h>
+#include <SDL_gamecontroller.h>
+#include <SDL_events.h>
 
 #include <cstdint>
 #include <functional>
