@@ -45,6 +45,9 @@ public:
       SDL_DestroyWindow(sdl.window);
     }
   }
+
+  bool toggle_fullscreen();
+
   bool init(std::shared_ptr<Config> config_);
   void run_frame();
   SDL_Texture* create_texture(std::shared_ptr<SDL_Surface> surface);

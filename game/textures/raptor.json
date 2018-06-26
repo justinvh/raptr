@@ -79,76 +79,67 @@
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
     "sourceSize": { "w": 64, "h": 32 },
     "duration": 125
+   },
+   {
+    "filename": "raptor2 9.aseprite",
+    "frame": { "x": 577, "y": 1, "w": 64, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
+    "sourceSize": { "w": 64, "h": 32 },
+    "duration": 500
+   },
+   {
+    "filename": "raptor2 10.aseprite",
+    "frame": { "x": 641, "y": 1, "w": 64, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
+    "sourceSize": { "w": 64, "h": 32 },
+    "duration": 500
+   },
+   {
+    "filename": "raptor2 11.aseprite",
+    "frame": { "x": 705, "y": 1, "w": 64, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
+    "sourceSize": { "w": 64, "h": 32 },
+    "duration": 500
+   },
+   {
+    "filename": "raptor2 12.aseprite",
+    "frame": { "x": 769, "y": 1, "w": 64, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
+    "sourceSize": { "w": 64, "h": 32 },
+    "duration": 500
    }
  ],
-  "meta": {
-    "app": "http://www.aseprite.org/",
-    "version": "1.2.8-x64",
-    "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\textures\\raptor-spritesheet.png",
-    "format": "RGBA8888",
-    "size": {
-      "w": 578,
-      "h": 34
-    },
-    "scale": "1",
-    "frameTags": [
-      {
-        "name": "Idle",
-        "from": 0,
-        "to": 2,
-        "direction": "pingpong"
-      },
-      {
-        "name": "Walk",
-        "from": 3,
-        "to": 5,
-        "direction": "pingpong"
-      },
-      {
-        "name": "Run",
-        "from": 6,
-        "to": 8,
-        "direction": "pingpong"
-      }
-    ],
-    "layers": [
-      {
-        "name": "Rear Leg",
-        "opacity": 255,
-        "blendMode": "normal"
-      },
-      {
-        "name": "Body",
-        "opacity": 255,
-        "blendMode": "normal"
-      },
-      {
-        "name": "Front Leg",
-        "opacity": 255,
-        "blendMode": "normal"
-      },
-      {
-        "name": "Tail",
-        "opacity": 255,
-        "blendMode": "normal"
-      },
-      {
-        "name": "Head + Neck",
-        "opacity": 255,
-        "blendMode": "normal"
-      },
-      {
-        "name": "Arms",
-        "opacity": 255,
-        "blendMode": "normal"
-      },
-      {
-        "name": "Layer 1",
-        "opacity": 255,
-        "blendMode": "normal"
-      }
-    ],
-    "slices": [
-    ]
-  }
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.8-x64",
+  "image": "C:\\Users\\justi\\Desktop\\raptor-spritesheet.png",
+  "format": "RGBA8888",
+  "size": { "w": 834, "h": 34 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "Idle", "from": 0, "to": 2, "direction": "pingpong" },
+   { "name": "Walk", "from": 3, "to": 5, "direction": "pingpong" },
+   { "name": "Run", "from": 6, "to": 8, "direction": "pingpong" },
+   { "name": "Jump", "from": 9, "to": 12, "direction": "forward" }
+  ],
+  "layers": [
+   { "name": "Rear Leg", "opacity": 255, "blendMode": "normal" },
+   { "name": "Body", "opacity": 255, "blendMode": "normal" },
+   { "name": "Front Leg", "opacity": 255, "blendMode": "normal" },
+   { "name": "Tail", "opacity": 255, "blendMode": "normal" },
+   { "name": "Head + Neck", "opacity": 255, "blendMode": "normal" },
+   { "name": "Arms", "opacity": 255, "blendMode": "normal" },
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
 }

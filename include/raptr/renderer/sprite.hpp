@@ -43,6 +43,7 @@ struct Animation {
   int32_t frame, from, to;
   std::vector<AnimationFrame> frames;
   AnimationDirection direction;
+  float speed;
 
   AnimationFrame& current_frame()
   {
@@ -52,7 +53,7 @@ struct Animation {
   bool next(uint32_t clock)
   {
     uint32_t curr = SDL_GetTicks();
-    if ((curr - clock) <= frames[frame].duration) {
+    if ((curr - clock) <= frames[frame].duration / speed) {
       return false;
     }
 
@@ -79,11 +80,11 @@ struct Animation {
           ++frame;
         }
 
-        if (frame == to) {
+        if (frame > to) {
           frame = to - 1;
           ping_backwards = true;
-        } else if (frame == -1) {
-          frame = 0;
+        } else if (frame < from) {
+          frame = from + 1;
           ping_backwards = false;
         }
         break;

@@ -21,8 +21,17 @@ enum class Button {
   dpad_left, dpad_right, dpad_down, dpad_up
 };
 
-using ButtonCallback = std::function<bool(const Button& button)>;
-using JoyCallback = std::function<bool(int32_t joystick, float angle, float magnitude, float x, float y)>;
+struct ControllerState {
+  int32_t joystick;
+  float angle;
+  float magnitude;
+  float x;
+  float y;
+  Button button;
+};
+
+using JoyCallback = std::function<bool(const ControllerState& controller)>;
+using ButtonCallback = std::function<bool(const ControllerState& controller)>;
 
 class Controller : public std::enable_shared_from_this<Controller> {
 public:

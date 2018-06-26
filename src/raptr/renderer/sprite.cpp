@@ -2,10 +2,10 @@
 #include <iostream>
 #include <map>
 #include <picojson/picojson.h>
-#include <SDL2/SDL_image.h>
+#include <SDL_image.h>
 
-#include "renderer.hpp"
-#include "sprite.hpp"
+#include <raptr/renderer/renderer.hpp>
+#include <raptr/renderer/sprite.hpp>
 
 namespace raptr {
 
@@ -60,6 +60,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const std::string& path)
     animation.from = 0;
     animation.to = to - from;
     animation.ping_backwards = false;
+    animation.hold_last_frame = false;
 
     if (direction == "forward") {
       animation.direction = AnimationDirection::forward;
@@ -84,6 +85,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const std::string& path)
       anim_frame.h = p_int(frame_size, "h");
       anim_frame.duration = p_int(frame, "duration");
 
+      animation.speed = 1.0f;
       animation.frames.push_back(anim_frame);
     }
 

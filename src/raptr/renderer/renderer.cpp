@@ -1,7 +1,7 @@
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
-#include "config.hpp"
-#include "renderer.hpp"
+#include <raptr/config.hpp>
+#include <raptr/renderer/renderer.hpp>
 
 namespace raptr {
 
@@ -10,8 +10,10 @@ bool Renderer::init(std::shared_ptr<Config> config_)
   config = config_;
 
   // Initialize SDL with some basics
-  sdl.window = SDL_CreateWindow("RAPTR", 100, 100, 512, 512, 0);
+  sdl.window = SDL_CreateWindow("RAPTR", 10, 10, 960, 540, 0);
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, 0);
   sdl.renderer = SDL_CreateRenderer(sdl.window, -1, SDL_RENDERER_ACCELERATED);
+  SDL_RenderSetLogicalSize(sdl.renderer, 480, 270);
   return true;
 }
 
@@ -27,6 +29,17 @@ void Renderer::run_frame()
   will_render.clear();
   SDL_RenderPresent(sdl.renderer);
   ++frame_count;
+}
+
+bool Renderer::toggle_fullscreen()
+{
+  if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN_DESKTOP) {
+    SDL_SetWindowFullscreen(sdl.window, 0);
+    return false;
+  } else {
+    SDL_SetWindowFullscreen(sdl.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    return true;
+  }
 }
 
 SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface> surface)

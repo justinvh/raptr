@@ -1,5 +1,5 @@
-#include "config.hpp"
-#include "sound.hpp"
+#include <raptr/config.hpp>
+#include <raptr/sound/sound.hpp>
 
 namespace raptr {
 

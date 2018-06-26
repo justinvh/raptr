@@ -15,7 +15,7 @@ class StaticMesh : public Entity {
 public:
   virtual bool intersects(const Entity* other) const;
   virtual int32_t id() const;
-  virtual SDL_Rect bbox() const;
+  virtual Rect bbox() const;
   virtual void think(std::shared_ptr<Game> game);
 
 public:

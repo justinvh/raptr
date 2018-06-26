@@ -1,6 +1,9 @@
+#pragma warning(disable:4838)
+#pragma warning(disable:4244)
+
 #define SDL_MAIN_HANDLED
-#include <SDL2/SDL.h>
-#include "game.hpp"
+#include <SDL.h>
+#include <raptr/game/game.hpp>
 
 int main(int argc, char** argv)
 {
