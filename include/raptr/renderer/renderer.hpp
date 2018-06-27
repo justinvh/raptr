@@ -21,7 +21,6 @@ class Config;
   be flipped or rotated.
 */
 struct Renderable {
-
   //! The SDL texture that was generated, for examples see the Sprite class
   std::shared_ptr<SDL_Texture> texture;
 
@@ -67,13 +66,13 @@ struct Renderable {
   itself, such as toggling fullscreen.
 */
 class Renderer {
-public:
+ public:
   Renderer() = default;
   Renderer(const Renderer&) = default;
   Renderer(Renderer&&) = default;
   ~Renderer();
 
-public:
+ public:
   /*!
     Add an object to the renderer to be drawn on the screen.
     /see Renderable
@@ -113,14 +112,14 @@ public:
   */
   bool toggle_fullscreen();
 
-public:
+ public:
   //! The configuration that was used to create this Renderer
   std::shared_ptr<Config> config;
 
   //! How many frames have been rendered
   uint64_t frame_count;
 
-private:
+ private:
   /*!
     An internal object for representing the SDL state of the renderer
   */
@@ -133,4 +132,4 @@ private:
   std::vector<Renderable> will_render;
 };
 
-}
+} // namespace raptr

@@ -3,7 +3,7 @@
 namespace raptr {
 
 class Config {
-public:
+ public:
   Config() = default;
   ~Config() = default;
   Config(const Config&) = default;
@@ -12,4 +12,4 @@ public:
   Config& operator=(Config&&) = default;
 };
 
-}
+} // namespace raptr

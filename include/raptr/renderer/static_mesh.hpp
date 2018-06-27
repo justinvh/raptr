@@ -21,7 +21,7 @@ class Game;
   to define its intersection and bounding box
 */
 class StaticMesh : public Entity {
-public:
+ public:
   /*!
   Returns the bounding box for this static mesh based on its sprite
   \return An rectangle containing the static mesh
@@ -47,7 +47,7 @@ public:
   */
   virtual void think(std::shared_ptr<Game> game);
 
-public:
+ public:
   //! The sprite that this Static Mesh uses to render and derive parameters
   std::shared_ptr<Sprite> sprite;
 
@@ -55,5 +55,5 @@ public:
   int32_t _id;
 };
 
+} // namespace raptr
 
-}

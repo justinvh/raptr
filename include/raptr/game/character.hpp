@@ -4,6 +4,7 @@
 */
 #pragma once
 
+#include <memory>
 #include <cstdint>
 #include <raptr/game/entity.hpp>
 
@@ -20,7 +21,7 @@ struct ControllerState;
   with its environment, and most importantly can have a controller attached to it.
  */
 class Character : public Entity {
-public:
+ public:
   /*! 
     Attaches and registers bindings against a controller. This provides a mechanism for
     propagating events, such as button presses or controller movement, back to this class and 
@@ -78,7 +79,7 @@ public:
   */
   virtual void walk(float scale);
 
-private:
+ private:
   /*! 
     When a controller is attached to this character, any button presses will be dispatched to this
     function which will handle how best to deal with a button press
@@ -93,8 +94,7 @@ private:
   */
   virtual bool on_right_joy(const ControllerState& state);
 
-public:
-
+ public:
   //! The sprite that is used to render this character
   std::shared_ptr<Sprite> sprite;
 
@@ -117,4 +117,4 @@ public:
   uint32_t jump_vel;
 };
 
-}
+} // namespace raptr

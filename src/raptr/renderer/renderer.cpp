@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <memory>
 
 #include <raptr/config.hpp>
 #include <raptr/renderer/renderer.hpp>
@@ -32,7 +33,7 @@ void Renderer::run_frame()
   SDL_RenderClear(sdl.renderer);
 
   for (auto w : will_render) {
-    SDL_RenderCopyEx(sdl.renderer, w.texture.get(), &w.src, &w.dst, 
+    SDL_RenderCopyEx(sdl.renderer, w.texture.get(), &w.src, &w.dst,
                      w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
   }
 
@@ -57,7 +58,7 @@ SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface> surface) cons
   return SDL_CreateTextureFromSurface(sdl.renderer, surface.get());
 }
 
-void Renderer::add(std::shared_ptr<SDL_Texture> texture, 
+void Renderer::add(std::shared_ptr<SDL_Texture> texture,
                    SDL_Rect src, SDL_Rect dst,
                    float angle, bool flip_x, bool flip_y)
 {
@@ -65,5 +66,5 @@ void Renderer::add(std::shared_ptr<SDL_Texture> texture,
   will_render.push_back(renderable);
 }
 
-}
+} // namespace raptr
 

@@ -1,6 +1,9 @@
 #include <SDL_joystick.h>
+
 #include <chrono>
 #include <thread>
+#include <memory>
+#include <vector>
 
 #include <raptr/config.hpp>
 #include <raptr/renderer/renderer.hpp>
@@ -69,12 +72,11 @@ bool Game::run()
   SDL_Event e;
   uint32_t last_game_tick = SDL_GetTicks();
   while (true) {
-
     if ((SDL_GetTicks() - last_game_tick) < 1) {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
       continue;
     }
-    
+
     if (SDL_PollEvent(&e)) {
       if (e.type == SDL_CONTROLLERAXISMOTION ||
           e.type == SDL_CONTROLLERBUTTONDOWN ||
@@ -197,4 +199,4 @@ bool Game::init_sound()
   return true;
 }
 
-}
+} // namespace raptr

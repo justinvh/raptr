@@ -4,9 +4,8 @@
 */
 #pragma once
 
-#include <memory>
 #include <cstdint>
-
+#include <memory>
 #include <raptr/common/rect.hpp>
 
 namespace raptr {
@@ -19,7 +18,7 @@ class Game;
   an Entity is something you should care about as a player.
 */
 class Entity {
-public:
+ public:
   /*!
     Returns the bounding box for this entity
     \return An rectangle containing the entity
@@ -94,8 +93,8 @@ public:
   */
   virtual Point& acceleration() { return acc_; }
 
-public:
-  //! The current position 
+ public:
+  //! The current position
   Point pos_;
 
   //! The current velocity
@@ -111,4 +110,4 @@ public:
   uint32_t last_think_time_ms;
 };
 
-}
+} // namespace raptr

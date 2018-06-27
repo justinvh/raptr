@@ -116,4 +116,4 @@ inline bool SDL_HasIntersection(const Rect* A, const Rect* B)
   return true;
 }
 
-}
+} // namespace raptr

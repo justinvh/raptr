@@ -57,13 +57,13 @@ enum class AnimationDirection {
   (as a multiplier to the duration of the frames themselves)
 */
 class Animation {
-public:
+ public:
   //! The animation name as described by the "Tag" of the spritesheet
   std::string name;
 
   //! If true, then animation will stop on the last frame
   bool hold_last_frame;
-  
+
   //! A state variable to track if the animation should go backwards
   bool ping_backwards;
 
@@ -79,7 +79,7 @@ public:
   //! A speed multiplier against the duration of the frames (1.0 == same speed)
   float speed;
 
-public:
+ public:
   /*!
     Retrieve the current AnimationFrame based on what "frame" is at
     /return The current AnimationFrame
@@ -106,7 +106,7 @@ using AnimationTable = std::map<std::string, Animation>;
   /see Character
 */
 class Sprite {
-public:
+ public:
   /*!
     Create a new Sprite object from a Asesprite JSON file
     /param path - An absolute path to a Aseprite JSON file
@@ -127,7 +127,7 @@ public:
   */
   void set_animation(const std::string& name, bool hold_last_frame = false);
 
-public:
+ public:
   //! A mapping of animation names to the animation itself
   AnimationTable animations;
 
@@ -159,4 +159,4 @@ public:
   uint32_t last_frame_tick;
 };
 
-}
+} // namespace raptr

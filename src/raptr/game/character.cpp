@@ -1,4 +1,5 @@
 #include <functional>
+#include <memory>
 
 #include <raptr/game/game.hpp>
 #include <raptr/renderer/sprite.hpp>
@@ -26,7 +27,7 @@ void Character::think(std::shared_ptr<Game> game)
 {
   uint32_t delta_ms = this->think_delta_ms();
   auto& vel = this->velocity();
-  
+
   // External forces, like gravity
   Rect fall_check = this->want_position_y();
   fall_check.y += game->gravity * fall_time_ms / 1000.0;
@@ -115,7 +116,7 @@ bool Character::on_button_down(const ControllerState& state)
 
 void Character::attach_controller(std::shared_ptr<Controller> controller_)
 {
-  using namespace std::placeholders;
+  using std::placeholders::_1;
 
   controller = controller_;
   controller->on_right_joy(std::bind(&Character::on_right_joy, this, _1));
@@ -151,4 +152,4 @@ Rect Character::bbox() const
   return box;
 }
 
-}
+} // namespace raptr

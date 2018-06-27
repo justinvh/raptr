@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include <raptr/game/game.hpp>
 #include <raptr/renderer/sprite.hpp>
@@ -46,4 +47,4 @@ void StaticMesh::think(std::shared_ptr<Game> game)
   sprite->render(game->renderer);
 }
 
-}
+} // namespace raptr

@@ -1,6 +1,9 @@
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <memory>
 #include <map>
+
 #include <picojson.h>
 #include <SDL_image.h>
 
@@ -206,4 +209,4 @@ void Sprite::set_animation(const std::string& name, bool hold_last_frame)
   current_animation->hold_last_frame = hold_last_frame;
 }
 
-}
+} // namespace raptr

@@ -51,8 +51,7 @@ using ControllerCallback = std::function<bool(const ControllerState& controller)
   well as a way for an SDL Event loop to push events to it
 */
 class Controller : public std::enable_shared_from_this<Controller> {
-public:
-
+ public:
   /*!
     Add a callback when a button is pressed down
     /param callback - The function to call when a button down event occurs
@@ -98,7 +97,7 @@ public:
   */
   int32_t id() { return sdl.controller_id;  }
 
-public:
+ public:
   //! List of callbacks that are called when a button down event occurs
   std::vector<ControllerCallback> button_down_callbacks;
 
@@ -111,8 +110,7 @@ public:
   //! List of callbacks that are called when a right joystick event occurs
   std::vector<ControllerCallback> right_joy_callbacks;
 
-private:
-
+ private:
   /*!
     An internal class for managing the SDL states of the controller
   */
@@ -122,7 +120,6 @@ private:
     SDL_GameController* controller;
     SDL_Joystick* joystick;
   } sdl;
-
 };
 
-};
+} // namespace raptr

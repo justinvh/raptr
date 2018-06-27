@@ -45,4 +45,4 @@ Rect Entity::want_position_y()
   return rect;
 }
 
-}
+} // namespace raptr

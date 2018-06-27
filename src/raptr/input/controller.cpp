@@ -1,9 +1,8 @@
 #include <iostream>
+#include <memory>
 #include <string>
 #include <limits>
 #include <algorithm>
-
-
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -46,7 +45,8 @@ ControllerState state_from_event(SDL_GameController* controller, const SDL_Event
     const int16_t deadzone = 4000;
     const int16_t value = SDL_GameControllerGetAxis(controller, axis);
     if (value < -deadzone || value > deadzone) {
-      mag[i] = std::max(-1.0f, std::min(value / float(std::numeric_limits<int16_t>::max()), 1.0f));
+      float int16_t_max = static_cast<float>(std::numeric_limits<int16_t>::max());
+      mag[i] = std::max(-1.0f, std::min(value / int16_t_max, 1.0f));
     }
   }
 
@@ -88,7 +88,7 @@ void Controller::process_event(const SDL_Event& e)
         callback(state);
       }
       break;
-  };
+  }
 }
 
 std::shared_ptr<Controller> Controller::open(int controller_id)
@@ -125,4 +125,4 @@ Controller::SDLInternal::~SDLInternal() {
   }
 }
 
-}
+} // namespace raptr

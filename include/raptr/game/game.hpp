@@ -26,24 +26,24 @@ class Sound;
   with additional utilities and conveniences. 
 */
 class Game : public std::enable_shared_from_this<Game> {
-private:
+ private:
   //! The class should be created using Game::create as it inherits from enable_shared_from_this
   Game() = default;
 
-public:
+ public:
   ~Game() = default;
   Game(const Game&) = delete;
   Game(Game&&) = default;
   Game& operator=(const Game&) = delete;
   Game& operator=(Game&&) = default;
 
-public:
+ public:
   /*!
     This should be used when creating a Game. 
   */
   static std::shared_ptr<Game> create() { return std::shared_ptr<Game>(new Game()); }
 
-public:
+ public:
   /*!
     Returns true if a given entity can teleport to a region defined by a bounding box
     \param entity - The entity that is trying to teleport
@@ -58,8 +58,7 @@ public:
   */
   bool run();
 
-private:
-
+ private:
   /*!
     Top-level function to call all other init functions
     \return Whether all init functions passed or not
@@ -84,7 +83,7 @@ private:
   */
   bool init_sound();
 
-public:
+ public:
   //! Global configuration loaded from a etc/raptr.ini
   std::shared_ptr<Config> config;
 
@@ -109,9 +108,10 @@ public:
   //! The gravity of the world
   double gravity;
 
-public:
+ public:
   //! If set, then all initialization has happened successfully
   bool is_init;
 };
 
-}
+} // namespace raptr
+
