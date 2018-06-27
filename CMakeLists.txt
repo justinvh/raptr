@@ -37,6 +37,7 @@ endif()
 set(RAPTR_CPP
     # Game sources
     src/raptr/game/character.cpp
+    src/raptr/game/entity.cpp
     src/raptr/game/game.cpp
 
     # Input sources

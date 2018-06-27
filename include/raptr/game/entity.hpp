@@ -4,6 +4,9 @@
 */
 #pragma once
 
+#include <memory>
+#include <cstdint>
+
 #include <raptr/common/rect.hpp>
 
 namespace raptr {
@@ -39,10 +42,7 @@ public:
   /*!
     Convenience method to reset the last time think() was called
   */
-  virtual void reset_think_delta()
-  {
-    last_think_time_ms = SDL_GetTicks();
-  }
+  virtual void reset_think_delta();
 
   /*!
     This method will determine how the entity interacts with the game.
@@ -56,53 +56,25 @@ public:
     How many seconds have happened since the last time think_delta was reset.
     \return A precise second value as a double
   */
-  virtual double think_delta_s()
-  {
-    return (SDL_GetTicks() - last_think_time_ms) / 1000.0;
-  }
+  virtual double think_delta_s();
 
   /*!
     How many milliseconds have happened since the last time think_delta was reset
     \return A precise number of milliseconds as a uint32_t
   */
-  virtual uint32_t think_delta_ms()
-  {
-    return (SDL_GetTicks() - last_think_time_ms);
-  }
+  virtual uint32_t think_delta_ms();
 
   /*!
     Given the current position, velocity, and acceleration, where does this entity *want* to go in X
     \return The rectangle this entity *wants* to occupy in the X direction
   */
-  virtual Rect want_position_x()
-  {
-    double dt = this->think_delta_s();
-    Point pos = this->position();
-    const Point& vel = this->velocity();
-    const Point& acc = this->acceleration();
-    pos.x += vel.x * dt + 0.5 * acc.x * dt * dt;
-    Rect rect = this->bbox();
-    rect.x = pos.x;
-    rect.y = pos.y;
-    return rect;
-  }
+  virtual Rect want_position_x();
 
   /*!
     Given the current position, velocity, and acceleration, where does this entity *want* to go in Y
     \return The rectangle this entity *wants* to occupy in the Y direction
   */
-  virtual Rect want_position_y()
-  {
-    double dt = this->think_delta_s();
-    Point pos = this->position();
-    const Point& vel = this->velocity();
-    const Point& acc = this->acceleration();
-    pos.y += vel.y * dt + 0.5 * acc.y * dt * dt;
-    Rect rect = this->bbox();
-    rect.x = pos.x;
-    rect.y = pos.y;
-    return rect;
-  }
+  virtual Rect want_position_y();
 
   /*!
     Return the current position of the entity
