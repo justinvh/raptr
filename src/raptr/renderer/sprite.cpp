@@ -22,6 +22,66 @@ std::string p_string(const picojson::value& v, const std::string& name)
   return v.get(name).get<std::string>();
 }
 
+void SDLDeleter::operator()(SDL_Texture* p) const
+{
+  SDL_DestroyTexture(p);
+}
+
+void SDLDeleter::operator()(SDL_Surface* p) const
+{
+  if (p->refcount == 0) {
+    SDL_FreeSurface(p);
+  }
+}
+
+AnimationFrame& Animation::current_frame()
+{
+  return frames[frame];
+}
+
+bool Animation::next(uint32_t clock)
+{
+  uint32_t curr = SDL_GetTicks();
+  if ((curr - clock) <= frames[frame].duration / speed) {
+    return false;
+  }
+
+  switch (direction) {
+    case AnimationDirection::forward:
+      ++frame;
+      if (frame < from) {
+        frame = from;
+      }
+
+      if (frame > to) {
+        if (hold_last_frame) {
+          frame = to;
+        } else {
+          frame = from;
+        }
+      }
+      break;
+
+    case AnimationDirection::ping_pong:
+      if (ping_backwards) {
+        --frame;
+      } else {
+        ++frame;
+      }
+
+      if (frame > to) {
+        frame = to - 1;
+        ping_backwards = true;
+      } else if (frame < from) {
+        frame = from + 1;
+        ping_backwards = false;
+      }
+      break;
+  }
+
+  return true;
+}
+
 std::shared_ptr<Sprite> Sprite::from_json(const std::string& path)
 {
   std::shared_ptr<Sprite> sprite(new Sprite);

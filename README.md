@@ -1,20 +1,28 @@
-# Raptr - A Dinosaur Platformer - 0.1 UNRELEASED
+# Raptr - A Dinosaur Platformer
 
-You're a dinosaur without feathers struggling to understand your place in the world. The humans see you as a threat and a form of entertainment. Maybe it's time you escape. Maybe it's time you find a way out of this all.
+You're a dinosaur without feathers struggling to understand your place in 
+the world. The humans see you as a threat and a form of entertainment. Maybe 
+it's time you escape. Maybe it's time you find a way out of this all.
 
 ![Our Dinosaur Warrior][raptr-idle]
 
 ## Development Updates
 
-This project is maintained at [GitHub](https://github.com/justinvh/raptr). Additional developer insight and blog can be found at [https://vh.io/](https://vh.io).
+This project is maintained at [GitHub](https://github.com/justinvh/raptr). 
+Additional developer insight and blog can be found at 
+[https://vh.io/](https://vh.io).
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+These instructions will get you a copy of the project up and running on your 
+local machine for development and testing purposes. See deployment for notes 
+on how to deploy the project on a live system.
 
 ### Prerequisites
 
-This project is currently being built in the Windows environment using `vcpkg` and `cmake`. A controller (such as an XInput device) must be plugged in to play
+This project is currently being built in the Windows environment using `vcpkg` 
+and `cmake`. A controller (such as an XInput device) must be plugged 
+in to play
 
 ```
 $ %USERPROFILE%\vcpkg\vcpkg.exe install sdl2:x64-windows sdl2_image:x64-windows picojson:x64-windows
@@ -29,7 +37,9 @@ You can now use Visual Studio 2017 to compile and build Raptr.
 
 ## Building documentation
 
-If you want to build the documentation, then you will need `doxygen` and `graphviz` projects installed. You can then use the `doxygen` target to build documentation.
+If you want to build the documentation, then you will need `doxygen` and 
+`graphviz` projects installed. You can then use the `doxygen` target to 
+build documentation.
 
 ## Running the tests
 

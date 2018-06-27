@@ -5,6 +5,16 @@
 
 namespace raptr {
 
+Renderer::~Renderer()
+{
+  if (sdl.renderer) {
+    SDL_DestroyRenderer(sdl.renderer);
+  }
+  if (sdl.window) {
+    SDL_DestroyWindow(sdl.window);
+  }
+}
+
 bool Renderer::init(std::shared_ptr<Config> config_)
 {
   config = config_;
@@ -42,7 +52,7 @@ bool Renderer::toggle_fullscreen()
   }
 }
 
-SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface> surface)
+SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface> surface) const
 {
   return SDL_CreateTextureFromSurface(sdl.renderer, surface.get());
 }

@@ -3,6 +3,8 @@
 #include <limits>
 #include <algorithm>
 
+
+
 #define _USE_MATH_DEFINES
 #include <cmath>
 
@@ -10,22 +12,22 @@
 
 namespace raptr {
 
-void Controller::on_button_down(const ButtonCallback& callback)
+void Controller::on_button_down(const ControllerCallback& callback)
 {
   button_down_callbacks.push_back(callback);
 }
 
-void Controller::on_button_up(const ButtonCallback& callback)
+void Controller::on_button_up(const ControllerCallback& callback)
 {
   button_up_callbacks.push_back(callback);
 }
 
-void Controller::on_left_joy(const JoyCallback& callback)
+void Controller::on_left_joy(const ControllerCallback& callback)
 {
   left_joy_callbacks.push_back(callback);
 }
 
-void Controller::on_right_joy(const JoyCallback& callback)
+void Controller::on_right_joy(const ControllerCallback& callback)
 {
   right_joy_callbacks.push_back(callback);
 }
@@ -115,6 +117,12 @@ std::shared_ptr<Controller> Controller::open(int controller_id)
   SDL_GameControllerEventState(SDL_ENABLE);
 
   return controller;
+}
+
+Controller::SDLInternal::~SDLInternal() {
+  if (controller) {
+    SDL_GameControllerClose(controller);
+  }
 }
 
 }

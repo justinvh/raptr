@@ -194,8 +194,6 @@ bool Game::init_renderer()
 
 bool Game::init_sound()
 {
-  sound.reset(new Sound());
-  sound->init(config);
   return true;
 }
 
