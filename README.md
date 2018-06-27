@@ -2,6 +2,8 @@
 
 You're a dinosaur without feathers struggling to understand your place in the world. The humans see you as a threat and a form of entertainment. Maybe it's time you escape. Maybe it's time you find a way out of this all.
 
+[Our Dinosaur Warrior](https://i.imgur.com/sqVdbnN.gifv)
+
 ## Development Updates
 
 This project is maintained at [GitHub](https://github.com/justinvh/raptr). Additional developer insight and blog can be found at [https://vh.io/](https://vh.io).
