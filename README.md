@@ -18,19 +18,34 @@ These instructions will get you a copy of the project up and running on your
 local machine for development and testing purposes. See deployment for notes 
 on how to deploy the project on a live system.
 
-### Prerequisites
+### Prerequisites - Windows 10
 
 This project is currently being built in the Windows environment using `vcpkg` 
 and `cmake`. A controller (such as an XInput device) must be plugged 
-in to play
+in to play.
+
+You will want to first install the dependencies:
 
 ```
-$ %USERPROFILE%\vcpkg\vcpkg.exe install sdl2:x64-windows sdl2_image:x64-windows picojson:x64-windows
-$ git clone https://github.com/justinvh/raptr.git
+$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2_image picojson
+```
+
+Now you can specify the toolchain file and continue on:
+
+```
+$ git clone https://github.com/justinvh/raptr.git raptr
+$ cd raptr/build
+$ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="%USERPROFILE%/vcpkg/scripts/buildsystems/vcpkg.cmake" -G "Visual Studio 15 2017 Win64" ..
+```
+
+Alternatively, if you don't want to use vcpkg and are running Windows 10 64-bit, then you can [download a 7zip export of the dependencies](https://drive.google.com/open?id=1XUcirZww859o7s_iTD9b9Xu2DlB8RYMK), extract into the checked out project, and:
+
+```
+$ git clone https://github.com/justinvh/raptr.git raptr
 $ cd raptr
-$ mkdir build
+$ 7z e vcpkg-export.7z
 $ cd build
-$ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="%USERPROFILE%\vcpkg\scripts\buildsystems\vcpkg.cmake" -G "Visual Studio 15 2017 Win64" ..
+$ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="../vcpkg/scripts/buildsystems/vcpkg.cmake" -G "Visual Studio 15 2017 Win64" ..
 ```
 
 You can now use Visual Studio 2017 to compile and build Raptr.
