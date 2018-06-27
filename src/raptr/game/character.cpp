@@ -1,9 +1,14 @@
 #include <functional>
 
+#include <raptr/game/game.hpp>
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/game/character.hpp>
-#include <raptr/game/game.hpp>
+#include <raptr/config.hpp>
+#include <raptr/renderer/renderer.hpp>
+#include <raptr/sound/sound.hpp>
 #include <raptr/input/controller.hpp>
+#include <raptr/common/rtree.hpp>
+#include <raptr/game/entity.hpp>
 
 namespace raptr {
 
