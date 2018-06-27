@@ -2,7 +2,7 @@
 
 You're a dinosaur without feathers struggling to understand your place in the world. The humans see you as a threat and a form of entertainment. Maybe it's time you escape. Maybe it's time you find a way out of this all.
 
-[Our Dinosaur Warrior](https://i.imgur.com/sqVdbnN.gifv)
+![Our Dinosaur Warrior][raptr-idle]
 
 ## Development Updates
 
@@ -35,6 +35,10 @@ If you want to build the documentation, then you will need `doxygen` and `graphv
 
 None available yet
 
+## Checklist
+
+To be added
+
 ## Built With
 
 * [SDL2](https://www.libsdl.org/index.php) - Simple DirectMedia Layer software development library
@@ -45,3 +49,4 @@ None available yet
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
 * [cmake](https://cmake.org/) - Cross-platform build system
 
+[raptr-idle]: https://i.imgur.com/sqVdbnN.gif
