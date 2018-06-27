@@ -17,14 +17,6 @@ void Character::crouch()
   sprite->set_animation("Crouch", true);
 }
 
-void Character::full_hop()
-{
-}
-
-void Character::short_hop()
-{
-}
-
 void Character::think(std::shared_ptr<Game> game)
 {
   uint32_t delta_ms = this->think_delta_ms();

@@ -8,8 +8,31 @@ project(raptr
 # Include additional custom cmake modules
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
+# Options for the project
+option(BUILD_DOCS "Build documentation" ON)
+option(BUILD_TESTS "Build tests" ON)
+
+# Check if doxygen is installed and available
+if (BUILD_DOCS)
+	find_package(Doxygen REQUIRED dot)
+	if (DOXYGEN_FOUND)
+		set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in)
+		set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+		configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+		add_custom_target(doxygen ALL
+			COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+			WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+			COMMENT "Generarting API documentation with Doxygen"
+			VERBATIM)
+	else(DOXYGEN_FOUND)
+		message("Doxygen is needed to generate doxygen documentation")
+	endif(DOXYGEN_FOUND)
+endif(BUILD_DOCS)
+
 # Targets that we develop under RAPTR
-enable_testing()
+if (BUILD_TESTS)
+	enable_testing()
+endif()
 
 set(RAPTR_CPP
     # Game sources
