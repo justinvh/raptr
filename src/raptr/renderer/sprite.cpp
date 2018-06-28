@@ -9,10 +9,11 @@
 
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/renderer/sprite.hpp>
+#include <raptr/common/logging.hpp>
 
 namespace raptr {
 
-std::map<std::string, std::shared_ptr<SDL_Surface>> SURFACE_CACHE;
+std::map<fs::path, std::shared_ptr<SDL_Surface>> SURFACE_CACHE;
 std::map<std::shared_ptr<SDL_Surface>, std::shared_ptr<SDL_Texture>> TEXTURE_CACHE;
 
 int32_t p_int(const picojson::value& v, const std::string& name)
@@ -85,13 +86,19 @@ bool Animation::next(uint32_t clock)
   return true;
 }
 
-std::shared_ptr<Sprite> Sprite::from_json(const std::string& path)
+std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
 {
+  logger->info("Loading Sprite from {}", path.file_relative);
+
   std::shared_ptr<Sprite> sprite(new Sprite);
-  std::ifstream input(path);
+  auto input = path.open();
+
+  if (!input) {
+    return nullptr;
+  }
 
   picojson::value doc;
-  input >> doc;
+  (*input) >> doc;
 
   auto frames = doc.get("frames").get<picojson::array>();
   auto meta = doc.get("meta");
@@ -101,13 +108,22 @@ std::shared_ptr<Sprite> Sprite::from_json(const std::string& path)
   sprite->width = p_int(size, "w");
   sprite->height = p_int(size, "h");
 
-  auto image_path = p_string(meta, "image");
+  fs::path relative_image_path(p_string(meta, "image"));
+  fs::path image_path = path.file_dir / relative_image_path;
+  std::string image_cpath(image_path.string());
+
+  logger->debug("Sprite texture is located at {}", relative_image_path);
 
   auto exists = SURFACE_CACHE.find(image_path);
   if (exists != SURFACE_CACHE.end()) {
     sprite->surface = exists->second;
   } else {
-    SURFACE_CACHE[image_path].reset(IMG_Load(image_path.c_str()), SDLDeleter());
+    SDL_Surface* surface = IMG_Load(image_cpath.c_str());
+    if (!surface) {
+      logger->error("Sprite texture failed to load from {}", image_path);
+      return nullptr;
+    }
+    SURFACE_CACHE[image_path].reset(surface, SDLDeleter());
     sprite->surface = SURFACE_CACHE[image_path];
   }
 
@@ -124,6 +140,8 @@ std::shared_ptr<Sprite> Sprite::from_json(const std::string& path)
     animation.to = to - from;
     animation.ping_backwards = false;
     animation.hold_last_frame = false;
+
+    logger->info("Adding animation {}", tag_name);
 
     if (direction == "forward") {
       animation.direction = AnimationDirection::forward;

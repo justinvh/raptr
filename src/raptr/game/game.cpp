@@ -13,12 +13,15 @@
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/input/controller.hpp>
 #include <raptr/renderer/static_mesh.hpp>
+#include <raptr/common/filesystem.hpp>
+#include <raptr/common/logging.hpp>
 
 namespace raptr {
 
-std::shared_ptr<Game> Game::create(const std::string& game_root)
+std::shared_ptr<Game> Game::create(const fs::path& game_root)
 {
-  return std::shared_ptr<Game>(new Game(game_root));
+  fs::path full_path = fs::absolute(game_root);
+  return std::shared_ptr<Game>(new Game(full_path));
 }
 
 Game::~Game()
@@ -36,47 +39,37 @@ bool Game::run()
   }
 
   {
-    std::shared_ptr<StaticMesh> mesh(new StaticMesh());
-    mesh->sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/fire.json");
-    mesh->sprite->set_animation("Idle");
+    auto mesh = StaticMesh::from_toml(filesystem->path("staticmeshes/fire.toml"));
+    if (!mesh) {
+      logger->error("Failed to load fire static mesh");
+      return false;
+    }
     mesh->sprite->x = 0;
     mesh->sprite->y = 250;
     mesh->_id = -40;
     Rect bbox = mesh->bbox();
-    double min_bounds[2] = {bbox.x, bbox.y};
-    double max_bounds[2] = {bbox.x + bbox.w, bbox.y + bbox.h};
+    Bounds bounds = mesh->bounds();
     last_known_entity_loc[mesh] = bbox;
-    rtree.Insert(min_bounds, max_bounds, mesh.get());
+    rtree.Insert(bounds.min, bounds.max, mesh.get());
     entities.push_back(mesh);
   }
 
-  std::vector<std::shared_ptr<Character>> characters;
   {
-    std::shared_ptr<Character> character(new Character());
-    character->sprite = Sprite::from_json("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/textures/raptor.json");
-    character->sprite->scale = 1.0;
-    character->sprite->set_animation("Idle");
-    character->walk_speed = 100;
-    character->run_speed = 300;
-    character->sprite->x = 0;
-    character->sprite->y = 0;
-    character->jump_vel = 300;
+    auto character_raptr = Character::from_toml(filesystem->path("characters/raptr.toml"));
+    if (!character_raptr) {
+      logger->error("Failed to load raptr character");
+      return false;
+    }
 
-    auto& acc = character->acceleration();
-    acc.y = 9.8;
+    entities.push_back(character_raptr);
+    character_raptr->attach_controller(controllers.begin()->second);
+    character_raptr->_id = -1;
 
-    character->attach_controller(controllers.begin()->second);
-    character->_id = -1;
+    Rect bbox = character_raptr->bbox();
+    Bounds bounds = character_raptr->bounds();
 
-    Rect bbox = character->bbox();
-    double min_bounds[2] = {bbox.x, bbox.y};
-    double max_bounds[2] = {bbox.x + bbox.w, bbox.y + bbox.h};
-
-    last_known_entity_loc[character] = bbox;
-    rtree.Insert(min_bounds, max_bounds, character.get());
-
-    characters.push_back(character);
-    entities.push_back(character);
+    last_known_entity_loc[character_raptr] = bbox;
+    rtree.Insert(bounds.min, bounds.max, character_raptr.get());
   }
 
   SDL_Event e;
@@ -159,21 +152,27 @@ bool Game::init()
 {
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
+  if (!this->init_filesystem()) {
+    logger->error("Failed to initialize filesystem. "
+                  "Are you sure {} is the game path?", game_root);
+    return false;
+  }
+
   config.reset(new Config());
   gravity = 9.8;
 
   if (!this->init_renderer()) {
-    std::cerr << "Failed to initialize renderer\n";
+    logger->error("Failed to initialize renderer");
     return false;
   }
 
   if (!this->init_sound()) {
-    std::cerr << "Failed to initialize sound\n";
+    logger->error("Failed to initialize sound");
     return false;
   }
 
   if (!this->init_controllers()) {
-    std::cerr << "Failed to initialize controllers\n";
+    logger->error("Failed to initialize controllers");
     return false;
   }
 
@@ -183,7 +182,7 @@ bool Game::init()
 bool Game::init_controllers()
 {
   if (SDL_NumJoysticks() < 1) {
-    std::cerr << "There are no controllers connected. What's the point of playing?\n";
+    logger->error("There are no controllers connected. What's the point of playing?");
     return false;
   }
 
@@ -208,6 +207,19 @@ bool Game::init_renderer()
 
 bool Game::init_sound()
 {
+  return true;
+}
+
+bool Game::init_filesystem()
+{
+  logger->info("Registering the game root as {}", game_root);
+
+  if (!fs::exists(game_root)) {
+    logger->error("{} does not exist!", game_root);
+    return false;
+  }
+
+  filesystem.reset(new Filesystem(game_root));
   return true;
 }
 

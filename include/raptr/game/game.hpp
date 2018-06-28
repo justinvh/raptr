@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 
+#include <raptr/common/filesystem.hpp>
 #include <raptr/common/rtree.hpp>
 #include <raptr/common/rect.hpp>
 
@@ -31,8 +32,8 @@ class Sound;
 class Game : public std::enable_shared_from_this<Game> {
  private:
   //! The class should be created using Game::create as it inherits from enable_shared_from_this
-  Game(const std::string& game_root_)
-    : game_root(game_root_) { }
+  Game(const fs::path& game_root_)
+    : is_init(false), game_root(game_root_) { }
 
  public:
   ~Game();
@@ -45,7 +46,7 @@ class Game : public std::enable_shared_from_this<Game> {
   /*!
     This should be used when creating a Game. 
   */
-  static std::shared_ptr<Game> create(const std::string& game_root);
+  static std::shared_ptr<Game> create(const fs::path& game_root);
 
  public:
   /*!
@@ -76,6 +77,13 @@ class Game : public std::enable_shared_from_this<Game> {
   bool init_controllers();
 
   /*!
+    Initialize the filesystem. This allows us to quickly access 
+    files relative to the game directory.
+    \return Whether the filesystem could be constructed
+  */
+  bool init_filesystem();
+
+  /*!
     Initialize the renderer and setup the screen for game-time
     \return Whether the renderer could be initialized
   */
@@ -97,6 +105,9 @@ class Game : public std::enable_shared_from_this<Game> {
   //! Instance of the sound engine being used
   std::shared_ptr<Sound> sound;
 
+  //! The filesystem object for accessing files to the game
+  std::shared_ptr<Filesystem> filesystem;
+
   //! A mapping of controller device ID to controller instances
   std::map<int32_t, std::shared_ptr<Controller>> controllers;
 
@@ -110,7 +121,7 @@ class Game : public std::enable_shared_from_this<Game> {
   RTree<Entity*, double, 2> rtree;
 
   //! The root of the game folders to extract
-  std::string game_root;
+  fs::path game_root;
 
   //! The gravity of the world
   double gravity;

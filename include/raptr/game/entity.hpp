@@ -26,6 +26,19 @@ class Entity {
   virtual Rect bbox() const = 0;
 
   /*!
+    Returns the bounds of the entity
+    */
+  virtual Bounds bounds() const
+  {
+    Rect bbox = this->bbox();
+    Bounds bounds = {
+      {bbox.x, bbox.y},
+      {bbox.x + bbox.w, bbox.y + bbox.h}
+    };
+    return bounds;
+  }
+
+  /*!
     Returns the unique id for this entity in the world
     \return a 32-bit signed integer representing a unique entity id
   */

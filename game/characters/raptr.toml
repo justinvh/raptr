@@ -1,0 +1,9 @@
+[character]
+name = "Raptr"
+walk_speed = 100
+run_speed = 300
+jump_vel = 300
+
+[sprite]
+path = "textures/raptor.json"
+scale = 1.0

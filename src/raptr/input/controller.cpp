@@ -7,6 +7,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+#include <raptr/common/logging.hpp>
 #include <raptr/input/controller.hpp>
 
 namespace raptr {
@@ -99,11 +100,10 @@ std::shared_ptr<Controller> Controller::open(int controller_id)
   char* mapping = SDL_GameControllerMapping(sdl_controller);
 
   if (!mapping) {
-    std::cerr << "There are no controller mappings available for " << SDL_GameControllerName(sdl_controller) << "\n";
+    logger->error("There are no controller mappings available for {}", SDL_GameControllerName(sdl_controller));
     SDL_GameControllerClose(sdl_controller);
     throw std::runtime_error("No available controller mappings");
   } else {
-    std::clog << "Registersted controller mapping is " << mapping << "\n";
     SDL_free(mapping);
   }
 
@@ -111,8 +111,9 @@ std::shared_ptr<Controller> Controller::open(int controller_id)
   controller->sdl.controller = sdl_controller;
   controller->sdl.joystick = SDL_GameControllerGetJoystick(sdl_controller);
   controller->sdl.controller_id = SDL_JoystickGetDeviceInstanceID(controller_id);
-  std::clog << "Registered " << SDL_GameControllerName(sdl_controller) << " as a controller with device id "
-            << controller->sdl.controller_id << ".\n";
+  logger->info("Registered {} as a controller with device id {}",
+    SDL_GameControllerName(sdl_controller),
+    controller->sdl.controller_id);
 
   SDL_GameControllerEventState(SDL_ENABLE);
 

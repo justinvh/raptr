@@ -37,6 +37,7 @@ endif()
 set(RAPTR_CPP
     # Common sources
     src/raptr/common/filesystem.cpp
+    src/raptr/common/logger.cpp
 
     # Game sources
     src/raptr/game/character.cpp
@@ -61,13 +62,12 @@ set(RAPTR_CPP
     src/raptr/config.cpp
 )
 
-set(HEADER_PREFIX)
-
 set(RAPTR_HPP
     # Common headers
     include/raptr/common/rect.hpp
     include/raptr/common/rtree.hpp
     include/raptr/common/filesystem.hpp
+    include/raptr/common/logging.hpp
 
     # Game headers
     include/raptr/game/character.hpp
@@ -100,11 +100,18 @@ set(RAPTR_CMAKE
     cmake/Modules/FindSDL2_Image.cmake
     cmake/Modules/FindPicojson.cmake
     cmake/Modules/Findcxxopts.cmake
+    cmake/Modules/Findtinytoml.cmake
 )
 
 set(RAPTR_GAME
     # Game modules
     game/controls/gamecontrollerdb.txt
+
+    # Characters
+    game/characters/raptr.toml
+
+    # Static meshes
+    game/staticmeshes/fire.toml
 
     # Sound
     game/sound/opening.mp3
@@ -130,7 +137,6 @@ foreach(source IN LISTS RAPTR_FILES)
     get_filename_component(source_path "${source}" PATH)
     string(REPLACE "/" "\\" source_path_msvc "${source_path}")
     source_group("${source_path_msvc}" FILES "${CMAKE_CURRENT_SOURCE_DIR}/${source}")
-    message(${CMAKE_CURRENT_SOURCE_DIR}/${source})
 endforeach()
 
 # Imported target: SDL2
@@ -138,7 +144,9 @@ find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image REQUIRED)
 find_package(Picojson REQUIRED)
 find_package(cxxopts REQUIRED)
-find_package(spdlog CONFIG REQUIRED)     
+find_package(spdlog REQUIRED)     
+find_package(fmt REQUIRED)     
+find_package(tinytoml REQUIRED)     
 
 add_library(sdl2 INTERFACE IMPORTED)
 set_property(TARGET sdl2 PROPERTY
@@ -151,18 +159,30 @@ target_include_directories(raptr
 	       "$<INSTALL_INTERFACE:include>"
 )
 
+target_include_directories(raptr SYSTEM
+	INTERFACE ${TINYTOML_INCLUDE_DIRS}
+)
+
 target_link_libraries(raptr PRIVATE
 	cxxopts::cxxopts 
 	SDL2::SDL2 
 	sdl2
 	Picojson::Picojson
 	spdlog::spdlog
+	fmt::fmt
+	tinytoml::tinytoml
 )
 
 # Add compiler requirements
 target_compile_features(raptr
-    PUBLIC cxx_auto_type
-    PRIVATE cxx_variadic_templates)
+    PUBLIC cxx_std_17
+    PRIVATE cxx_std_17
+)
+
+# Unfortunately, cmake doesn't support this yet
+if (MSVC) 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+endif(MSVC)
 
 # 'make install' to the correct locations
 install(TARGETS raptr EXPORT RaptrConfig

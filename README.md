@@ -24,10 +24,22 @@ This project is currently being built in the Windows environment using `vcpkg`
 and `cmake`. A controller (such as an XInput device) must be plugged 
 in to play.
 
+### Patch fmt package
+
+Unfortunately, the fmt package is backwards incompatible with spdlog at the moment, so you will have to checkout the port
+at a specific version:
+
+```
+$ cd %USERPROFILE%\vcpkg
+$ git checkout 178517052f42d428bb2f304946e635d3c1f318e9 -- ports/fmt
+```
+
+### Continue on!
+
 You will want to first install the dependencies:
 
 ```
-$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image picojson cxxopts spdlog
+$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image picojson cxxopts spdlog tinytoml
 ```
 
 Now you can specify the toolchain file and continue on:
@@ -74,6 +86,7 @@ To be added
 * [SDL2](https://www.libsdl.org/index.php) - Simple DirectMedia Layer software development library
 * [SDL2_image](https://www.libsdl.org/projects/SDL_image/) - Image file loading library extensions to SDL2
 * [spdlog](https://github.com/gabime/spdlog) - Fast C++ logging library
+* [tinytoml](https://github.com/mayah/tinytoml) - A header only C++11 library for parsing TOML
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
 
 [raptr-idle]: https://i.imgur.com/sqVdbnN.gif

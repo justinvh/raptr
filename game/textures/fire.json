@@ -21,7 +21,7 @@
  "meta": {
   "app": "http://www.aseprite.org/",
   "version": "1.2.8-x64",
-  "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\textures\\fire.png",
+  "image": "fire.png",
   "format": "RGBA8888",
   "size": { "w": 2050, "h": 18 },
   "scale": "1",

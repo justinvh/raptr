@@ -1,13 +1,38 @@
 #include <raptr/common/filesystem.hpp>
+#include <raptr/common/logging.hpp>
 
 namespace raptr {
-namespace fs {
 
-std::ifstream open(const Path& path)
+std::optional<std::ifstream> FileInfo::open(bool binary) const
 {
-  std::ifstream foo("");
-  return foo;
+  fs::path full_path = file_path;
+  logger->debug("Attempting to read {}", file_relative);
+
+  if (!fs::exists(full_path)) {
+    logger->error("{} does not exist", full_path);
+    return {};
+  }
+
+  std::ifstream istrm(full_path, binary ? std::ios::binary : std::ios::in);
+
+  if (istrm.is_open()) {
+    return istrm;
+  }
+
+  logger->error("{} could not be opened, though it exists.", full_path);
+  return {};
 }
 
-} // namespace fs
+FileInfo Filesystem::path(const fs::path& relative_path)
+{
+  fs::path full_path = root / relative_path;
+
+  return FileInfo {
+    relative_path,
+    root / relative_path,
+    root / (relative_path.parent_path()),
+    root
+  };
+}
+
 } // namespace raptr

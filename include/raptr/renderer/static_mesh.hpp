@@ -10,6 +10,7 @@
 #include <string>
 
 #include <raptr/game/entity.hpp>
+#include <raptr/common/filesystem.hpp>
 
 namespace raptr {
 
@@ -27,6 +28,13 @@ class StaticMesh : public Entity {
   \return An rectangle containing the static mesh
   */
   virtual Rect bbox() const;
+
+  /*!
+    Generates a StaticMesh object from a TOML configuration file
+    /param path - The path to the TOML file
+    /return An instance of the character if found
+  */
+  static std::shared_ptr<StaticMesh> from_toml(const FileInfo& path);
 
   /*!
   Returns the unique id for this static mesh in the world

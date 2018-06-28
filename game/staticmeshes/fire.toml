@@ -1,0 +1,6 @@
+[staticmesh]
+name = "Fire"
+
+[sprite]
+path = "textures/fire.json"
+scale = 1.0

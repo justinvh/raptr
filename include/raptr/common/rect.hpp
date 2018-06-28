@@ -17,6 +17,12 @@ struct Rect {
   double x, y, w, h;
 };
 
+//! A bounds object
+struct Bounds {
+  double min[2];
+  double max[2];
+};
+
 /*! If a Rect has no width or has no height, then it is considered empty
 
   \param r - The rectangle to check if empty

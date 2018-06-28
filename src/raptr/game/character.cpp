@@ -1,5 +1,10 @@
 #include <functional>
 #include <memory>
+#include <string>
+
+#pragma warning(disable : 4996)
+#include <toml/toml.h>
+#pragma warning(default : 4996)
 
 #include <raptr/game/game.hpp>
 #include <raptr/renderer/sprite.hpp>
@@ -9,9 +14,101 @@
 #include <raptr/sound/sound.hpp>
 #include <raptr/input/controller.hpp>
 #include <raptr/common/rtree.hpp>
+#include <raptr/common/logging.hpp>
 #include <raptr/game/entity.hpp>
 
 namespace raptr {
+
+std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
+{
+  auto toml_relative = toml_path.file_relative;
+  auto ifs = toml_path.open();
+  if (!ifs) {
+    return nullptr;
+  }
+
+  toml::ParseResult pr = toml::parse(*ifs);
+
+  if (!pr.valid()) {
+    logger->error("Failed to parse {} with reason {}", toml_relative, pr.errorReason);
+    return nullptr;
+  }
+
+  const toml::Value& v = pr.value;
+
+  const toml::Value* character_section = v.find("character");
+  if (!character_section) {
+    logger->error("{} is missing [character] section", toml_relative);
+    return nullptr;
+  }
+
+  const toml::Value* name_value = character_section->find("name");
+  if (!name_value) {
+    logger->error("{} is missing character.name", toml_relative);
+    return nullptr;
+  }
+
+  const toml::Value* walk_speed_value = character_section->find("walk_speed");
+  if (!walk_speed_value) {
+    logger->error("{} is missing character.walk_speed", toml_relative);
+    return nullptr;
+  }
+
+  const toml::Value* run_speed_value = character_section->find("run_speed");
+  if (!run_speed_value) {
+    logger->error("{} is missing character.run_speed", toml_relative);
+    return nullptr;
+  }
+
+  const toml::Value* jump_vel_value = character_section->find("jump_vel");
+  if (!jump_vel_value) {
+    logger->error("{} is missing character.jump_vel", toml_relative);
+    return nullptr;
+  }
+
+  const toml::Value* sprite_section = v.find("sprite");
+  if (!sprite_section) {
+    logger->error("{} is missing [sprite] section", toml_relative);
+    return nullptr;
+  }
+
+  const toml::Value* path_value = sprite_section->find("path");
+  if (!path_value) {
+    logger->error("{} is missing sprite.path", toml_relative);
+    return nullptr;
+  }
+
+  std::string sprite_path = path_value->as<std::string>();
+  if (!fs::exists(toml_path.game_root / sprite_path)) {
+    logger->error("{} is not a valid sprite path in {}", sprite_path, toml_relative);
+  }
+
+  const toml::Value* scale_value = sprite_section->find("scale");
+  if (!scale_value) {
+    logger->error("{} is missing sprite.scale", toml_relative);
+    return nullptr;
+  }
+
+  std::shared_ptr<Character> character(new Character());
+  FileInfo sprite_file;
+  sprite_file.game_root = toml_path.game_root;
+  sprite_file.file_path = toml_path.game_root / sprite_path;
+  sprite_file.file_relative = sprite_path;
+  sprite_file.file_dir = sprite_file.file_path.parent_path();
+
+  character->sprite = Sprite::from_json(sprite_file);
+  character->sprite->scale = scale_value->as<double>();
+  character->sprite->set_animation("Idle");
+  character->walk_speed = walk_speed_value->as<int32_t>();
+  character->run_speed = run_speed_value->as<int32_t>();
+  character->sprite->x = 0;
+  character->sprite->y = 0;
+  character->position().x = 0;
+  character->position().y = 0;
+  character->jump_vel = jump_vel_value->as<int32_t>();
+
+  return character;
+}
 
 int32_t Character::id() const
 {

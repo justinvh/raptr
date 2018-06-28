@@ -7,12 +7,14 @@
 #include <memory>
 #include <cstdint>
 #include <raptr/game/entity.hpp>
+#include <raptr/common/filesystem.hpp>
 
 namespace raptr {
 
 class Game;
 class Sprite;
 class Controller;
+class Filesystem;
 struct ControllerState;
 
 /*! 
@@ -42,6 +44,13 @@ class Character : public Entity {
     or run speed when this is called.
   */
   virtual void crouch();
+
+  /*!
+    Generates a Character object from a TOML configuration file
+    /param path - The path to the TOML file
+    /return An instance of the character if found
+  */
+  static std::shared_ptr<Character> from_toml(const FileInfo& path);
 
   /*!
     Returns the unique id for this character in the world

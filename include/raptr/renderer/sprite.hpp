@@ -16,6 +16,8 @@
 #include <SDL.h>
 #include <SDL_surface.h>
 
+#include <raptr/common/filesystem.hpp>
+
 namespace raptr {
 
 class Renderer;
@@ -112,7 +114,7 @@ class Sprite {
     /param path - An absolute path to a Aseprite JSON file
     /return An instance of the Sprite if it can be constructed
   */
-  static std::shared_ptr<Sprite> from_json(const std::string& path);
+  static std::shared_ptr<Sprite> from_json(const FileInfo& path);
 
   /*!
     Render this sprite to a provided renderer
