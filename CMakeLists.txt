@@ -112,6 +112,7 @@ set(RAPTR_GAME
 
     # Static meshes
     game/staticmeshes/fire.toml
+    game/staticmeshes/platform.toml
 
     # Sound
     game/sound/opening.mp3
@@ -121,7 +122,7 @@ set(RAPTR_GAME
     game/textures/fire.json
     game/textures/fire.png
     game/textures/platform.png
-    game/textures/platform.png
+    game/textures/platform.json
     game/textures/raptor-spritesheet.png
     game/textures/raptor.json
 )

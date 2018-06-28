@@ -41,6 +41,42 @@ bool Game::run()
   }
 
   {
+    auto mesh = StaticMesh::from_toml(filesystem->path("staticmeshes/platform.toml"));
+    if (!mesh) {
+      logger->error("Failed to load platform static mesh");
+      return false;
+    }
+    auto& pos = mesh->position();
+    pos.x = 100;
+    pos.y = 200;
+
+    Rect bbox = mesh->bbox();
+    Bounds bounds = mesh->bounds();
+    last_known_entity_loc[mesh] = bbox;
+    rtree.Insert(bounds.min, bounds.max, mesh.get());
+    entities.push_back(mesh);
+    entity_lut[mesh->id()] = mesh;
+  }
+
+  {
+    auto mesh = StaticMesh::from_toml(filesystem->path("staticmeshes/platform.toml"));
+    if (!mesh) {
+      logger->error("Failed to load platform static mesh");
+      return false;
+    }
+    auto& pos = mesh->position();
+    pos.x = 300;
+    pos.y = 100;
+
+    Rect bbox = mesh->bbox();
+    Bounds bounds = mesh->bounds();
+    last_known_entity_loc[mesh] = bbox;
+    rtree.Insert(bounds.min, bounds.max, mesh.get());
+    entities.push_back(mesh);
+    entity_lut[mesh->id()] = mesh;
+  }
+
+  {
     auto mesh = StaticMesh::from_toml(filesystem->path("staticmeshes/fire.toml"));
     if (!mesh) {
       logger->error("Failed to load fire static mesh");

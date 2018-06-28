@@ -1,0 +1,6 @@
+[staticmesh]
+name = "Platform"
+
+[sprite]
+path = "textures/platform.json"
+scale = 1.0
