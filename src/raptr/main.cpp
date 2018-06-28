@@ -4,10 +4,13 @@
 #include <raptr/game/game.hpp>
 #include <raptr/common/logging.hpp>
 
+macro_enable_logger();
+
 int main(int argc, char** argv)
 {
   spdlog::set_level(spdlog::level::debug);
-  raptr::logger->info("Hello from raptr!");
+
+  logger->info("Hello from raptr!");
 
   cxxopts::Options options("raptr",
     "You're a dinosaur without feathers struggling to understand your place in the world.");

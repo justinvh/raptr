@@ -10,7 +10,10 @@
 #include <raptr/common/logging.hpp>
 #include <raptr/input/controller.hpp>
 
+macro_enable_logger();
+
 namespace raptr {
+
 
 void Controller::on_button_down(const ControllerCallback& callback)
 {

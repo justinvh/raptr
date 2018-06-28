@@ -1,6 +1,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <map>
 
 #pragma warning(disable : 4996)
 #include <toml/toml.h>
@@ -16,6 +17,8 @@
 #include <raptr/common/rtree.hpp>
 #include <raptr/common/logging.hpp>
 #include <raptr/game/entity.hpp>
+
+macro_enable_logger();
 
 namespace raptr {
 
@@ -36,57 +39,29 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
 
   const toml::Value& v = pr.value;
 
-  const toml::Value* character_section = v.find("character");
-  if (!character_section) {
-    logger->error("{} is missing [character] section", toml_relative);
-    return nullptr;
+  std::string toml_keys[] = {
+    "character.name",
+    "character.walk_speed",
+    "character.run_speed",
+    "character.jump_vel",
+    "sprite.path",
+    "sprite.scale"
+  };
+
+  std::map<std::string, const toml::Value*> dict;
+
+  for (const auto& key : toml_keys) {
+    const toml::Value* value = v.find(key);
+    if (!value) {
+      logger->error("{} is missing {}", toml_relative, key);
+      return nullptr;
+    }
+    dict[key] = value;
   }
 
-  const toml::Value* name_value = character_section->find("name");
-  if (!name_value) {
-    logger->error("{} is missing character.name", toml_relative);
-    return nullptr;
-  }
-
-  const toml::Value* walk_speed_value = character_section->find("walk_speed");
-  if (!walk_speed_value) {
-    logger->error("{} is missing character.walk_speed", toml_relative);
-    return nullptr;
-  }
-
-  const toml::Value* run_speed_value = character_section->find("run_speed");
-  if (!run_speed_value) {
-    logger->error("{} is missing character.run_speed", toml_relative);
-    return nullptr;
-  }
-
-  const toml::Value* jump_vel_value = character_section->find("jump_vel");
-  if (!jump_vel_value) {
-    logger->error("{} is missing character.jump_vel", toml_relative);
-    return nullptr;
-  }
-
-  const toml::Value* sprite_section = v.find("sprite");
-  if (!sprite_section) {
-    logger->error("{} is missing [sprite] section", toml_relative);
-    return nullptr;
-  }
-
-  const toml::Value* path_value = sprite_section->find("path");
-  if (!path_value) {
-    logger->error("{} is missing sprite.path", toml_relative);
-    return nullptr;
-  }
-
-  std::string sprite_path = path_value->as<std::string>();
+  std::string sprite_path = dict["sprite.path"]->as<std::string>();
   if (!fs::exists(toml_path.game_root / sprite_path)) {
     logger->error("{} is not a valid sprite path in {}", sprite_path, toml_relative);
-  }
-
-  const toml::Value* scale_value = sprite_section->find("scale");
-  if (!scale_value) {
-    logger->error("{} is missing sprite.scale", toml_relative);
-    return nullptr;
   }
 
   std::shared_ptr<Character> character(new Character());
@@ -97,15 +72,15 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   sprite_file.file_dir = sprite_file.file_path.parent_path();
 
   character->sprite = Sprite::from_json(sprite_file);
-  character->sprite->scale = scale_value->as<double>();
+  character->sprite->scale = dict["sprite.scale"]->as<double>();
   character->sprite->set_animation("Idle");
-  character->walk_speed = walk_speed_value->as<int32_t>();
-  character->run_speed = run_speed_value->as<int32_t>();
+  character->walk_speed = dict["character.walk_speed"]->as<int32_t>();
+  character->run_speed = dict["character.run_speed"]->as<int32_t>();
   character->sprite->x = 0;
   character->sprite->y = 0;
   character->position().x = 0;
   character->position().y = 0;
-  character->jump_vel = jump_vel_value->as<int32_t>();
+  character->jump_vel = dict["character.jump_vel"]->as<int32_t>();
 
   return character;
 }

@@ -16,6 +16,8 @@
 #include <raptr/common/filesystem.hpp>
 #include <raptr/common/logging.hpp>
 
+macro_enable_logger();
+
 namespace raptr {
 
 std::shared_ptr<Game> Game::create(const fs::path& game_root)

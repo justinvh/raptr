@@ -6,6 +6,8 @@
 
 namespace raptr {
 
-extern std::shared_ptr<spdlog::logger> logger;
+std::shared_ptr<spdlog::logger> _get_logger(const std::string& name);
 
 }
+
+#define macro_enable_logger() namespace { auto logger = raptr::_get_logger(__FILE__); }

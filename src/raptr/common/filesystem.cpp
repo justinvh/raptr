@@ -1,6 +1,8 @@
 #include <raptr/common/filesystem.hpp>
 #include <raptr/common/logging.hpp>
 
+macro_enable_logger();
+
 namespace raptr {
 
 std::optional<std::ifstream> FileInfo::open(bool binary) const

@@ -11,6 +11,8 @@
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/common/logging.hpp>
 
+macro_enable_logger();
+
 namespace raptr {
 
 std::map<fs::path, std::shared_ptr<SDL_Surface>> SURFACE_CACHE;

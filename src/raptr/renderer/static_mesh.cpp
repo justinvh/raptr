@@ -1,7 +1,7 @@
-#pragma
 #include <iostream>
 #include <memory>
 #include <string>
+#include <map>
 
 #pragma warning(disable : 4996)
 #include <toml/toml.h>
@@ -11,6 +11,8 @@
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/renderer/static_mesh.hpp>
 #include <raptr/common/logging.hpp>
+
+macro_enable_logger();
 
 namespace raptr {
 
@@ -31,39 +33,26 @@ std::shared_ptr<StaticMesh> StaticMesh::from_toml(const FileInfo& toml_path)
 
   const toml::Value& v = pr.value;
 
-  const toml::Value* staticmesh_section = v.find("staticmesh");
-  if (!staticmesh_section) {
-    logger->error("{} is missing [staticmesh] section", toml_relative);
-    return nullptr;
+  std::string toml_keys[] = {
+    "staticmesh.name",
+    "sprite.path",
+    "sprite.scale"
+  };
+
+  std::map<std::string, const toml::Value*> dict;
+
+  for (const auto& key : toml_keys) {
+    const toml::Value* value = v.find(key);
+    if (!value) {
+      logger->error("{} is missing {}", toml_relative, key);
+      return nullptr;
+    }
+    dict[key] = value;
   }
 
-  const toml::Value* name_value = staticmesh_section->find("name");
-  if (!name_value) {
-    logger->error("{} is missing staticmesh.name", toml_relative);
-    return nullptr;
-  }
-
-  const toml::Value* sprite_section = v.find("sprite");
-  if (!sprite_section) {
-    logger->error("{} is missing [sprite] section", toml_relative);
-    return nullptr;
-  }
-
-  const toml::Value* path_value = sprite_section->find("path");
-  if (!path_value) {
-    logger->error("{} is missing sprite.path", toml_relative);
-    return nullptr;
-  }
-
-  std::string sprite_path = path_value->as<std::string>();
+  std::string sprite_path = dict["sprite.path"]->as<std::string>();
   if (!fs::exists(toml_path.game_root / sprite_path)) {
     logger->error("{} is not a valid sprite path in {}", sprite_path, toml_relative);
-  }
-
-  const toml::Value* scale_value = sprite_section->find("scale");
-  if (!scale_value) {
-    logger->error("{} is missing sprite.scale", toml_relative);
-    return nullptr;
   }
 
   FileInfo sprite_file;
@@ -74,7 +63,7 @@ std::shared_ptr<StaticMesh> StaticMesh::from_toml(const FileInfo& toml_path)
 
   std::shared_ptr<StaticMesh> staticmesh(new StaticMesh());
   staticmesh->sprite = Sprite::from_json(sprite_file);
-  staticmesh->sprite->scale = scale_value->as<double>();
+  staticmesh->sprite->scale = dict["sprite.scale"]->as<double>();
   staticmesh->sprite->set_animation("Idle");
   staticmesh->sprite->x = 0;
   staticmesh->sprite->y = 0;
