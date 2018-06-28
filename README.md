@@ -27,7 +27,7 @@ in to play.
 You will want to first install the dependencies:
 
 ```
-$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2_image picojson
+$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image picojson
 ```
 
 Now you can specify the toolchain file and continue on:
