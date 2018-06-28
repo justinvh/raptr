@@ -1,18 +1,23 @@
-#pragma warning(disable:4838)
-#pragma warning(disable:4244)
-
-#define SDL_MAIN_HANDLED
-#include <SDL.h>
+#include <string>
+#include <cxxopts.hpp>
 #include <raptr/game/game.hpp>
 
 int main(int argc, char** argv)
 {
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
+  cxxopts::Options options("raptr",
+    "You're a dinosaur without feathers struggling to understand your place in the world.");
 
-  auto game = raptr::Game::create();
+  options.add_options()
+    ("d,debug", "Enable debugging")
+    ("g,game", "Game root path", cxxopts::value<std::string>()->default_value("../../../game"))
+    ;
+
+  options.parse(argc, argv);
+
+  std::string game_root = options["game"].as<std::string>();
+
+  auto game = raptr::Game::create(game_root);
   game->run();
-
-  SDL_Quit();
 
   return 0;
 }

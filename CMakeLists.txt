@@ -9,7 +9,7 @@ project(raptr
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
 # Options for the project
-option(BUILD_DOCS "Build documentation" ON)
+option(BUILD_DOCS "Build documentation" OFF)
 option(BUILD_TESTS "Build tests" ON)
 
 # Check if doxygen is installed and available
@@ -99,6 +99,7 @@ set(RAPTR_CMAKE
     # Modules
     cmake/Modules/FindSDL2_Image.cmake
     cmake/Modules/FindPicojson.cmake
+    cmake/Modules/Findcxxopts.cmake
 )
 
 set(RAPTR_GAME
@@ -115,26 +116,29 @@ set(RAPTR_GAME
     game/textures/platform.png
     game/textures/platform.png
     game/textures/raptor-spritesheet.png
-    game/textures/raptr.json
+    game/textures/raptor.json
 )
 
 set(RAPTR_SOURCES ${RAPTR_HPP} ${RAPTR_CPP})
-set(RAPTR_FILES ${RAPTR_SOURCES} ${RAPTR_CMAKE} ${RAPTR_GAME})
+set(RAPTR_FILES ${RAPTR_HPP} ${RAPTR_CPP} ${RAPTR_CMAKE} ${RAPTR_GAME})
 
 # Create our Raptr target executable
-add_executable(raptr ${RAPTR_SOURCES})
+add_executable(raptr ${RAPTR_FILES})
 
 # Make the filters available if using VS
 foreach(source IN LISTS RAPTR_FILES)
     get_filename_component(source_path "${source}" PATH)
     string(REPLACE "/" "\\" source_path_msvc "${source_path}")
-    source_group("${source_path_msvc}" FILES "${source}")
+    source_group("${source_path_msvc}" FILES "${CMAKE_CURRENT_SOURCE_DIR}/${source}")
+    message(${CMAKE_CURRENT_SOURCE_DIR}/${source})
 endforeach()
 
 # Imported target: SDL2
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image REQUIRED)
 find_package(Picojson REQUIRED)
+find_package(cxxopts REQUIRED)
+find_package(spdlog CONFIG REQUIRED)     
 
 add_library(sdl2 INTERFACE IMPORTED)
 set_property(TARGET sdl2 PROPERTY
@@ -147,7 +151,13 @@ target_include_directories(raptr
 	       "$<INSTALL_INTERFACE:include>"
 )
 
-target_link_libraries(raptr SDL2::SDL2 sdl2 Picojson::Picojson)
+target_link_libraries(raptr PRIVATE
+	cxxopts::cxxopts 
+	SDL2::SDL2 
+	sdl2
+	Picojson::Picojson
+	spdlog::spdlog
+)
 
 # Add compiler requirements
 target_compile_features(raptr

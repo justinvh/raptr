@@ -27,7 +27,7 @@ in to play.
 You will want to first install the dependencies:
 
 ```
-$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image picojson
+$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image picojson cxxopts spdlog
 ```
 
 Now you can specify the toolchain file and continue on:
@@ -66,12 +66,14 @@ To be added
 
 ## Built With
 
+* [aseprite](https://www.aseprite.org/) - Animated sprite editor and pixel art tool
+* [cmake](https://cmake.org/) - Cross-platform build system
+* [cxxopts](https://github.com/jarro2783/cxxopts) - Lightweight C++ command line option parser
+* [musescore](https://musescore.com/) - Create, play, and print beautiful sheet music
+* [picojson](https://github.com/kazuho/picojson) - A header-file-only, JSON parser serializer in C++
 * [SDL2](https://www.libsdl.org/index.php) - Simple DirectMedia Layer software development library
 * [SDL2_image](https://www.libsdl.org/projects/SDL_image/) - Image file loading library extensions to SDL2
-* [picojson](https://github.com/kazuho/picojson) - A header-file-only, JSON parser serializer in C++
-* [aseprite](https://www.aseprite.org/) - Animated sprite editor and pixel art tool
-* [musescore](https://musescore.com/) - Create, play, and print beautiful sheet music
+* [spdlog](https://github.com/gabime/spdlog) - Fast C++ logging library
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
-* [cmake](https://cmake.org/) - Cross-platform build system
 
 [raptr-idle]: https://i.imgur.com/sqVdbnN.gif

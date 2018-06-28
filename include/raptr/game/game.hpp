@@ -5,6 +5,9 @@
 */
 #pragma once
 
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
+
 #include <map>
 #include <memory>
 #include <vector>
@@ -28,10 +31,11 @@ class Sound;
 class Game : public std::enable_shared_from_this<Game> {
  private:
   //! The class should be created using Game::create as it inherits from enable_shared_from_this
-  Game() = default;
+  Game(const std::string& game_root_)
+    : game_root(game_root_) { }
 
  public:
-  ~Game() = default;
+  ~Game();
   Game(const Game&) = delete;
   Game(Game&&) = default;
   Game& operator=(const Game&) = delete;
@@ -41,7 +45,7 @@ class Game : public std::enable_shared_from_this<Game> {
   /*!
     This should be used when creating a Game. 
   */
-  static std::shared_ptr<Game> create() { return std::shared_ptr<Game>(new Game()); }
+  static std::shared_ptr<Game> create(const std::string& game_root);
 
  public:
   /*!
@@ -104,6 +108,9 @@ class Game : public std::enable_shared_from_this<Game> {
 
   //! The r-tree is used as a secondary test for bounding box interactions
   RTree<Entity*, double, 2> rtree;
+
+  //! The root of the game folders to extract
+  std::string game_root;
 
   //! The gravity of the world
   double gravity;

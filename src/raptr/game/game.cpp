@@ -16,6 +16,16 @@
 
 namespace raptr {
 
+std::shared_ptr<Game> Game::create(const std::string& game_root)
+{
+  return std::shared_ptr<Game>(new Game(game_root));
+}
+
+Game::~Game()
+{
+  SDL_Quit();
+}
+
 bool Game::run()
 {
   if (!is_init) {
@@ -147,6 +157,8 @@ bool Game::entity_can_move_to(Entity* entity, const Rect& bbox)
 
 bool Game::init()
 {
+  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
+
   config.reset(new Config());
   gravity = 9.8;
 
