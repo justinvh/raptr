@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <raptr/common/rect.hpp>
 
 namespace raptr {
@@ -18,6 +19,14 @@ class Game;
   an Entity is something you should care about as a player.
 */
 class Entity {
+ public:
+  Entity();
+  Entity(const Entity&) = default;
+  Entity(Entity&&) = default;
+  Entity& operator=(const Entity&) = default;
+  Entity& operator=(Entity&&) = default;
+  virtual ~Entity() = default;
+
  public:
   /*!
     Returns the bounding box for this entity
@@ -42,7 +51,7 @@ class Entity {
     Returns the unique id for this entity in the world
     \return a 32-bit signed integer representing a unique entity id
   */
-  virtual int32_t id() const = 0;
+  virtual int32_t id() const;
 
   /*!
     Returns true if this entity intersects with another entity
@@ -50,11 +59,6 @@ class Entity {
     \return Whether an intersection occured
   */
   virtual bool intersects(const Entity* other) const = 0;
-
-  /*!
-    Convenience method to reset the last time think() was called
-  */
-  virtual void reset_think_delta();
 
   /*!
     This method will determine how the entity interacts with the game.
@@ -65,48 +69,45 @@ class Entity {
   virtual void think(std::shared_ptr<Game> game) = 0;
 
   /*!
-    How many seconds have happened since the last time think_delta was reset.
-    \return A precise second value as a double
-  */
-  virtual double think_delta_s();
-
-  /*!
-    How many milliseconds have happened since the last time think_delta was reset
-    \return A precise number of milliseconds as a uint32_t
-  */
-  virtual uint32_t think_delta_ms();
-
-  /*!
     Given the current position, velocity, and acceleration, where does this entity *want* to go in X
     \return The rectangle this entity *wants* to occupy in the X direction
   */
-  virtual Rect want_position_x();
+  virtual Rect want_position_x(int64_t delta_ms);
 
   /*!
     Given the current position, velocity, and acceleration, where does this entity *want* to go in Y
     \return The rectangle this entity *wants* to occupy in the Y direction
   */
-  virtual Rect want_position_y();
+  virtual Rect want_position_y(int64_t delta_ms);
 
   /*!
     Return the current position of the entity
     \return A double-precision point of the Entity position
   */
   virtual Point& position() { return pos_; }
+  virtual const Point& position() const { return pos_; }
 
   /*!
     Return the current velocity of the entity
     \return A double-precision point of the Entity velocity
   */
   virtual Point& velocity() { return vel_; }
+  virtual const Point& velocity() const { return vel_; }
 
   /*!
     Return the current acceleration of the entity
     \return A double-precision point of the Entity acceleration
   */
   virtual Point& acceleration() { return acc_; }
+  virtual const Point& acceleration() const { return acc_; }
 
  public:
+  //! The name of the entity
+   std::string name;
+
+  //! The unique ID of the entity
+  int32_t id_;
+
   //! The current position
   Point pos_;
 
@@ -119,8 +120,9 @@ class Entity {
   //! How long the entity has been falling in milliseconds, if any
   uint32_t fall_time_ms;
 
-  //! How long it has been since think() was called in milliseconds
-  uint32_t last_think_time_ms;
+ private:
+  //! A simple ID counter
+  static int32_t global_id;
 };
 
 } // namespace raptr

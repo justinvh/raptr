@@ -23,6 +23,14 @@ class Game;
 */
 class StaticMesh : public Entity {
  public:
+   StaticMesh();
+   ~StaticMesh() = default;
+   StaticMesh(const StaticMesh&) = default;
+   StaticMesh(StaticMesh&&) = default;
+   StaticMesh& operator=(const StaticMesh&) = default;
+   StaticMesh& operator=(StaticMesh&&) = default;
+
+ public:
   /*!
   Returns the bounding box for this static mesh based on its sprite
   \return An rectangle containing the static mesh
@@ -35,12 +43,6 @@ class StaticMesh : public Entity {
     /return An instance of the character if found
   */
   static std::shared_ptr<StaticMesh> from_toml(const FileInfo& path);
-
-  /*!
-  Returns the unique id for this static mesh in the world
-  \return a 32-bit signed integer representing a unique static mesh id
-  */
-  virtual int32_t id() const;
 
   /*!
   Returns true if this static mesh intersects with another entity

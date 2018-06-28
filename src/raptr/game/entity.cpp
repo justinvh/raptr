@@ -1,27 +1,28 @@
 #include <SDL.h>
 #include <raptr/game/entity.hpp>
+#include <raptr/common/logging.hpp>
+
+macro_enable_logger();
 
 namespace raptr {
 
+int32_t Entity::global_id = 0;
 
-void Entity::reset_think_delta()
+Entity::Entity()
 {
-  last_think_time_ms = SDL_GetTicks();
+  id_ = ++global_id;
+  fall_time_ms = 0;
+  logger->info("Registering entity with id {}", id_);
 }
 
-double Entity::think_delta_s()
+int32_t Entity::id() const
 {
-  return (SDL_GetTicks() - last_think_time_ms) / 1000.0;
+  return id_;
 }
 
-uint32_t Entity::think_delta_ms()
+Rect Entity::want_position_x(int64_t delta_ms)
 {
-  return (SDL_GetTicks() - last_think_time_ms);
-}
-
-Rect Entity::want_position_x()
-{
-  double dt = this->think_delta_s();
+  double dt = delta_ms / 1000.0;
   Point pos = this->position();
   const Point& vel = this->velocity();
   const Point& acc = this->acceleration();
@@ -32,13 +33,13 @@ Rect Entity::want_position_x()
   return rect;
 }
 
-Rect Entity::want_position_y()
+Rect Entity::want_position_y(int64_t delta_ms)
 {
-  double dt = this->think_delta_s();
+  double dt = delta_ms / 1000.0;
   Point pos = this->position();
   const Point& vel = this->velocity();
   const Point& acc = this->acceleration();
-  pos.y += vel.y * dt + 0.5 * acc.y * dt * dt;
+  pos.y += -vel.y * dt + -0.5 * acc.y * dt * dt;
   Rect rect = this->bbox();
   rect.x = pos.x;
   rect.y = pos.y;

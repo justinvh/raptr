@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <chrono>
 
 #include <raptr/common/filesystem.hpp>
 #include <raptr/common/rtree.hpp>
@@ -23,6 +24,9 @@ class Controller;
 class Entity;
 class Renderer;
 class Sound;
+
+typedef std::chrono::high_resolution_clock Time;
+typedef decltype(Time::now) TimePoint;
 
 /*!
   The Game is a class that ties together the Renderer, Sound, Input, and Entities
@@ -53,9 +57,9 @@ class Game : public std::enable_shared_from_this<Game> {
     Returns true if a given entity can teleport to a region defined by a bounding box
     \param entity - The entity that is trying to teleport
     \param bbox - The bounding box that the entity wants to teleport to
-    \return Whether or not the entity can teleport
+    \return The first entity that the object intersected or null if nothing
   */
-  bool entity_can_move_to(Entity* entity, const Rect& bbox);
+  std::shared_ptr<Entity> intersect_world(Entity* entity, const Rect& bbox);
 
   /*!
     Run the game and manage maintaining a healthy FPS
@@ -114,6 +118,9 @@ class Game : public std::enable_shared_from_this<Game> {
   //! A list of all loaded entities in the game
   std::vector<std::shared_ptr<Entity>> entities;
 
+  //! A mapping of entity IDs to entities
+  std::map<int32_t, std::shared_ptr<Entity>> entity_lut;
+
   //! A map to find what the last known location of an entity was
   std::map<std::shared_ptr<Entity>, Rect> last_known_entity_loc;
 
@@ -125,6 +132,9 @@ class Game : public std::enable_shared_from_this<Game> {
 
   //! The gravity of the world
   double gravity;
+
+  //! The number of ms since the last frame
+  int64_t frame_delta_ms;
 
  public:
   //! If set, then all initialization has happened successfully

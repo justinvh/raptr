@@ -46,14 +46,16 @@ bool Game::run()
       logger->error("Failed to load fire static mesh");
       return false;
     }
-    mesh->sprite->x = 0;
-    mesh->sprite->y = 250;
-    mesh->_id = -40;
+    auto& pos = mesh->position();
+    pos.x = 0;
+    pos.y = 240;
+
     Rect bbox = mesh->bbox();
     Bounds bounds = mesh->bounds();
     last_known_entity_loc[mesh] = bbox;
     rtree.Insert(bounds.min, bounds.max, mesh.get());
     entities.push_back(mesh);
+    entity_lut[mesh->id()] = mesh;
   }
 
   {
@@ -65,19 +67,25 @@ bool Game::run()
 
     entities.push_back(character_raptr);
     character_raptr->attach_controller(controllers.begin()->second);
-    character_raptr->_id = -1;
 
     Rect bbox = character_raptr->bbox();
     Bounds bounds = character_raptr->bounds();
 
     last_known_entity_loc[character_raptr] = bbox;
     rtree.Insert(bounds.min, bounds.max, character_raptr.get());
+    entity_lut[character_raptr->id()] = character_raptr;
   }
 
   SDL_Event e;
-  uint32_t last_game_tick = SDL_GetTicks();
+  auto frame_last_time = Time::now();
+  using ms = std::chrono::milliseconds;
+
   while (true) {
-    if ((SDL_GetTicks() - last_game_tick) < 1) {
+    auto frame_curr_time = Time::now();
+    auto frame_delta = std::chrono::duration_cast<ms>(frame_curr_time - frame_last_time);
+    frame_delta_ms = frame_delta.count();
+
+    if (frame_delta_ms == 0) {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
       continue;
     }
@@ -111,13 +119,13 @@ bool Game::run()
     }
 
     renderer->run_frame();
-    last_game_tick = SDL_GetTicks();
+    frame_last_time = Time::now();
   }
 
   return true;
 }
 
-bool Game::entity_can_move_to(Entity* entity, const Rect& bbox)
+std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
 {
   double min_bounds[2] = {bbox.x, bbox.y};
   double max_bounds[2] = {bbox.x + bbox.w, bbox.y + bbox.h};
@@ -125,12 +133,14 @@ bool Game::entity_can_move_to(Entity* entity, const Rect& bbox)
   struct ConditionMet {
     Entity* check;
     Rect bbox;
+    Entity* found;
     bool intersected;
   } condition_met;
 
   condition_met.check = entity;
   condition_met.intersected = false;
   condition_met.bbox = bbox;
+  condition_met.found = nullptr;
 
   rtree.Search(min_bounds, max_bounds, [](Entity* found, void* context) -> bool {
     ConditionMet* condition = reinterpret_cast<ConditionMet*>(context);
@@ -141,13 +151,18 @@ bool Game::entity_can_move_to(Entity* entity, const Rect& bbox)
 
     if (SDL_HasIntersection(&condition->bbox, &found->bbox())) {
       condition->intersected = true;
+      condition->found = found;
       return false;
     }
 
     return true;
   }, reinterpret_cast<void*>(&condition_met));
 
-  return !condition_met.intersected;
+  if (condition_met.intersected) {
+    return entity_lut[condition_met.found->id()];
+  }
+
+  return nullptr;
 }
 
 bool Game::init()
@@ -161,7 +176,7 @@ bool Game::init()
   }
 
   config.reset(new Config());
-  gravity = 9.8;
+  gravity = -3000;
 
   if (!this->init_renderer()) {
     logger->error("Failed to initialize renderer");

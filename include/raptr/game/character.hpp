@@ -24,6 +24,14 @@ struct ControllerState;
  */
 class Character : public Entity {
  public:
+   Character();
+   ~Character() = default;
+   Character(const Character&) = default;
+   Character(Character&&) = default;
+   Character& operator=(const Character&) = default;
+   Character& operator=(Character&&) = default;
+
+ public:
   /*! 
     Attaches and registers bindings against a controller. This provides a mechanism for
     propagating events, such as button presses or controller movement, back to this class and 
@@ -51,12 +59,6 @@ class Character : public Entity {
     /return An instance of the character if found
   */
   static std::shared_ptr<Character> from_toml(const FileInfo& path);
-
-  /*!
-    Returns the unique id for this character in the world
-    \return a 32-bit signed integer representing a unique entity id
-  */
-  virtual int32_t id() const;
 
   /*! 
     Returns true if this character intersects with another entity
@@ -116,14 +118,32 @@ class Character : public Entity {
   //! If the think() determines the character is falling down, then this will be set
   bool falling;
 
+  //! If true, then a multiplier is put against the acceleration downwards
+  bool fast_fall;
+
+  //! Fast fall multiplier against gravity
+  double fast_fall_scale;
+
+  //! How long the character has been jumping
+  int64_t jump_time_ms;
+
+  //! Current jump count
+  uint32_t jump_count;
+
+  //! If the player is in a double jump
+  uint32_t jumps_allowed;
+
+  //! Perfect jump scale
+  double jump_perfect_scale;
+
   //! The walk speed in pixels/sec
-  uint32_t walk_speed;
+  int32_t walk_speed;
 
   //! The run speed in pixels/sec
-  uint32_t run_speed;
+  int32_t run_speed;
 
   //! The initial velocity (v(0)) for computing how high the character will jump
-  uint32_t jump_vel;
+  int32_t jump_vel;
 };
 
 } // namespace raptr

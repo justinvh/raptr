@@ -16,6 +16,11 @@ macro_enable_logger();
 
 namespace raptr {
 
+StaticMesh::StaticMesh()
+  : Entity()
+{
+}
+
 std::shared_ptr<StaticMesh> StaticMesh::from_toml(const FileInfo& toml_path)
 {
   auto toml_relative = toml_path.file_relative;
@@ -68,12 +73,14 @@ std::shared_ptr<StaticMesh> StaticMesh::from_toml(const FileInfo& toml_path)
   staticmesh->sprite->x = 0;
   staticmesh->sprite->y = 0;
 
-  return staticmesh;
-}
+  auto& pos = staticmesh->position();
+  auto& vel = staticmesh->velocity();
+  auto& acc = staticmesh->acceleration();
+  pos.x = 0; pos.y = 0;
+  vel.x = 0; vel.y = 0;
+  acc.x = 0; acc.y = 0;
 
-int32_t StaticMesh::id() const
-{
-  return _id;
+  return staticmesh;
 }
 
 bool StaticMesh::intersects(const Entity* other) const
@@ -98,16 +105,19 @@ Rect StaticMesh::bbox() const
 {
   Rect box;
   auto& current_frame = sprite->current_animation->current_frame();
-  box.x = static_cast<int32_t>(sprite->x);
-  box.y = static_cast<int32_t>(sprite->y);
+  auto& pos = this->position();
+  box.x = pos.x;
+  box.y = pos.y;
   box.w = current_frame.w * sprite->scale;
   box.h = current_frame.h * sprite->scale;
   return box;
 }
 
-
 void StaticMesh::think(std::shared_ptr<Game> game)
 {
+  auto& pos = position();
+  sprite->x = pos.x;
+  sprite->y = pos.y;
   sprite->render(game->renderer);
 }
 
