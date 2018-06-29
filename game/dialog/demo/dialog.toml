@@ -1,0 +1,70 @@
+[1]
+speaker = "raptor-lady"
+expression = "Afraid"
+name = "Trapped Dinosaur"
+text = "You, Mr. Raptor, can you help?"
+
+    [1.1]
+    evil_requirement = 10
+    name = "Mr. Raptor"
+    expression = "Angry"
+    key = "help_dinosaur_1"
+    value = "evil"
+    speaker = "raptor"
+    text = "It's Emperor RAPTR. You got yourself there. You can get yourself out."
+
+        [1.1.1]
+        name = "Likely Dead Dinosaur"
+        expression = "Afraid"
+        speaker = "raptor-lady"
+        text = "You're a--a monster!"
+
+            [1.1.1.1]
+            name = "Emperor RAPTR"
+            expression = "Angry"
+            speaker = "raptor"
+            text = "lol, bye."
+
+    [1.2]
+    name = "Raptr"
+    expression = "Happy"
+    key = "help_dinosaur_1"
+    value = "wholesome"
+    speaker = "raptor"
+    text = "Of course! Let me give you a hand."
+    trigger = "save_dinosaur_1"
+
+        [1.2.1]
+        name = "Trapped Dinosaur"
+        expression = "Happy"
+        speaker = "raptor-lady"
+        text = "Thank goodness. Those humans put me here."
+
+            [1.2.1.1]
+            name = "Raptr"
+            expression = "Happy"
+            evil_requirement = 1
+            key = "hate_humans_1"
+            speaker = "raptor"
+            value = "evil"
+            text = "Don't worry, I ate like 20 on my way here, so even?"
+
+                [1.2.1.1.1]
+                name = "Seductively Trapped Dinosaur"
+                expression = "Happy"
+                speaker = "raptor-lady"
+                text = "That's actually kind of hot."
+
+            [1.2.1.2]
+            name = "Raptr"
+            expression = "Sad"
+            speaker = "raptor"
+            key = "hate_humans_1"
+            value = "wholesome"
+            text = "They don't understand us yet."
+
+                [1.2.1.2.1]
+                name = "Trapped Dinosaur"
+                expression = "Angry"
+                speaker = "raptor-lady"
+                text = "Hmph."

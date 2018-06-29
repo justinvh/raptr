@@ -100,6 +100,7 @@ set(RAPTR_HPP
 set(RAPTR_CMAKE
     # Modules
     cmake/Modules/FindSDL2_Image.cmake
+    cmake/Modules/FindSDL2_TTF.cmake
     cmake/Modules/FindPicojson.cmake
     cmake/Modules/Findcxxopts.cmake
     cmake/Modules/Findtinytoml.cmake
@@ -115,6 +116,9 @@ set(RAPTR_GAME
 
     # Characters
     game/characters/raptr.toml
+
+    # Dialog
+    game/dialog/demo/dialog.toml
 
     # Static meshes
     game/staticmeshes/fire.toml
@@ -152,6 +156,7 @@ endforeach()
 # Imported target: SDL2
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image REQUIRED)
+find_package(SDL2_TTF REQUIRED)
 find_package(Picojson REQUIRED)
 find_package(cxxopts REQUIRED)
 find_package(spdlog REQUIRED)     
@@ -177,6 +182,7 @@ target_link_libraries(raptr PRIVATE
 	cxxopts::cxxopts 
 	SDL2::SDL2 
 	sdl2
+	sdl2_ttf::sdl2_ttf
 	Picojson::Picojson
 	spdlog::spdlog
 	fmt::fmt

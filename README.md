@@ -39,7 +39,7 @@ $ git checkout 178517052f42d428bb2f304946e635d3c1f318e9 -- ports/fmt
 You will want to first install the dependencies:
 
 ```
-$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image picojson cxxopts spdlog tinytoml
+$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image sdl2-ttf picojson cxxopts spdlog tinytoml
 ```
 
 Now you can specify the toolchain file and continue on:
@@ -85,6 +85,7 @@ To be added
 * [picojson](https://github.com/kazuho/picojson) - A header-file-only, JSON parser serializer in C++
 * [SDL2](https://www.libsdl.org/index.php) - Simple DirectMedia Layer software development library
 * [SDL2_image](https://www.libsdl.org/projects/SDL_image/) - Image file loading library extensions to SDL2
+* [SDL2_TTF](https://www.libsdl.org/projects/SDL_ttf/docs/SDL_ttf.html) - TTF Support in SDL
 * [spdlog](https://github.com/gabime/spdlog) - Fast C++ logging library
 * [tinytoml](https://github.com/mayah/tinytoml) - A header only C++11 library for parsing TOML
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS

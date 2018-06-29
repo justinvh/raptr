@@ -21,19 +21,7 @@ class FileInfo {
 
  public:
   std::optional<std::ifstream> open(bool binary = true) const;
-};
-
-class Filesystem {
- public:
-  explicit Filesystem(const fs::path& root_)
-    : root(root_)
-  {
-  }
-
-  FileInfo path(const fs::path& relative_path);
-
- public:
-  fs::path root;
+  FileInfo from_root(const fs::path& relative_path) const;
 };
 
 } // namespace raptr

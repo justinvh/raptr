@@ -66,7 +66,7 @@ class Entity {
     interact with the entity; rendering it;
     \param game - An instance of the game to retrieve event states, such as the current renderer
   */
-  virtual void think(std::shared_ptr<Game> game) = 0;
+  virtual void think(std::shared_ptr<Game>& game) = 0;
 
   /*!
     Given the current position, velocity, and acceleration, where does this entity *want* to go in X

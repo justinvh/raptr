@@ -38,7 +38,7 @@ class Character : public Entity {
     dispatching to the appropriate functions for handling the events.
     \param controller - The instance to a Controller object for registering callbacks against
   */
-  virtual void attach_controller(std::shared_ptr<Controller> controller);
+  virtual void attach_controller(std::shared_ptr<Controller>& controller);
 
   /*! 
     Returns the bounding box for this character
@@ -76,7 +76,7 @@ class Character : public Entity {
     interact with the character; rendering the sprite;
     \param game - An instance of the game to retrieve event states, such as the current renderer
   */
-  virtual void think(std::shared_ptr<Game> game);
+  virtual void think(std::shared_ptr<Game>& game);
 
   /*!
     Trigger the "Run" animation and set the movement speed to run speed 

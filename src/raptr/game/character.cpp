@@ -114,7 +114,7 @@ void Character::crouch()
   sprite->set_animation("Crouch", true);
 }
 
-void Character::think(std::shared_ptr<Game> game)
+void Character::think(std::shared_ptr<Game>& game)
 {
   int64_t delta_ms = game->frame_delta_ms;
   auto& vel = this->velocity();
@@ -239,7 +239,7 @@ bool Character::on_button_down(const ControllerState& state)
   return true;
 }
 
-void Character::attach_controller(std::shared_ptr<Controller> controller_)
+void Character::attach_controller(std::shared_ptr<Controller>& controller_)
 {
   using std::placeholders::_1;
 

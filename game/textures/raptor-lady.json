@@ -1,6 +1,6 @@
 { "frames": [
    {
-    "filename": "raptr 0.aseprite",
+    "filename": "raptr_lady 0.aseprite",
     "frame": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -9,7 +9,7 @@
     "duration": 500
    },
    {
-    "filename": "raptr 1.aseprite",
+    "filename": "raptr_lady 1.aseprite",
     "frame": { "x": 60, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -18,7 +18,7 @@
     "duration": 500
    },
    {
-    "filename": "raptr 2.aseprite",
+    "filename": "raptr_lady 2.aseprite",
     "frame": { "x": 120, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -27,7 +27,7 @@
     "duration": 500
    },
    {
-    "filename": "raptr 3.aseprite",
+    "filename": "raptr_lady 3.aseprite",
     "frame": { "x": 180, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -36,7 +36,7 @@
     "duration": 200
    },
    {
-    "filename": "raptr 4.aseprite",
+    "filename": "raptr_lady 4.aseprite",
     "frame": { "x": 240, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -45,7 +45,7 @@
     "duration": 200
    },
    {
-    "filename": "raptr 5.aseprite",
+    "filename": "raptr_lady 5.aseprite",
     "frame": { "x": 300, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -54,7 +54,7 @@
     "duration": 200
    },
    {
-    "filename": "raptr 6.aseprite",
+    "filename": "raptr_lady 6.aseprite",
     "frame": { "x": 360, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -63,7 +63,7 @@
     "duration": 125
    },
    {
-    "filename": "raptr 7.aseprite",
+    "filename": "raptr_lady 7.aseprite",
     "frame": { "x": 420, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -72,7 +72,7 @@
     "duration": 125
    },
    {
-    "filename": "raptr 8.aseprite",
+    "filename": "raptr_lady 8.aseprite",
     "frame": { "x": 480, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -81,7 +81,7 @@
     "duration": 125
    },
    {
-    "filename": "raptr 9.aseprite",
+    "filename": "raptr_lady 9.aseprite",
     "frame": { "x": 540, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -90,7 +90,7 @@
     "duration": 500
    },
    {
-    "filename": "raptr 10.aseprite",
+    "filename": "raptr_lady 10.aseprite",
     "frame": { "x": 600, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -99,7 +99,7 @@
     "duration": 500
    },
    {
-    "filename": "raptr 11.aseprite",
+    "filename": "raptr_lady 11.aseprite",
     "frame": { "x": 660, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -108,7 +108,7 @@
     "duration": 500
    },
    {
-    "filename": "raptr 12.aseprite",
+    "filename": "raptr_lady 12.aseprite",
     "frame": { "x": 720, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -117,7 +117,7 @@
     "duration": 500
    },
    {
-    "filename": "raptr 13.aseprite",
+    "filename": "raptr_lady 13.aseprite",
     "frame": { "x": 780, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -126,7 +126,7 @@
     "duration": 200
    },
    {
-    "filename": "raptr 14.aseprite",
+    "filename": "raptr_lady 14.aseprite",
     "frame": { "x": 840, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -135,7 +135,7 @@
     "duration": 200
    },
    {
-    "filename": "raptr 15.aseprite",
+    "filename": "raptr_lady 15.aseprite",
     "frame": { "x": 900, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -144,7 +144,7 @@
     "duration": 200
    },
    {
-    "filename": "raptr 16.aseprite",
+    "filename": "raptr_lady 16.aseprite",
     "frame": { "x": 960, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -153,7 +153,7 @@
     "duration": 200
    },
    {
-    "filename": "raptr 17.aseprite",
+    "filename": "raptr_lady 17.aseprite",
     "frame": { "x": 1020, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -162,7 +162,7 @@
     "duration": 1000
    },
    {
-    "filename": "raptr 18.aseprite",
+    "filename": "raptr_lady 18.aseprite",
     "frame": { "x": 1080, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -171,7 +171,7 @@
     "duration": 1000
    },
    {
-    "filename": "raptr 19.aseprite",
+    "filename": "raptr_lady 19.aseprite",
     "frame": { "x": 1140, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -180,7 +180,7 @@
     "duration": 1000
    },
    {
-    "filename": "raptr 20.aseprite",
+    "filename": "raptr_lady 20.aseprite",
     "frame": { "x": 1200, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
@@ -192,7 +192,7 @@
  "meta": {
   "app": "http://www.aseprite.org/",
   "version": "1.2.8-x64",
-  "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\textures\\raptor-spritesheet.png",
+  "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\textures\\raptor-lady-spritesheet.png",
   "format": "RGBA8888",
   "size": { "w": 1260, "h": 32 },
   "scale": "1",

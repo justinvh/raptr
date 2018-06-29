@@ -5,16 +5,18 @@
 #include <memory>
 #include <vector>
 
-#include <raptr/config.hpp>
-#include <raptr/renderer/renderer.hpp>
-#include <raptr/sound/sound.hpp>
-#include <raptr/game/game.hpp>
-#include <raptr/game/character.hpp>
-#include <raptr/renderer/sprite.hpp>
-#include <raptr/input/controller.hpp>
-#include <raptr/renderer/static_mesh.hpp>
 #include <raptr/common/filesystem.hpp>
 #include <raptr/common/logging.hpp>
+#include <raptr/config.hpp>
+#include <raptr/game/character.hpp>
+#include <raptr/game/dialog.hpp>
+#include <raptr/game/game.hpp>
+#include <raptr/input/controller.hpp>
+#include <raptr/renderer/renderer.hpp>
+#include <raptr/renderer/sprite.hpp>
+#include <raptr/renderer/static_mesh.hpp>
+#include <raptr/sound/sound.hpp>
+
 
 macro_enable_logger();
 
@@ -40,8 +42,11 @@ bool Game::run()
     }
   }
 
+  auto dialog = Dialog::from_toml(game_path.from_root("dialog/demo/dialog.toml"));
+  dialog->attach_controller(controllers.begin()->second);
+
   {
-    auto mesh = StaticMesh::from_toml(filesystem->path("staticmeshes/platform.toml"));
+    auto mesh = StaticMesh::from_toml(game_path.from_root("staticmeshes/platform.toml"));
     if (!mesh) {
       logger->error("Failed to load platform static mesh");
       return false;
@@ -59,7 +64,7 @@ bool Game::run()
   }
 
   {
-    auto mesh = StaticMesh::from_toml(filesystem->path("staticmeshes/platform.toml"));
+    auto mesh = StaticMesh::from_toml(game_path.from_root("staticmeshes/platform.toml"));
     if (!mesh) {
       logger->error("Failed to load platform static mesh");
       return false;
@@ -77,7 +82,7 @@ bool Game::run()
   }
 
   {
-    auto mesh = StaticMesh::from_toml(filesystem->path("staticmeshes/fire.toml"));
+    auto mesh = StaticMesh::from_toml(game_path.from_root("staticmeshes/fire.toml"));
     if (!mesh) {
       logger->error("Failed to load fire static mesh");
       return false;
@@ -95,7 +100,7 @@ bool Game::run()
   }
 
   {
-    auto character_raptr = Character::from_toml(filesystem->path("characters/raptr.toml"));
+    auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
     if (!character_raptr) {
       logger->error("Failed to load raptr character");
       return false;
@@ -153,6 +158,8 @@ bool Game::run()
         last_known_entity_loc[entity] = new_bbox;
       }
     }
+
+    dialog->think(this->shared_from_this());
 
     renderer->run_frame();
     frame_last_time = Time::now();
@@ -272,7 +279,7 @@ bool Game::init_filesystem()
     return false;
   }
 
-  filesystem.reset(new Filesystem(game_root));
+  game_path.game_root = game_root;
   return true;
 }
 

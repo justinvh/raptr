@@ -110,7 +110,7 @@ class Game : public std::enable_shared_from_this<Game> {
   std::shared_ptr<Sound> sound;
 
   //! The filesystem object for accessing files to the game
-  std::shared_ptr<Filesystem> filesystem;
+  FileInfo game_path;
 
   //! A mapping of controller device ID to controller instances
   std::map<int32_t, std::shared_ptr<Controller>> controllers;

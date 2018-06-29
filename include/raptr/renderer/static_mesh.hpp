@@ -55,7 +55,7 @@ class StaticMesh : public Entity {
   The static mesh just needs to render. It is a simple function.
   \param game - An instance of the game to retrieve event states, such as the current renderer
   */
-  virtual void think(std::shared_ptr<Game> game);
+  virtual void think(std::shared_ptr<Game>& game);
 
  public:
   //! The sprite that this Static Mesh uses to render and derive parameters

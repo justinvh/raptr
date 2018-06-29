@@ -83,7 +83,7 @@ class Renderer {
     /param flip_x - Flip the texture along the X-axis, after the src has been cropped out
     /param flip_y - Flip the texture along the Y-axis, after the sr has been cropped out
   */
-  void add(std::shared_ptr<SDL_Texture> texture,
+  void add(std::shared_ptr<SDL_Texture>& texture,
            SDL_Rect src, SDL_Rect dst,
            float angle,  bool flip_x, bool flip_y);
   /*!
@@ -92,14 +92,14 @@ class Renderer {
     /param surface - A shared pointer to a created SDL_Surface (see Sprite for an example)
     /return A freshly allocated texture created from the surface
   */
-  SDL_Texture* create_texture(std::shared_ptr<SDL_Surface> surface) const;
+  SDL_Texture* create_texture(std::shared_ptr<SDL_Surface>& surface) const;
 
   /*!
     Initialize the renderer from a Configuration file
     /param config_ - The configuration that will be used to pull rendering parameters
     /return Whether the renderer could be setup
   */
-  bool init(std::shared_ptr<Config> config_);
+  bool init(std::shared_ptr<Config>& config_);
 
   /*!
     Clears the screen and renders all added objects to the screen.

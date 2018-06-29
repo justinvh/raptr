@@ -25,15 +25,15 @@ std::optional<std::ifstream> FileInfo::open(bool binary) const
   return {};
 }
 
-FileInfo Filesystem::path(const fs::path& relative_path)
+FileInfo FileInfo::from_root(const fs::path& relative_path) const
 {
-  fs::path full_path = root / relative_path;
+  fs::path full_path = game_root / relative_path;
 
   return FileInfo {
     relative_path,
-    root / relative_path,
-    root / (relative_path.parent_path()),
-    root
+    game_root / relative_path,
+    game_root / (relative_path.parent_path()),
+    game_root
   };
 }
 

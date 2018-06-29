@@ -15,6 +15,7 @@
 
 #include <SDL.h>
 #include <SDL_surface.h>
+#include <SDL_ttf.h>
 
 #include <raptr/common/filesystem.hpp>
 
@@ -28,6 +29,7 @@ class Renderer;
 struct SDLDeleter {
   void operator()(SDL_Texture* p) const;
   void operator()(SDL_Surface* p) const;
+  void operator()(TTF_Font* p) const;
 };
 
 /*!
@@ -123,14 +125,15 @@ class Sprite {
     Render this sprite to a provided renderer
     /param renderer - The Renderer that this sprite should render to
   */
-  void render(std::shared_ptr<Renderer> renderer);
+  void render(std::shared_ptr<Renderer>& renderer);
 
   /*!
     Change the current animation to a different one by name, such as "Idle" or "Walk"
     /param name - The name of the animation, such as "Idle" or "Walk"
     /param hold_last_frame - Whether the last frame of the animation should be held, instead of cycled
+    /return Whether the animation could be set
   */
-  void set_animation(const std::string& name, bool hold_last_frame = false);
+  bool set_animation(const std::string& name, bool hold_last_frame = false);
 
  public:
   //! A mapping of animation names to the animation itself

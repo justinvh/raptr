@@ -16,7 +16,7 @@ Renderer::~Renderer()
   }
 }
 
-bool Renderer::init(std::shared_ptr<Config> config_)
+bool Renderer::init(std::shared_ptr<Config>& config_)
 {
   config = config_;
 
@@ -53,12 +53,12 @@ bool Renderer::toggle_fullscreen()
   }
 }
 
-SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface> surface) const
+SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) const
 {
   return SDL_CreateTextureFromSurface(sdl.renderer, surface.get());
 }
 
-void Renderer::add(std::shared_ptr<SDL_Texture> texture,
+void Renderer::add(std::shared_ptr<SDL_Texture>& texture,
                    SDL_Rect src, SDL_Rect dst,
                    float angle, bool flip_x, bool flip_y)
 {

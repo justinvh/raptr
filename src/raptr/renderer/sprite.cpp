@@ -17,6 +17,7 @@ namespace raptr {
 
 std::map<fs::path, std::shared_ptr<SDL_Surface>> SURFACE_CACHE;
 std::map<std::shared_ptr<SDL_Surface>, std::shared_ptr<SDL_Texture>> TEXTURE_CACHE;
+std::map<fs::path, std::shared_ptr<Sprite>> SPRITE_CACHE;
 
 int32_t p_int(const picojson::value& v, const std::string& name)
 {
@@ -38,6 +39,11 @@ void SDLDeleter::operator()(SDL_Surface* p) const
   if (p->refcount == 0) {
     SDL_FreeSurface(p);
   }
+}
+
+void SDLDeleter::operator()(TTF_Font* p) const
+{
+  TTF_CloseFont(p);
 }
 
 AnimationFrame& Animation::current_frame()
@@ -92,6 +98,13 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
 {
   logger->info("Loading Sprite from {}", path.file_relative);
 
+  auto in_cache = SPRITE_CACHE.find(path.file_relative);
+  if (in_cache != SPRITE_CACHE.end()) {
+    logger->info("Sprite is in cache!");
+    std::shared_ptr<Sprite> cached(new Sprite(*in_cache->second));
+    return cached;
+  }
+
   std::shared_ptr<Sprite> sprite(new Sprite);
   auto input = path.open();
 
@@ -111,10 +124,10 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   sprite->height = p_int(size, "h");
 
   fs::path relative_image_path(p_string(meta, "image"));
-  fs::path image_path = path.file_dir / relative_image_path;
+  fs::path image_path = path.file_dir / (relative_image_path.filename());
   std::string image_cpath(image_path.string());
 
-  logger->debug("Sprite texture is located at {}", relative_image_path);
+  logger->debug("Sprite texture is located at {}", image_path);
 
   auto exists = SURFACE_CACHE.find(image_path);
   if (exists != SURFACE_CACHE.end()) {
@@ -122,7 +135,8 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   } else {
     SDL_Surface* surface = IMG_Load(image_cpath.c_str());
     if (!surface) {
-      logger->error("Sprite texture failed to load from {}", image_path);
+      logger->error("Sprite texture failed to load from {}: {}", 
+                    image_path);
       return nullptr;
     }
     SURFACE_CACHE[image_path].reset(surface, SDLDeleter());
@@ -183,10 +197,13 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   sprite->flip_y = false;
   sprite->angle = 0.0;
 
+  std::shared_ptr<Sprite> cache(new Sprite(*sprite));
+  SPRITE_CACHE[path.file_relative] = cache;
+
   return sprite;
 }
 
-void Sprite::render(std::shared_ptr<Renderer> renderer)
+void Sprite::render(std::shared_ptr<Renderer>& renderer)
 {
   if (!texture) {
     auto exists = TEXTURE_CACHE.find(surface);
@@ -219,15 +236,20 @@ void Sprite::render(std::shared_ptr<Renderer> renderer)
 }
 
 
-void Sprite::set_animation(const std::string& name, bool hold_last_frame)
+bool Sprite::set_animation(const std::string& name, bool hold_last_frame)
 {
   if (current_animation->name == name) {
-    return;
+    return true;
+  }
+
+  if (animations.find(name) == animations.end()) {
+    return false;
   }
 
   current_animation = &animations[name];
   current_animation->frame = 0;
   current_animation->hold_last_frame = hold_last_frame;
+  return true;
 }
 
 } // namespace raptr

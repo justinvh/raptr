@@ -113,7 +113,7 @@ Rect StaticMesh::bbox() const
   return box;
 }
 
-void StaticMesh::think(std::shared_ptr<Game> game)
+void StaticMesh::think(std::shared_ptr<Game>& game)
 {
   auto& pos = position();
   sprite->x = pos.x;
