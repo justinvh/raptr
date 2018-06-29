@@ -41,6 +41,7 @@ set(RAPTR_CPP
 
     # Game sources
     src/raptr/game/character.cpp
+    src/raptr/game/dialog.cpp
     src/raptr/game/entity.cpp
     src/raptr/game/game.cpp
 
@@ -71,6 +72,7 @@ set(RAPTR_HPP
 
     # Game headers
     include/raptr/game/character.hpp
+    include/raptr/game/dialog.hpp
     include/raptr/game/entity.hpp
     include/raptr/game/game.hpp
 
@@ -104,6 +106,10 @@ set(RAPTR_CMAKE
 )
 
 set(RAPTR_GAME
+    # Aseprite
+    game/aseprite/dialog-simple-sheet.aseprite
+    game/aseprite/raptr.aseprite
+
     # Game modules
     game/controls/gamecontrollerdb.txt
 
@@ -125,6 +131,9 @@ set(RAPTR_GAME
     game/textures/platform.json
     game/textures/raptor-spritesheet.png
     game/textures/raptor.json
+    game/textures/dialog-simple.png
+    game/textures/dialog-simple.json
+
 )
 
 set(RAPTR_SOURCES ${RAPTR_HPP} ${RAPTR_CPP})

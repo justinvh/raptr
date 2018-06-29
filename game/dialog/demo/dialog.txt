@@ -1,0 +1,6 @@
+character raptr
+tag Talk-Happy
+normal_text What a beautiful day when all is unknown!
+normal_text What a beautiful world!
+slow_text It's almost too beautiful.
+slower_text Something isn't right.
