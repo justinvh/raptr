@@ -1,120 +1,156 @@
 { "frames": [
    {
     "filename": "raptor2 0.aseprite",
-    "frame": { "x": 1, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 500
    },
    {
     "filename": "raptor2 1.aseprite",
-    "frame": { "x": 65, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 60, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 500
    },
    {
     "filename": "raptor2 2.aseprite",
-    "frame": { "x": 129, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 120, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 500
    },
    {
     "filename": "raptor2 3.aseprite",
-    "frame": { "x": 193, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 180, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 200
    },
    {
     "filename": "raptor2 4.aseprite",
-    "frame": { "x": 257, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 240, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 200
    },
    {
     "filename": "raptor2 5.aseprite",
-    "frame": { "x": 321, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 300, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 200
    },
    {
     "filename": "raptor2 6.aseprite",
-    "frame": { "x": 385, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 360, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 125
    },
    {
     "filename": "raptor2 7.aseprite",
-    "frame": { "x": 449, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 420, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 125
    },
    {
     "filename": "raptor2 8.aseprite",
-    "frame": { "x": 513, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 480, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 125
    },
    {
     "filename": "raptor2 9.aseprite",
-    "frame": { "x": 577, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 540, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 500
    },
    {
     "filename": "raptor2 10.aseprite",
-    "frame": { "x": 641, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 600, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 500
    },
    {
     "filename": "raptor2 11.aseprite",
-    "frame": { "x": 705, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 660, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 500
    },
    {
     "filename": "raptor2 12.aseprite",
-    "frame": { "x": 769, "y": 1, "w": 64, "h": 32 },
+    "frame": { "x": 720, "y": 0, "w": 60, "h": 32 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 32 },
-    "sourceSize": { "w": 64, "h": 32 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
     "duration": 500
+   },
+   {
+    "filename": "raptor2 13.aseprite",
+    "frame": { "x": 780, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "raptor2 14.aseprite",
+    "frame": { "x": 840, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "raptor2 15.aseprite",
+    "frame": { "x": 900, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "raptor2 16.aseprite",
+    "frame": { "x": 960, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
    }
  ],
  "meta": {
@@ -122,13 +158,15 @@
   "version": "1.2.8-x64",
   "image": "raptor-spritesheet.png",
   "format": "RGBA8888",
-  "size": { "w": 834, "h": 34 },
+  "size": { "w": 1020, "h": 32 },
   "scale": "1",
   "frameTags": [
    { "name": "Idle", "from": 0, "to": 2, "direction": "pingpong" },
    { "name": "Walk", "from": 3, "to": 5, "direction": "pingpong" },
    { "name": "Run", "from": 6, "to": 8, "direction": "pingpong" },
-   { "name": "Jump", "from": 9, "to": 12, "direction": "forward" }
+   { "name": "Jump", "from": 9, "to": 12, "direction": "forward" },
+   { "name": "Talk-Happy", "from": 13, "to": 14, "direction": "pingpong" },
+   { "name": "Talk-Angry", "from": 15, "to": 16, "direction": "forward" }
   ],
   "layers": [
    { "name": "Rear Leg", "opacity": 255, "blendMode": "normal" },

@@ -42,6 +42,9 @@ struct AnimationFrame {
 
   //! How long the frame should hold before continuing to the next
   uint32_t duration;
+  
+  //! The teeter pixel is the most down and left pixel occuped by the sprite
+  int32_t teeter_px;
 };
 
 /*!

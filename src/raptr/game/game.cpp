@@ -212,7 +212,7 @@ bool Game::init()
   }
 
   config.reset(new Config());
-  gravity = -3000;
+  gravity = -4000;
 
   if (!this->init_renderer()) {
     logger->error("Failed to initialize renderer");

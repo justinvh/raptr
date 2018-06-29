@@ -162,8 +162,9 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
       auto frame = frames.at(frame_num);
       auto frame_name = p_string(frame, "filename");
       auto frame_size = frame.get("frame");
-      anim_frame.x = p_int(frame_size, "x");
-      anim_frame.y = p_int(frame_size, "y");
+      auto sprite_source_size = frame.get("spriteSourceSize");
+      anim_frame.x = p_int(frame_size, "x") + p_int(sprite_source_size, "x");
+      anim_frame.y = p_int(frame_size, "y") + p_int(sprite_source_size, "y");
       anim_frame.w = p_int(frame_size, "w");
       anim_frame.h = p_int(frame_size, "h");
       anim_frame.duration = p_int(frame, "duration");

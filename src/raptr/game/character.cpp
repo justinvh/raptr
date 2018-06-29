@@ -129,7 +129,7 @@ void Character::think(std::shared_ptr<Game> game)
 
   // External forces, like gravity
   Rect fall_check = this->want_position_y(delta_ms);
-  fall_check.y += 1;
+  fall_check.y += 0.1;
 
   auto intersected_entity = game->intersect_world(this, fall_check);
   if (!intersected_entity) {

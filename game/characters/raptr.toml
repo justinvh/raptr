@@ -4,7 +4,7 @@ walk_speed = 100
 run_speed = 400
 jump_vel = 500
 jumps_allowed = 2
-jump_perfect_scale = 1.25
+jump_perfect_scale = 1.50
 fast_fall_scale = 2.5
 
 [sprite]
