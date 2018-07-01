@@ -41,7 +41,6 @@ set(RAPTR_CPP
 
     # Game sources
     src/raptr/game/character.cpp
-    src/raptr/game/dialog.cpp
     src/raptr/game/entity.cpp
     src/raptr/game/game.cpp
 
@@ -58,6 +57,10 @@ set(RAPTR_CPP
     # Sound sources
     src/raptr/sound/sound.cpp
 
+    # UI sources
+    src/raptr/ui/dialog.cpp
+    src/raptr/ui/font.cpp
+
     # Top-level sources
     src/raptr/main.cpp
     src/raptr/config.cpp
@@ -72,7 +75,6 @@ set(RAPTR_HPP
 
     # Game headers
     include/raptr/game/character.hpp
-    include/raptr/game/dialog.hpp
     include/raptr/game/entity.hpp
     include/raptr/game/game.hpp
 
@@ -92,6 +94,8 @@ set(RAPTR_HPP
 
     # UI headers
     include/raptr/ui/ui.hpp
+    include/raptr/ui/dialog.hpp
+    include/raptr/ui/font.hpp
 
     # Top-Level
     include/raptr/config.hpp
@@ -118,11 +122,19 @@ set(RAPTR_GAME
     game/characters/raptr.toml
 
     # Dialog
+    game/dialog/dialog.toml
     game/dialog/demo/dialog.toml
+
+    # Fonts
+    game/fonts/04b.ttf
+    game/fonts/americancursive.ttf
+    game/fonts/munro_small.ttf
+    game/fonts/fonts.toml
 
     # Static meshes
     game/staticmeshes/fire.toml
     game/staticmeshes/platform.toml
+    game/staticmeshes/staticmeshes.toml
 
     # Sound
     game/sound/opening.mp3
@@ -137,7 +149,6 @@ set(RAPTR_GAME
     game/textures/raptor.json
     game/textures/dialog-simple.png
     game/textures/dialog-simple.json
-
 )
 
 set(RAPTR_SOURCES ${RAPTR_HPP} ${RAPTR_CPP})

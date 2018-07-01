@@ -24,4 +24,10 @@ class FileInfo {
   FileInfo from_root(const fs::path& relative_path) const;
 };
 
+inline std::ostream& operator<<(std::ostream& os, const FileInfo& f)
+{
+  os << f.file_relative;
+  return os;
+}
+
 } // namespace raptr

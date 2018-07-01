@@ -11,8 +11,8 @@
 #include <raptr/input/controller.hpp>
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/renderer/renderer.hpp>
-#include <raptr/game/dialog.hpp>
 #include <raptr/common/logging.hpp>
+#include <raptr/ui/dialog.hpp>
 
 macro_enable_logger();
 
@@ -48,11 +48,6 @@ std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path)
   dialog->dialog_box->x = 0;
   dialog->dialog_box->y = 0;
 
-  if (!dialog->load_font(toml_path.from_root("fonts/munro_small.ttf"))) {
-    logger->error("Fonts failed to load!");
-    return nullptr;
-  }
-
   int32_t check = 0;
   while (++check) {
     if (!v.find(std::to_string(check))) {
@@ -78,24 +73,6 @@ std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path)
 
   dialog->last_ticks = SDL_GetTicks();
   return dialog;
-}
-
-bool Dialog::load_font(const FileInfo& path)
-{
-  if (TTF_Init() < 0) {
-    logger->error("TTF failed to initialize: {}", SDL_GetError());
-    return false;
-  }
-
-  std::string full_path = path.file_path.string();
-
-  font.reset(TTF_OpenFont(full_path.c_str(), 15), SDLDeleter());
-  if (!font) {
-    logger->error("TTF failed to load font {}: {}", full_path, SDL_GetError());
-    return false;
-  }
-
-  return true;
 }
 
 bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::vector<int32_t>& section)
@@ -129,7 +106,9 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     "trigger",
     "key",
     "value",
-    "button"
+    "button",
+    "font_name",
+    "font_size"
   };
 
   std::map<std::string, const toml::Value*> dict;
@@ -222,36 +201,43 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     prompt->has.value = true;
   }
 
+  int32_t font_size = 15;
+  if (dict.find("font_size") != dict.end()) {
+    font_size = dict["font_size"]->as<int32_t>();
+  }
+
+  std::string font_name = "default";
+  if (dict.find("font_name") != dict.end()) {
+    font_name = dict["font_name"]->as<std::string>();
+  }
+
   SDL_Color text_color = {255, 255, 255, 255};
   SDL_Color hover_color = {0, 255, 0, 255};
   SDL_Color bg_color = {0, 0, 0, 255};
 
-  prompt->r_text.surface.reset(
-    TTF_RenderText_Solid(font.get(), prompt->text.c_str(), text_color), SDLDeleter());
-  if (!prompt->r_text.surface) {
+  auto game_root = toml_path.from_root("");
+  prompt->r_text = Text::create(game_root, font_name, prompt->text, font_size, text_color);
+  if (!prompt->r_text) {
     logger->error("{}: Failed to create TTF for text '{}'", section_name, prompt->text);
     parse_error = true;
     return false;
   }
 
-  prompt->r_name.surface.reset(
-    TTF_RenderText_Solid(font.get(), prompt->name.c_str(), text_color), SDLDeleter());
-  if (!prompt->r_name.surface) {
+  prompt->r_name = Text::create(game_root, font_name, prompt->name, font_size, text_color);
+  if (!prompt->r_name) {
     logger->error("{}: Failed to create TTF for text '{}'", section_name, prompt->name);
     parse_error = true;
     return false;
   }
 
   if (!prompt->button.empty()) {
-    prompt->r_button.surface.reset(
-      TTF_RenderText_Shaded(font.get(), prompt->button.c_str(), text_color, bg_color), SDLDeleter());
-    if (!prompt->r_button.surface) {
+    prompt->r_button = Text::create(game_root, "default", prompt->button, 15, text_color);
+    if (!prompt->r_button) {
       parse_error = true;
       logger->error("{}: Failed to create TTF for button '{}'", section_name, prompt->button);
       return false;
     }
-    prompt->r_button_hover.surface.reset(
-      TTF_RenderText_Solid(font.get(), prompt->button.c_str(), hover_color), SDLDeleter());
+    prompt->r_button_hover = Text::create(game_root, "default", prompt->button, 15, hover_color);
   }
 
   int32_t check = 0;
@@ -305,6 +291,8 @@ bool Dialog::on_button_down(const ControllerState& state)
     active_prompt = &active_prompt->choices[selected_choice];
     selected_choice = 0;
   }
+
+  return true;
 }
 
 bool Dialog::on_right_joy(const ControllerState& state)
@@ -326,7 +314,7 @@ bool Dialog::on_right_joy(const ControllerState& state)
   } else if (state.y > 0.5) {
     --selected_choice;
     if (selected_choice < 0) {
-      selected_choice = active_prompt->choices.size() - 1;
+      selected_choice = static_cast<int32_t>(active_prompt->choices.size() - 1);
     }
     last_ticks = SDL_GetTicks();
   }
@@ -334,25 +322,6 @@ bool Dialog::on_right_joy(const ControllerState& state)
   return true;
 }
 
-
-bool DialogPrompt::Text::allocate(std::shared_ptr<Renderer>& renderer)
-{
-  if (texture) {
-    return false;
-  }
-
-  texture.reset(renderer->create_texture(surface), SDLDeleter());
-  if (!texture) {
-    logger->error("Failed to allocate texture");
-    return false;
-  }
-
-  SDL_QueryTexture(texture.get(), NULL, NULL, &bbox.w, &bbox.h);
-  bbox.x = 0;
-  bbox.y = 0;
-
-  return true;  
-}
 
 bool Dialog::think(std::shared_ptr<Game>& game)
 {
@@ -376,12 +345,12 @@ bool Dialog::think(std::shared_ptr<Game>& game)
   {
     SDL_Rect dst;
     auto& text = active_prompt->r_text;
-    text.allocate(renderer);
-    auto& texture = text.texture;
-    auto& bbox = text.bbox;
+    text->allocate(renderer);
+    auto& texture = text->texture;
+    auto& bbox = text->bbox;
     dst.w = bbox.w;
     dst.h = bbox.h;
-    dst.x = speaker->x + current_frame.w + 16;
+    dst.x = static_cast<int32_t>(speaker->x + current_frame.w + 16);
     dst.y = 32;
     renderer->add(texture, bbox, dst, 0.0, false, false);
   }
@@ -390,9 +359,9 @@ bool Dialog::think(std::shared_ptr<Game>& game)
   {
     SDL_Rect dst;
     auto& text = active_prompt->r_name;
-    text.allocate(renderer);
-    auto& texture = text.texture;
-    auto& bbox = text.bbox;
+    text->allocate(renderer);
+    auto& texture = text->texture;
+    auto& bbox = text->bbox;
     dst.w = bbox.w;
     dst.h = bbox.h;
     dst.x = 32;
@@ -407,10 +376,10 @@ bool Dialog::think(std::shared_ptr<Game>& game)
     for (int32_t i = 0; i < active_prompt->choices.size(); ++i) {
       auto& choice = active_prompt->choices[i];
       SDL_Rect dst;
-      DialogPrompt::Text& text = (i == selected_choice) ? choice.r_button_hover : choice.r_button;
-      text.allocate(renderer);
-      auto& texture = text.texture;
-      auto& bbox = text.bbox;
+      auto& text = (i == selected_choice) ? choice.r_button_hover : choice.r_button;
+      text->allocate(renderer);
+      auto& texture = text->texture;
+      auto& bbox = text->bbox;
       dst.w = bbox.w;
       dst.h = bbox.h;
       dst.x = choice_x;

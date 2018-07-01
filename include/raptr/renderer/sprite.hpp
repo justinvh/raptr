@@ -15,22 +15,12 @@
 
 #include <SDL.h>
 #include <SDL_surface.h>
-#include <SDL_ttf.h>
 
 #include <raptr/common/filesystem.hpp>
 
 namespace raptr {
 
 class Renderer;
-
-/*!
-  Deleters for SDL objects that are allocated via std::shared_ptr
-*/
-struct SDLDeleter {
-  void operator()(SDL_Texture* p) const;
-  void operator()(SDL_Surface* p) const;
-  void operator()(TTF_Font* p) const;
-};
 
 /*!
   A simple object for describing a frame in animation

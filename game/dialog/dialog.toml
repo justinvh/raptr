@@ -1,0 +1,7 @@
+[[dialog]]
+character = "raptor"
+font = "default"
+
+[[dialog]]
+character = "raptor-lady"
+font = "cursive"

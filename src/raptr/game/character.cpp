@@ -223,7 +223,7 @@ bool Character::on_button_down(const ControllerState& state)
   auto& acc = this->acceleration();
   if (state.button == Button::a && jump_count < jumps_allowed) {
     int32_t peak_time_ms = static_cast<int32_t>(std::fabs(jump_vel / acc.y * 1000.0));
-    int32_t button_time = std::abs(jump_time_ms - peak_time_ms);
+    int32_t button_time = static_cast<int32_t>(std::abs(jump_time_ms - peak_time_ms));
 
     if (falling && button_time < 32) {
       vel.y -= -jump_vel * jump_perfect_scale;

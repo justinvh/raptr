@@ -7,8 +7,20 @@
 #pragma once
 
 #include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+
 #include <vector>
 #include <memory>
+
+/*!
+Deleters for SDL objects that are allocated via std::shared_ptr
+*/
+struct SDLDeleter {
+  void operator()(SDL_Texture* p) const;
+  void operator()(SDL_Surface* p) const;
+  void operator()(TTF_Font* p) const;
+};
 
 namespace raptr {
 

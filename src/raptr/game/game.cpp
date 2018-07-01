@@ -9,13 +9,13 @@
 #include <raptr/common/logging.hpp>
 #include <raptr/config.hpp>
 #include <raptr/game/character.hpp>
-#include <raptr/game/dialog.hpp>
 #include <raptr/game/game.hpp>
 #include <raptr/input/controller.hpp>
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/renderer/static_mesh.hpp>
 #include <raptr/sound/sound.hpp>
+#include <raptr/ui/dialog.hpp>
 
 macro_enable_logger();
 

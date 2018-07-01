@@ -29,23 +29,6 @@ std::string p_string(const picojson::value& v, const std::string& name)
   return v.get(name).get<std::string>();
 }
 
-void SDLDeleter::operator()(SDL_Texture* p) const
-{
-  SDL_DestroyTexture(p);
-}
-
-void SDLDeleter::operator()(SDL_Surface* p) const
-{
-  if (p->refcount == 0) {
-    SDL_FreeSurface(p);
-  }
-}
-
-void SDLDeleter::operator()(TTF_Font* p) const
-{
-  TTF_CloseFont(p);
-}
-
 AnimationFrame& Animation::current_frame()
 {
   return frames[frame];

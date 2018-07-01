@@ -1,0 +1,11 @@
+[[font]]
+name = "default"
+path = "munro_small.ttf"
+
+[[font]]
+name = "cursive"
+path = "americancursive.ttf"
+
+[[font]]
+name = "bubbly"
+path = "04b.ttf"

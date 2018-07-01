@@ -12,6 +12,7 @@
 
 #include <raptr/common/filesystem.hpp>
 #include <raptr/input/controller.hpp>
+#include <raptr/ui/font.hpp>
 
 namespace toml {
 class Value;
@@ -36,14 +37,9 @@ struct DialogPrompt {
   int32_t evil_requirement;
   int32_t wholesome_requirement;
   std::vector<DialogPrompt> choices;
-  
-  struct Text {
-    std::shared_ptr<SDL_Surface> surface;
-    std::shared_ptr<SDL_Texture> texture;
-    SDL_Rect bbox;
-    bool allocate(std::shared_ptr<Renderer>& renderer);
-  } r_name, r_text, r_button, r_button_hover;
 
+  std::shared_ptr<Text> r_name, r_text, r_button, r_button_hover;
+  
   struct Has {
     bool trigger;
     bool key;
@@ -75,12 +71,6 @@ class Dialog {
     Start processing the dialog
   */
   bool think(std::shared_ptr<Game>& game);
-
-  /*!
-    Register and load a font using SDL_ttf
-    /param path - Path to the font
-  */
-  bool load_font(const FileInfo& path);
 
  private:
   /*!

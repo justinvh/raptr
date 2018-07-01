@@ -1,8 +1,28 @@
-#include <SDL.h>
 #include <memory>
+
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
 
 #include <raptr/config.hpp>
 #include <raptr/renderer/renderer.hpp>
+
+void SDLDeleter::operator()(SDL_Texture* p) const
+{
+  SDL_DestroyTexture(p);
+}
+
+void SDLDeleter::operator()(SDL_Surface* p) const
+{
+  if (p->refcount == 0) {
+    SDL_FreeSurface(p);
+  }
+}
+
+void SDLDeleter::operator()(TTF_Font* p) const
+{
+  TTF_CloseFont(p);
+}
 
 namespace raptr {
 
