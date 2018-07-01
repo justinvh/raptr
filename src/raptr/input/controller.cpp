@@ -88,8 +88,18 @@ void Controller::process_event(const SDL_Event& e)
       break;
     case SDL_CONTROLLERAXISMOTION:
       state = state_from_event(sdl.controller, e);
-      for (auto& callback : right_joy_callbacks) {
-        callback(state);
+      int16_t axis = static_cast<int16_t>(e.caxis.axis) / 2;
+      switch (axis) {
+        case 0:
+          for (auto& callback : right_joy_callbacks) {
+            callback(state);
+          }
+          break;
+        case 1:
+          for (auto& callback : left_joy_callbacks) {
+            callback(state);
+          }
+          break;
       }
       break;
   }

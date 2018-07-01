@@ -17,7 +17,6 @@
 #include <raptr/renderer/static_mesh.hpp>
 #include <raptr/sound/sound.hpp>
 
-
 macro_enable_logger();
 
 namespace raptr {

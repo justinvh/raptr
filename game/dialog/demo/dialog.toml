@@ -11,13 +11,14 @@ text = "You, Mr. Raptor, can you help?"
     key = "help_dinosaur_1"
     value = "evil"
     speaker = "raptor"
-    text = "It's Emperor RAPTR. You got yourself there. You can get yourself out."
+	button = "Uh, excuse me?"
+    text = "It's Emperor RAPTR. Get yourself out."
 
         [1.1.1]
         name = "Likely Dead Dinosaur"
         expression = "Afraid"
         speaker = "raptor-lady"
-        text = "You're a--a monster!"
+        text = "No, wait. I am sorry! Emperor, sir, help me!"
 
             [1.1.1.1]
             name = "Emperor RAPTR"
@@ -31,6 +32,7 @@ text = "You, Mr. Raptor, can you help?"
     key = "help_dinosaur_1"
     value = "wholesome"
     speaker = "raptor"
+	button = "What happened?!"
     text = "Of course! Let me give you a hand."
     trigger = "save_dinosaur_1"
 
@@ -47,6 +49,7 @@ text = "You, Mr. Raptor, can you help?"
             key = "hate_humans_1"
             speaker = "raptor"
             value = "evil"
+			button = "(push stomach out and pat on its sides)"
             text = "Don't worry, I ate like 20 on my way here, so even?"
 
                 [1.2.1.1.1]
@@ -61,6 +64,7 @@ text = "You, Mr. Raptor, can you help?"
             speaker = "raptor"
             key = "hate_humans_1"
             value = "wholesome"
+			button = "(show a sense of sadness and confusion)"
             text = "They don't understand us yet."
 
                 [1.2.1.2.1]

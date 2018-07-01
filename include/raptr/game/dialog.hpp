@@ -22,6 +22,7 @@ namespace raptr {
 class Game;
 class Controller;
 class Sprite;
+class Renderer;
 
 struct DialogPrompt {
   std::shared_ptr<Sprite> speaker;
@@ -31,17 +32,17 @@ struct DialogPrompt {
   std::string trigger;
   std::string key;
   std::string value;
+  std::string section;
   int32_t evil_requirement;
   int32_t wholesome_requirement;
   std::vector<DialogPrompt> choices;
-
-  std::shared_ptr<SDL_Surface> text_surface;
-  std::shared_ptr<SDL_Texture> text_texture;
-  SDL_Rect text_bbox;
-
-  std::shared_ptr<SDL_Surface> name_surface;
-  std::shared_ptr<SDL_Texture> name_texture;
-  SDL_Rect title_bbox;
+  
+  struct Text {
+    std::shared_ptr<SDL_Surface> surface;
+    std::shared_ptr<SDL_Texture> texture;
+    SDL_Rect bbox;
+    bool allocate(std::shared_ptr<Renderer>& renderer);
+  } r_name, r_text, r_button, r_button_hover;
 
   struct Has {
     bool trigger;
@@ -90,13 +91,19 @@ class Dialog {
   bool parse_toml(const toml::Value* root, DialogPrompt* prompt, const std::vector<int32_t>& section);
 
   /*!
-  When a controller is attached to this character, any button presses will be dispatched to this
-  function which will handle how best to deal with a button press
-  \param state - What the controller was doing exactly when a button was pressed down
+    When a controller is attached to this character, any button presses will be dispatched to this
+    function which will handle how best to deal with a button press
+    \param state - What the controller was doing exactly when a button was pressed down
   */
   bool on_button_down(const ControllerState& state);
 
+  /*!
+    This is a simple joystick interaction to control the Dialog options.
+  */
+  bool on_right_joy(const ControllerState& state);
+
  private:
+  uint32_t last_ticks;
   bool parse_error;
   FileInfo toml_path;
   std::shared_ptr<Controller> controller;
@@ -104,6 +111,7 @@ class Dialog {
   std::shared_ptr<Sprite> dialog_box;
   DialogPrompt* active_prompt;
   std::shared_ptr<TTF_Font> font;
+  int32_t selected_choice;
 };
 
 } // namespace raptr

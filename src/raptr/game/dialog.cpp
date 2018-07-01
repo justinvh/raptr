@@ -20,7 +20,6 @@ macro_enable_logger();
 #include <toml/toml.h>
 #pragma warning(default : 4996)
 
-
 namespace raptr {
 
 std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path)
@@ -77,6 +76,7 @@ std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path)
     return nullptr;
   }
 
+  dialog->last_ticks = SDL_GetTicks();
   return dialog;
 }
 
@@ -89,7 +89,7 @@ bool Dialog::load_font(const FileInfo& path)
 
   std::string full_path = path.file_path.string();
 
-  font.reset(TTF_OpenFont(full_path.c_str(), 14), SDLDeleter());
+  font.reset(TTF_OpenFont(full_path.c_str(), 15), SDLDeleter());
   if (!font) {
     logger->error("TTF failed to load font {}: {}", full_path, SDL_GetError());
     return false;
@@ -137,7 +137,7 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
   for (const auto& key : required_keys) {
     const toml::Value* value = found->find(key);
     if (!value) {
-      logger->error("{} is missing {}", section_name, key);
+      logger->error("{}: Missing {}", section_name, key);
       parse_error = true;
       return false;
     }
@@ -159,27 +159,25 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
   prompt->speaker->x = 15;
   prompt->speaker->y = 25;
   prompt->speaker->flip_x = true;
+  prompt->section = section_name;
   if (!prompt->speaker) {
     parse_error = true;
-    logger->error("Failed to load speaker: {} (tried {})", speaker_id, sprite_path.file_path);
+    logger->error("{}: Failed to load speaker: {} (tried {})", 
+      section_name, speaker_id, sprite_path.file_path);
     return false;
   }
 
   std::string animation_name = dict["expression"]->as<std::string>();
   if (!prompt->speaker->set_animation(animation_name)) {
     parse_error = true;
-    logger->error("Failed to find animation for expression {} in {}", animation_name, speaker_id);
+    logger->error("{}: Failed to find animation for expression {} in {}", 
+      section_name, animation_name, speaker_id);
     return false;
   }
 
   prompt->name = dict["name"]->as<std::string>();
 
   prompt->text = dict["text"]->as<std::string>();
-
-  prompt->button = "Ok.";
-  if (dict.find("button") != dict.end()) {
-    prompt->button = dict["button"]->as<std::string>();
-  }
 
   prompt->has.evil_requirement = false;
   if (dict.find("evil_requirement") != dict.end()) {
@@ -191,6 +189,19 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
   if (dict.find("wholesome_requirement") != dict.end()) {
     prompt->wholesome_requirement = dict["wholesome_requirement"]->as<int32_t>();
     prompt->has.wholesome_requirement = true;
+  }
+  
+  prompt->button = "";
+  if (dict.find("button") != dict.end()) {
+    std::string prefix;
+    if (prompt->has.evil_requirement) {
+      prefix = "[EVIL]";
+    } else if (prompt->has.wholesome_requirement) {
+      prefix = "[WHOLESOME]";
+    } else {
+      prefix = "[" + animation_name + "]";
+    }
+    prompt->button = prefix + " " + dict["button"]->as<std::string>();
   }
 
   prompt->has.trigger = false;
@@ -212,8 +223,36 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
   }
 
   SDL_Color text_color = {255, 255, 255, 255};
-  prompt->text_surface.reset(TTF_RenderText_Solid(font.get(), prompt->text.c_str(), text_color), SDLDeleter());
-  prompt->name_surface.reset(TTF_RenderText_Solid(font.get(), prompt->name.c_str(), text_color), SDLDeleter());
+  SDL_Color hover_color = {0, 255, 0, 255};
+  SDL_Color bg_color = {0, 0, 0, 255};
+
+  prompt->r_text.surface.reset(
+    TTF_RenderText_Solid(font.get(), prompt->text.c_str(), text_color), SDLDeleter());
+  if (!prompt->r_text.surface) {
+    logger->error("{}: Failed to create TTF for text '{}'", section_name, prompt->text);
+    parse_error = true;
+    return false;
+  }
+
+  prompt->r_name.surface.reset(
+    TTF_RenderText_Solid(font.get(), prompt->name.c_str(), text_color), SDLDeleter());
+  if (!prompt->r_name.surface) {
+    logger->error("{}: Failed to create TTF for text '{}'", section_name, prompt->name);
+    parse_error = true;
+    return false;
+  }
+
+  if (!prompt->button.empty()) {
+    prompt->r_button.surface.reset(
+      TTF_RenderText_Shaded(font.get(), prompt->button.c_str(), text_color, bg_color), SDLDeleter());
+    if (!prompt->r_button.surface) {
+      parse_error = true;
+      logger->error("{}: Failed to create TTF for button '{}'", section_name, prompt->button);
+      return false;
+    }
+    prompt->r_button_hover.surface.reset(
+      TTF_RenderText_Solid(font.get(), prompt->button.c_str(), hover_color), SDLDeleter());
+  }
 
   int32_t check = 0;
   while (++check) {
@@ -222,6 +261,16 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     DialogPrompt next_prompt;
 
     if (!found->find(std::to_string(check))) {
+      if (prompt->choices.size() > 1) {
+        for (auto& choice : prompt->choices) {
+          if (choice.button.empty()) {
+            parse_error = true;
+            logger->error("{}: Missing a 'button' tag. It is part of a group of responses.", 
+                          choice.section);
+            return false;
+          }
+        }
+      }
       break;
     }
 
@@ -243,6 +292,7 @@ void Dialog::attach_controller(std::shared_ptr<Controller>& controller_)
 
   controller = controller_;
   controller->on_button_down(std::bind(&Dialog::on_button_down, this, _1));
+  controller->on_right_joy(std::bind(&Dialog::on_right_joy, this, _1));
 }
 
 bool Dialog::on_button_down(const ControllerState& state)
@@ -252,52 +302,123 @@ bool Dialog::on_button_down(const ControllerState& state)
   }
 
   if (!active_prompt->choices.empty()) {
-    active_prompt = &active_prompt->choices[0];
+    active_prompt = &active_prompt->choices[selected_choice];
+    selected_choice = 0;
   }
 }
 
+bool Dialog::on_right_joy(const ControllerState& state)
+{
+  if (!active_prompt) {
+    return false;
+  }
+
+  if ((SDL_GetTicks() - last_ticks) < 250) {
+    return false;
+  }
+  
+  if (state.y < -0.5) {
+    ++selected_choice;
+    if (selected_choice >= active_prompt->choices.size()) {
+      selected_choice = 0;
+    }
+    last_ticks = SDL_GetTicks();
+  } else if (state.y > 0.5) {
+    --selected_choice;
+    if (selected_choice < 0) {
+      selected_choice = active_prompt->choices.size() - 1;
+    }
+    last_ticks = SDL_GetTicks();
+  }
+
+  return true;
+}
+
+
+bool DialogPrompt::Text::allocate(std::shared_ptr<Renderer>& renderer)
+{
+  if (texture) {
+    return false;
+  }
+
+  texture.reset(renderer->create_texture(surface), SDLDeleter());
+  if (!texture) {
+    logger->error("Failed to allocate texture");
+    return false;
+  }
+
+  SDL_QueryTexture(texture.get(), NULL, NULL, &bbox.w, &bbox.h);
+  bbox.x = 0;
+  bbox.y = 0;
+
+  return true;  
+}
 
 bool Dialog::think(std::shared_ptr<Game>& game)
 {
   if (!active_prompt) {
+    selected_choice = 0;
     active_prompt = &prompts[0];
   }
 
-  auto& renderer = game->renderer;
-
-  if (!active_prompt->text_texture) {
-    active_prompt->text_texture.reset(renderer->create_texture(active_prompt->text_surface), SDLDeleter());
-    SDL_QueryTexture(active_prompt->text_texture.get(), NULL, NULL, &active_prompt->text_bbox.w, &active_prompt->text_bbox.h);
-    active_prompt->text_bbox.x = 0;
-    active_prompt->text_bbox.y = 0;
-  }
-
-  if (!active_prompt->name_texture) {
-    active_prompt->name_texture.reset(renderer->create_texture(active_prompt->name_surface), SDLDeleter());
-    SDL_QueryTexture(active_prompt->name_texture.get(), NULL, NULL, &active_prompt->title_bbox.w, &active_prompt->title_bbox.h);
-    active_prompt->title_bbox.x = 0;
-    active_prompt->title_bbox.y = 0;
-  }
-  
+  // Render dialog box
+  auto& renderer = game->renderer; 
   dialog_box->render(renderer);
 
+  // Render speaker
   auto& speaker = active_prompt->speaker;
   speaker->render(renderer);
 
+  // Start rendering frame info
   auto& current_frame = speaker->current_animation->current_frame();
 
-  SDL_Rect dst;
-  dst.w = active_prompt->text_bbox.w;
-  dst.h = active_prompt->text_bbox.h;
-  dst.x = speaker->x + current_frame.w + 16;
-  dst.y = 32;
-  renderer->add(active_prompt->text_texture, active_prompt->text_bbox, dst, 0.0, false, false);
+  // Text of the Dialog box
+  {
+    SDL_Rect dst;
+    auto& text = active_prompt->r_text;
+    text.allocate(renderer);
+    auto& texture = text.texture;
+    auto& bbox = text.bbox;
+    dst.w = bbox.w;
+    dst.h = bbox.h;
+    dst.x = speaker->x + current_frame.w + 16;
+    dst.y = 32;
+    renderer->add(texture, bbox, dst, 0.0, false, false);
+  }
 
-  dst.w = active_prompt->title_bbox.w;
-  dst.h = active_prompt->title_bbox.h;
-  dst.x = 32;
-  dst.y = 8;
-  renderer->add(active_prompt->name_texture, active_prompt->title_bbox, dst, 0.0, false, false);
+  // Name of the Character
+  {
+    SDL_Rect dst;
+    auto& text = active_prompt->r_name;
+    text.allocate(renderer);
+    auto& texture = text.texture;
+    auto& bbox = text.bbox;
+    dst.w = bbox.w;
+    dst.h = bbox.h;
+    dst.x = 32;
+    dst.y = 8;
+    renderer->add(texture, bbox, dst, 0.0, false, false);
+  }
+
+  // Available choices
+  if (active_prompt->choices.size() > 1) {
+    int32_t choice_x = 40;
+    int32_t choice_y = 100;
+    for (int32_t i = 0; i < active_prompt->choices.size(); ++i) {
+      auto& choice = active_prompt->choices[i];
+      SDL_Rect dst;
+      DialogPrompt::Text& text = (i == selected_choice) ? choice.r_button_hover : choice.r_button;
+      text.allocate(renderer);
+      auto& texture = text.texture;
+      auto& bbox = text.bbox;
+      dst.w = bbox.w;
+      dst.h = bbox.h;
+      dst.x = choice_x;
+      dst.y = choice_y;
+      renderer->add(texture, bbox, dst, 0.0, false, false);
+      choice_y += 24;
+    }
+  }
 
   return true;
 }
