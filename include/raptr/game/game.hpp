@@ -122,7 +122,8 @@ class Game : public std::enable_shared_from_this<Game> {
   std::map<int32_t, std::shared_ptr<Entity>> entity_lut;
 
   //! A map to find what the last known location of an entity was
-  std::map<std::shared_ptr<Entity>, Rect> last_known_entity_loc;
+  std::map<std::shared_ptr<Entity>, Point> last_known_entity_pos;
+  std::map<std::shared_ptr<Entity>, std::vector<Bounds>> last_known_entity_bounds;
 
   //! The r-tree is used as a secondary test for bounding box interactions
   RTree<Entity*, double, 2> rtree;

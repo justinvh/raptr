@@ -20,30 +20,37 @@ int32_t Entity::id() const
   return id_;
 }
 
-Rect Entity::want_position_x(int64_t delta_ms)
+std::vector<Rect> Entity::want_position_x(int64_t delta_ms)
 {
   double dt = delta_ms / 1000.0;
   Point pos = this->position();
   const Point& vel = this->velocity();
   const Point& acc = this->acceleration();
   pos.x += vel.x * dt + 0.5 * acc.x * dt * dt;
-  Rect rect = this->bbox();
-  rect.x = pos.x;
-  rect.y = pos.y;
-  return rect;
+
+  // Need a transformation matrix for this sort of stuff
+  std::vector<Rect> rects = this->bbox();
+  for (auto& r : rects) {
+    r.x = pos.x;
+    r.y = pos.y;
+  }
+
+  return rects;
 }
 
-Rect Entity::want_position_y(int64_t delta_ms)
+std::vector<Rect> Entity::want_position_y(int64_t delta_ms)
 {
   double dt = delta_ms / 1000.0;
   Point pos = this->position();
   const Point& vel = this->velocity();
   const Point& acc = this->acceleration();
   pos.y += -vel.y * dt + -0.5 * acc.y * dt * dt;
-  Rect rect = this->bbox();
-  rect.x = pos.x;
-  rect.y = pos.y;
-  return rect;
+  std::vector<Rect> rects = this->bbox();
+  for (auto& r : rects) {
+    r.x = pos.x;
+    r.y = pos.y;
+  }
+  return rects;
 }
 
 } // namespace raptr

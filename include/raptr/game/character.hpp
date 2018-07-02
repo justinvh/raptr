@@ -44,7 +44,7 @@ class Character : public Entity {
     Returns the bounding box for this character
     \return An rectangle containing the character
   */
-  virtual Rect bbox() const;
+  virtual std::vector<Rect> bbox() const;
 
   /*! 
     Triggers the "crouch" animation of the character. This will influence

@@ -55,10 +55,13 @@ bool Game::run()
     pos.x = 100;
     pos.y = 200;
 
-    Rect bbox = mesh->bbox();
-    Bounds bounds = mesh->bounds();
-    last_known_entity_loc[mesh] = bbox;
-    rtree.Insert(bounds.min, bounds.max, mesh.get());
+    const auto& bounds = mesh->bounds();
+    last_known_entity_pos[mesh] = mesh->position();
+
+    for (const auto& b : bounds) {
+      rtree.Insert(b.min, b.max, mesh.get());
+    }
+
     entities.push_back(mesh);
     entity_lut[mesh->id()] = mesh;
   }
@@ -73,10 +76,13 @@ bool Game::run()
     pos.x = 300;
     pos.y = 100;
 
-    Rect bbox = mesh->bbox();
-    Bounds bounds = mesh->bounds();
-    last_known_entity_loc[mesh] = bbox;
-    rtree.Insert(bounds.min, bounds.max, mesh.get());
+    const auto& bounds = mesh->bounds();
+    last_known_entity_pos[mesh] = mesh->position();
+
+    for (const auto& b : bounds) {
+      rtree.Insert(b.min, b.max, mesh.get());
+    }
+
     entities.push_back(mesh);
     entity_lut[mesh->id()] = mesh;
   }
@@ -91,10 +97,13 @@ bool Game::run()
     pos.x = 0;
     pos.y = 240;
 
-    Rect bbox = mesh->bbox();
-    Bounds bounds = mesh->bounds();
-    last_known_entity_loc[mesh] = bbox;
-    rtree.Insert(bounds.min, bounds.max, mesh.get());
+    const auto& bounds = mesh->bounds();
+    last_known_entity_pos[mesh] = mesh->position();
+
+    for (const auto& b : bounds) {
+      rtree.Insert(b.min, b.max, mesh.get());
+    }
+
     entities.push_back(mesh);
     entity_lut[mesh->id()] = mesh;
   }
@@ -109,11 +118,14 @@ bool Game::run()
     entities.push_back(character_raptr);
     character_raptr->attach_controller(controllers.begin()->second);
 
-    Rect bbox = character_raptr->bbox();
-    Bounds bounds = character_raptr->bounds();
+    auto all_bounds = character_raptr->bounds();
+    last_known_entity_pos[character_raptr] = character_raptr->position();
+    last_known_entity_bounds[character_raptr] = character_raptr->bounds();
 
-    last_known_entity_loc[character_raptr] = bbox;
-    rtree.Insert(bounds.min, bounds.max, character_raptr.get());
+    for (const auto& bounds : all_bounds) {
+      rtree.Insert(bounds.min, bounds.max, character_raptr.get());
+    }
+
     entity_lut[character_raptr->id()] = character_raptr;
   }
 
@@ -146,16 +158,18 @@ bool Game::run()
     for (auto& entity : entities) {
       entity->think(this->shared_from_this());
 
-      Rect& old_bbox = last_known_entity_loc[entity];
-      Rect new_bbox = entity->bbox();
-      if (!SDL_RectEquals(&new_bbox, &old_bbox)) {
-        double new_min_bounds[2] = {new_bbox.x, new_bbox.y};
-        double new_max_bounds[2] = {new_bbox.x + new_bbox.w, new_bbox.y + new_bbox.h};
-        double old_min_bounds[2] = {old_bbox.x, old_bbox.y};
-        double old_max_bounds[2] = {old_bbox.x + old_bbox.w, old_bbox.y + old_bbox.h};
-        rtree.Remove(old_min_bounds, old_max_bounds, entity.get());
-        rtree.Insert(new_min_bounds, new_max_bounds, entity.get());
-        last_known_entity_loc[entity] = new_bbox;
+      const Point& old_point = last_known_entity_pos[entity];
+      const Point& new_point = entity->position();
+
+      if (!old_point.x - new_point.x > 1e-5 || old_point.y - new_point.y > 1e-5) {
+        for (auto& b : last_known_entity_bounds[entity]) {
+          rtree.Remove(b.min, b.max, entity.get());
+        }
+        last_known_entity_bounds[entity] = entity->bounds();
+        for (auto& b : entity->bounds()) {
+          rtree.Insert(b.min, b.max, entity.get());
+        }
+        last_known_entity_pos[entity] = entity->position();
       }
     }
 
@@ -192,10 +206,12 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
       return true;
     }
 
-    if (SDL_HasIntersection(&condition->bbox, &found->bbox())) {
-      condition->intersected = true;
-      condition->found = found;
-      return false;
+    for (const auto& b : found->bbox()) {
+      if (SDL_HasIntersection(&condition->bbox, &b)) {
+        condition->intersected = true;
+        condition->found = found;
+        return false;
+      }
     }
 
     return true;

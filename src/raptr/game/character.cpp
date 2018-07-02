@@ -128,7 +128,7 @@ void Character::think(std::shared_ptr<Game>& game)
   acc.y = game->gravity;
 
   // External forces, like gravity
-  Rect fall_check = this->want_position_y(delta_ms);
+  Rect fall_check = this->want_position_y(delta_ms)[0];
   fall_check.y += 0.1;
 
   auto intersected_entity = game->intersect_world(this, fall_check);
@@ -149,8 +149,8 @@ void Character::think(std::shared_ptr<Game>& game)
     falling = false;
   }
 
-  Rect want_x = this->want_position_x(delta_ms);
-  Rect want_y = this->want_position_y(delta_ms);
+  Rect want_x = this->want_position_x(delta_ms)[0];
+  Rect want_y = this->want_position_y(delta_ms)[0];
 
   if (!game->intersect_world(this, want_x)) {
     if (vel.x < 0) {
@@ -254,11 +254,16 @@ bool Character::intersects(const Entity* other) const
     return false;
   }
 
-  Rect self_box = this->bbox();
-  Rect other_box = other->bbox();
-  Rect res_box;
-  if (!SDL_IntersectRect(&self_box, &other_box, &res_box)) {
-    return false;
+  const auto& self_boxes = this->bbox();
+  const auto& other_boxes = other->bbox();
+
+  for (const auto& self_box : self_boxes) {
+    for (const auto& other_box : self_boxes) {
+      Rect res_box;
+      if (!SDL_IntersectRect(&self_box, &other_box, &res_box)) {
+        return false;
+      }
+    }
   }
 
   std::clog << other->id() << " is intersecting with " << this->id() << "\n";
@@ -266,7 +271,7 @@ bool Character::intersects(const Entity* other) const
   return true;
 }
 
-Rect Character::bbox() const
+std::vector<Rect> Character::bbox() const
 {
   Rect box;
   auto& pos = this->position();
@@ -275,7 +280,7 @@ Rect Character::bbox() const
   box.y = pos.y;
   box.w = (current_frame.w * sprite->scale);
   box.h = (current_frame.h * sprite->scale);
-  return box;
+  return {box};
 }
 
 } // namespace raptr

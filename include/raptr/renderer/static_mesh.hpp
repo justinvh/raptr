@@ -35,7 +35,7 @@ class StaticMesh : public Entity {
   Returns the bounding box for this static mesh based on its sprite
   \return An rectangle containing the static mesh
   */
-  virtual Rect bbox() const;
+  virtual std::vector<Rect> bbox() const;
 
   /*!
     Generates a StaticMesh object from a TOML configuration file

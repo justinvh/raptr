@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 #include <raptr/common/rect.hpp>
 
 namespace raptr {
@@ -32,19 +33,25 @@ class Entity {
     Returns the bounding box for this entity
     \return An rectangle containing the entity
   */
-  virtual Rect bbox() const = 0;
+  virtual std::vector<Rect> bbox() const = 0;
 
   /*!
     Returns the bounds of the entity
     */
-  virtual Bounds bounds() const
+  virtual std::vector<Bounds> bounds() const
   {
-    Rect bbox = this->bbox();
-    Bounds bounds = {
-      {bbox.x, bbox.y},
-      {bbox.x + bbox.w, bbox.y + bbox.h}
-    };
-    return bounds;
+    std::vector<Rect> bboxes = this->bbox();
+    std::vector<Bounds> all_bounds;
+
+    for (const auto& bbox : bboxes) {
+      Bounds bounds = {
+        {bbox.x, bbox.y},
+        {bbox.x + bbox.w, bbox.y + bbox.h}
+      };
+      all_bounds.push_back(bounds);
+    }
+
+    return all_bounds;
   }
 
   /*!
@@ -72,13 +79,13 @@ class Entity {
     Given the current position, velocity, and acceleration, where does this entity *want* to go in X
     \return The rectangle this entity *wants* to occupy in the X direction
   */
-  virtual Rect want_position_x(int64_t delta_ms);
+  virtual std::vector<Rect> want_position_x(int64_t delta_ms);
 
   /*!
     Given the current position, velocity, and acceleration, where does this entity *want* to go in Y
     \return The rectangle this entity *wants* to occupy in the Y direction
   */
-  virtual Rect want_position_y(int64_t delta_ms);
+  virtual std::vector<Rect> want_position_y(int64_t delta_ms);
 
   /*!
     Return the current position of the entity

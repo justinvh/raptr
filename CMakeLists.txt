@@ -43,11 +43,10 @@ set(RAPTR_CPP
     src/raptr/game/character.cpp
     src/raptr/game/entity.cpp
     src/raptr/game/game.cpp
+    src/raptr/game/map.cpp
 
     # Input sources
     src/raptr/input/controller.cpp
-
-    # Map sources
 
     # Renderer sources
     src/raptr/renderer/renderer.cpp
@@ -77,12 +76,10 @@ set(RAPTR_HPP
     include/raptr/game/character.hpp
     include/raptr/game/entity.hpp
     include/raptr/game/game.hpp
+    include/raptr/game/map.hpp
 
     # Input headers
     include/raptr/input/controller.hpp
-
-    # Map headers
-    include/raptr/map/map.hpp
 
     # Renderer headers
     include/raptr/renderer/renderer.hpp
@@ -130,6 +127,12 @@ set(RAPTR_GAME
     game/fonts/americancursive.ttf
     game/fonts/munro_small.ttf
     game/fonts/fonts.toml
+
+    # Maps
+    game/maps/demo/demo.aseprite
+    game/maps/demo/demo.json
+    game/maps/demo/demo.png
+    game/maps/demo/map.toml
 
     # Static meshes
     game/staticmeshes/fire.toml
