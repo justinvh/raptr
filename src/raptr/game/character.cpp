@@ -18,7 +18,7 @@
 #include <raptr/common/logging.hpp>
 #include <raptr/game/entity.hpp>
 
-macro_enable_logger();
+namespace { auto logger = raptr::_get_logger(__FILE__); };
 
 namespace raptr {
 
@@ -197,7 +197,7 @@ void Character::stop()
   sprite->set_animation("Idle");
 }
 
-bool Character::on_right_joy(const ControllerState& state)
+bool Character::on_left_joy(const ControllerState& state)
 {
   float mag_x = std::fabs(state.x);
 
@@ -213,7 +213,7 @@ bool Character::on_right_joy(const ControllerState& state)
     fast_fall = true;
   }
 
-  return true;
+  return false;
 }
 
 
@@ -236,7 +236,7 @@ bool Character::on_button_down(const ControllerState& state)
     sprite->set_animation("Jump");
     ++jump_count;
   }
-  return true;
+  return false;
 }
 
 void Character::attach_controller(std::shared_ptr<Controller>& controller_)
@@ -244,7 +244,7 @@ void Character::attach_controller(std::shared_ptr<Controller>& controller_)
   using std::placeholders::_1;
 
   controller = controller_;
-  controller->on_right_joy(std::bind(&Character::on_right_joy, this, _1));
+  controller->on_left_joy(std::bind(&Character::on_left_joy, this, _1));
   controller->on_button_down(std::bind(&Character::on_button_down, this, _1));
 }
 

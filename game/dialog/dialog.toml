@@ -1,7 +1,9 @@
 [[dialog]]
 character = "raptor"
 font = "default"
+size = 15
 
 [[dialog]]
 character = "raptor-lady"
-font = "cursive"
+font = "default"
+size = 15

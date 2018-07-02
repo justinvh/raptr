@@ -17,7 +17,7 @@
 #include <raptr/sound/sound.hpp>
 #include <raptr/ui/dialog.hpp>
 
-macro_enable_logger();
+namespace { auto logger = raptr::_get_logger(__FILE__); };
 
 namespace raptr {
 
@@ -36,13 +36,14 @@ bool Game::run()
 {
   if (!is_init) {
     if (!this->init()) {
-      std::cerr << "Failed to initialize the game.\n";
+      logger->error("Failed to initialize the game");
       return false;
     }
   }
 
   auto dialog = Dialog::from_toml(game_path.from_root("dialog/demo/dialog.toml"));
   dialog->attach_controller(controllers.begin()->second);
+  dialog->start();
 
   {
     auto mesh = StaticMesh::from_toml(game_path.from_root("staticmeshes/platform.toml"));
@@ -250,7 +251,7 @@ bool Game::init_controllers()
       continue;
     }
 
-    auto controller = Controller::open(i);
+    auto controller = Controller::open(game_path, i);
     controllers[controller->id()] = controller;
   }
 

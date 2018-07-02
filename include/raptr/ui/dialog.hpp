@@ -25,6 +25,12 @@ class Controller;
 class Sprite;
 class Renderer;
 
+struct DialogCharacter {
+  std::string name;
+  std::string font_name;
+  int32_t font_size;
+};
+
 struct DialogPrompt {
   std::shared_ptr<Sprite> speaker;
   std::string name;
@@ -66,6 +72,11 @@ class Dialog {
     /return Whether the document was parsed correctly
   */
   static std::shared_ptr<Dialog> from_toml(const FileInfo& path);
+
+  /*!
+    Start the dialog
+  */
+  bool start();
 
   /*!
     Start processing the dialog

@@ -42,7 +42,7 @@ bool Renderer::init(std::shared_ptr<Config>& config_)
 
   // Initialize SDL with some basics
   sdl.window = SDL_CreateWindow("RAPTR", 10, 10, 960, 540, 0);
-  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, 0);
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
   sdl.renderer = SDL_CreateRenderer(sdl.window, -1, SDL_RENDERER_ACCELERATED);
   SDL_RenderSetLogicalSize(sdl.renderer, 480, 270);
   return true;

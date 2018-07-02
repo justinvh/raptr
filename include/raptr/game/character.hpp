@@ -103,7 +103,7 @@ class Character : public Entity {
     function which will handle how best to deal with the motion angle and amplitude.
     \param state - What the controller was doing exactly when a button was pressed down
   */
-  virtual bool on_right_joy(const ControllerState& state);
+  virtual bool on_left_joy(const ControllerState& state);
 
  public:
   //! The sprite that is used to render this character

@@ -2,7 +2,7 @@
 #include <raptr/game/entity.hpp>
 #include <raptr/common/logging.hpp>
 
-macro_enable_logger();
+namespace { auto logger = raptr::_get_logger(__FILE__); };
 
 namespace raptr {
 

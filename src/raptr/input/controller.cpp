@@ -10,47 +10,65 @@
 #include <raptr/common/logging.hpp>
 #include <raptr/input/controller.hpp>
 
-macro_enable_logger();
+namespace { auto logger = raptr::_get_logger(__FILE__); };
 
 namespace raptr {
 
 
-void Controller::on_button_down(const ControllerCallback& callback)
+void Controller::on_button_down(const ControllerCallback& callback, int32_t priority)
 {
-  button_down_callbacks.push_back(callback);
+  button_down_callbacks.push_back(std::make_pair(priority, callback));
+  std::sort(button_down_callbacks.begin(), button_down_callbacks.end());
 }
 
-void Controller::on_button_up(const ControllerCallback& callback)
+void Controller::on_button_up(const ControllerCallback& callback, int32_t priority)
 {
-  button_up_callbacks.push_back(callback);
+  button_up_callbacks.push_back(std::make_pair(priority, callback));
+  std::sort(button_up_callbacks.begin(), button_up_callbacks.end());
 }
 
-void Controller::on_left_joy(const ControllerCallback& callback)
+void Controller::on_left_joy(const ControllerCallback& callback, int32_t priority)
 {
-  left_joy_callbacks.push_back(callback);
+  left_joy_callbacks.push_back(std::make_pair(priority, callback));
+  std::sort(left_joy_callbacks.begin(), left_joy_callbacks.end());
 }
 
-void Controller::on_right_joy(const ControllerCallback& callback)
+void Controller::on_right_joy(const ControllerCallback& callback, int32_t priority)
 {
-  right_joy_callbacks.push_back(callback);
+  right_joy_callbacks.push_back(std::make_pair(priority, callback));
+  std::sort(right_joy_callbacks.begin(), right_joy_callbacks.end());
 }
 
 
-ControllerState state_from_event(SDL_GameController* controller, const SDL_Event& e)
+ControllerState state_from_joystick_event(SDL_GameController* controller, const SDL_Event& e)
 {
+  float mag[2] = {0.0f, 0.0f};
   ControllerState state;
 
-  int16_t axis = static_cast<int16_t>(e.caxis.axis);
-  int16_t primary_axis = axis / 2;
-  float mag[2] = {0, 0};
+  int16_t primary_axis = 0;
+
+  switch (e.caxis.axis) {
+    case SDL_CONTROLLER_AXIS_LEFTX:
+    case SDL_CONTROLLER_AXIS_LEFTY:
+      primary_axis = static_cast<int16_t>(SDL_CONTROLLER_AXIS_LEFTX);
+      break;
+    case SDL_CONTROLLER_AXIS_RIGHTX:
+    case SDL_CONTROLLER_AXIS_RIGHTY:
+      primary_axis = static_cast<int16_t>(SDL_CONTROLLER_AXIS_RIGHTX);
+      break;
+    default:
+      logger->debug("Unhandled axis event for the controller");
+      primary_axis = 0;
+  }
+
   float angle = 0.0;
-  for (int i = primary_axis; i <= primary_axis + 1; ++i) {
+  for (size_t i = primary_axis, k = 0; i <= primary_axis + 1; ++i, ++k) {
     SDL_GameControllerAxis axis = static_cast<SDL_GameControllerAxis>(i);
     const int16_t deadzone = 4000;
     const int16_t value = SDL_GameControllerGetAxis(controller, axis);
     if (value < -deadzone || value > deadzone) {
       float int16_t_max = static_cast<float>(std::numeric_limits<int16_t>::max());
-      mag[i] = std::max(-1.0f, std::min(value / int16_t_max, 1.0f));
+      mag[k] = std::max(-1.0f, std::min(value / int16_t_max, 1.0f));
     }
   }
 
@@ -66,11 +84,14 @@ ControllerState state_from_event(SDL_GameController* controller, const SDL_Event
   state.y = y;
   state.magnitude = magnitude;
   state.angle = angle;
+  state.joystick = primary_axis;
 
   if (e.cbutton.button == SDL_CONTROLLER_BUTTON_A) {
     state.button = Button::a;
   } else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_B) {
     state.button = Button::b;
+  } else {
+    state.button = Button::not_set;
   }
 
   return state;
@@ -81,34 +102,47 @@ void Controller::process_event(const SDL_Event& e)
   ControllerState state;
   switch (e.type) {
     case SDL_CONTROLLERBUTTONDOWN:
-      state = state_from_event(sdl.controller, e);
+      state = state_from_joystick_event(sdl.controller, e);
       for (auto& callback : button_down_callbacks) {
-        callback(state);
+        // If a callback returns false it means do not bubble
+        if (!callback.second(state)) {
+          break;
+        }
       }
       break;
     case SDL_CONTROLLERAXISMOTION:
-      state = state_from_event(sdl.controller, e);
       int16_t axis = static_cast<int16_t>(e.caxis.axis) / 2;
-      switch (axis) {
-        case 0:
-          for (auto& callback : right_joy_callbacks) {
-            callback(state);
-          }
-          break;
-        case 1:
-          for (auto& callback : left_joy_callbacks) {
-            callback(state);
-          }
-          break;
+      if (axis == 0 || axis == 1) {
+        state = state_from_joystick_event(sdl.controller, e);
+        switch (axis) {
+          case 0:
+            // If a callback returns false it means do not bubble
+            for (auto& callback : left_joy_callbacks) {
+              if (!callback.second(state)) {
+                break;
+              }
+            }
+            break;
+          case 1:
+            // If a callback returns false it means do not bubble
+            for (auto& callback : right_joy_callbacks) {
+              if (!callback.second(state)) {
+                break;
+              }
+            }
+            break;
+        }
       }
       break;
   }
 }
 
-std::shared_ptr<Controller> Controller::open(int controller_id)
+std::shared_ptr<Controller> Controller::open(const FileInfo& game_root, int controller_id)
 {
   SDL_GameController* sdl_controller = SDL_GameControllerOpen(controller_id);
-  SDL_GameControllerAddMappingsFromFile("C:/Users/justi/OneDrive/Documents/Visual Studio 2017/Projects/raptr/game/controls/gamecontrollerdb.txt");
+  auto mapping_file = game_root.from_root(fs::path("controls") / "gamecontrollerdb.txt").file_path;
+  auto mapping_file_str = mapping_file.string();
+  SDL_GameControllerAddMappingsFromFile(mapping_file_str.c_str());
 
   char* mapping = SDL_GameControllerMapping(sdl_controller);
 

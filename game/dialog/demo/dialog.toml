@@ -2,7 +2,7 @@
 speaker = "raptor-lady"
 expression = "Afraid"
 name = "Trapped Dinosaur"
-text = "You, Mr. Raptor, can you help?"
+text = "You, Mr. Raptor. Please, I am trapped, help me!"
 
     [1.1]
     evil_requirement = 10

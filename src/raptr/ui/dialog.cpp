@@ -14,7 +14,7 @@
 #include <raptr/common/logging.hpp>
 #include <raptr/ui/dialog.hpp>
 
-macro_enable_logger();
+namespace { auto logger = raptr::_get_logger(__FILE__); };
 
 #pragma warning(disable : 4996)
 #include <toml/toml.h>
@@ -22,8 +22,51 @@ macro_enable_logger();
 
 namespace raptr {
 
+namespace {
+
+std::map<std::string, DialogCharacter> CHARACTER_DIALOG_CACHE;
+bool dialog_cache_loaded = false;
+
+}
+
+bool load_dialog_cache(const FileInfo& game_root)
+{
+  if (dialog_cache_loaded) {
+    return true;
+  }
+
+  auto toml_path = game_root.from_root("dialog/dialog.toml");
+  auto toml_relative = toml_path.file_relative;
+  auto ifs = toml_path.open();
+  if (!ifs) {
+    return nullptr;
+  }
+
+  toml::ParseResult pr = toml::parse(*ifs);
+
+  if (!pr.valid()) {
+    logger->error("Failed to parse {} with reason {}", toml_relative, pr.errorReason);
+    return nullptr;
+  }
+
+  const toml::Value& v = pr.value;
+  const toml::Array& registry_values = v.find("dialog")->as<toml::Array>();
+  for (const toml::Value& v : registry_values) {
+    std::string name = v.get<std::string>("character");
+    std::string font_name = v.get<std::string>("font");
+    int32_t font_size = v.get<int32_t>("size");
+    DialogCharacter dc = {name, font_name, font_size};
+    CHARACTER_DIALOG_CACHE[name] = dc;
+    logger->debug("Registered {} dialog defaults", name);
+  }
+
+  dialog_cache_loaded = true;
+  return true;
+}
+
 std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path)
 {
+  load_dialog_cache(toml_path);
   auto toml_relative = toml_path.file_relative;
   auto ifs = toml_path.open();
   if (!ifs) {
@@ -201,12 +244,22 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     prompt->has.value = true;
   }
 
-  int32_t font_size = 15;
+  auto char_map  = CHARACTER_DIALOG_CACHE.find(speaker_id);
+  bool has_defaults = char_map != CHARACTER_DIALOG_CACHE.end();
+  DialogCharacter char_defaults;
+  if (has_defaults) {
+    char_defaults = char_map->second;
+  } else {
+    char_defaults.font_name = "default";
+    char_defaults.font_size = 15;
+  }
+    
+  int32_t font_size = char_defaults.font_size;
   if (dict.find("font_size") != dict.end()) {
     font_size = dict["font_size"]->as<int32_t>();
   }
 
-  std::string font_name = "default";
+  std::string font_name = char_defaults.font_name;
   if (dict.find("font_name") != dict.end()) {
     font_name = dict["font_name"]->as<std::string>();
   }
@@ -214,16 +267,23 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
   SDL_Color text_color = {255, 255, 255, 255};
   SDL_Color hover_color = {0, 255, 0, 255};
   SDL_Color bg_color = {0, 0, 0, 255};
+  int32_t max_width = 400;
 
   auto game_root = toml_path.from_root("");
-  prompt->r_text = Text::create(game_root, font_name, prompt->text, font_size, text_color);
+  prompt->r_text = Text::create(game_root, font_name,
+    prompt->text, font_size, text_color,
+    max_width);
+
   if (!prompt->r_text) {
     logger->error("{}: Failed to create TTF for text '{}'", section_name, prompt->text);
     parse_error = true;
     return false;
   }
 
-  prompt->r_name = Text::create(game_root, font_name, prompt->name, font_size, text_color);
+  prompt->r_name = Text::create(game_root, font_name, 
+    prompt->name, font_size, text_color,
+    max_width);
+
   if (!prompt->r_name) {
     logger->error("{}: Failed to create TTF for text '{}'", section_name, prompt->name);
     parse_error = true;
@@ -277,12 +337,17 @@ void Dialog::attach_controller(std::shared_ptr<Controller>& controller_)
   controller = controller_;
 
   controller = controller_;
-  controller->on_button_down(std::bind(&Dialog::on_button_down, this, _1));
-  controller->on_right_joy(std::bind(&Dialog::on_right_joy, this, _1));
+  controller->on_button_down(std::bind(&Dialog::on_button_down, this, _1), -1);
+  controller->on_right_joy(std::bind(&Dialog::on_right_joy, this, _1), -1);
+  controller->on_left_joy(std::bind(&Dialog::on_right_joy, this, _1), -1);
 }
 
 bool Dialog::on_button_down(const ControllerState& state)
 {
+  if (!active_prompt) {
+    return true;
+  }
+
   if (state.button != Button::b) {
     return false;
   }
@@ -290,15 +355,17 @@ bool Dialog::on_button_down(const ControllerState& state)
   if (!active_prompt->choices.empty()) {
     active_prompt = &active_prompt->choices[selected_choice];
     selected_choice = 0;
+  } else {
+    active_prompt = nullptr;
   }
 
-  return true;
+  return false;
 }
 
 bool Dialog::on_right_joy(const ControllerState& state)
 {
   if (!active_prompt) {
-    return false;
+    return true;
   }
 
   if ((SDL_GetTicks() - last_ticks) < 250) {
@@ -319,15 +386,25 @@ bool Dialog::on_right_joy(const ControllerState& state)
     last_ticks = SDL_GetTicks();
   }
 
-  return true;
+  return false;
 }
 
+bool Dialog::start()
+{
+  if (prompts.empty()) {
+    logger->error("There are no prompts to start");
+    return false;
+  }
+
+  selected_choice = 0;
+  active_prompt = &prompts[0];
+  return true;
+}
 
 bool Dialog::think(std::shared_ptr<Game>& game)
 {
   if (!active_prompt) {
-    selected_choice = 0;
-    active_prompt = &prompts[0];
+    return false;
   }
 
   // Render dialog box

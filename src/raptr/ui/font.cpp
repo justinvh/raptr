@@ -3,11 +3,12 @@
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/ui/font.hpp>
 
+
 #pragma warning(disable : 4996)
 #include <toml/toml.h>
 #pragma warning(default : 4996)
 
-macro_enable_logger();
+namespace { auto logger = raptr::_get_logger(__FILE__); };
 
 namespace raptr {
 
@@ -63,6 +64,10 @@ bool load_registry(const FileInfo& game_root)
         return false;
       }
 
+      TTF_SetFontHinting(ttf, TTF_HINTING_NONE);
+      TTF_SetFontOutline(ttf, 0);
+      TTF_SetFontStyle(ttf, TTF_STYLE_NORMAL);
+
       // Handover the TTF to font
       std::shared_ptr<TTF_Font> font;
       font.reset(ttf);
@@ -92,6 +97,8 @@ bool Text::allocate(std::shared_ptr<Renderer>& renderer)
   SDL_QueryTexture(texture.get(), NULL, NULL, &bbox.w, &bbox.h);
   bbox.x = 0;
   bbox.y = 0;
+  bbox.w = surface->w;
+  bbox.h = surface->h;
 
   return true;
 }
@@ -100,7 +107,8 @@ std::shared_ptr<Text> Text::create(const FileInfo& game_root,
                                    const std::string& font,
                                    const std::string& text,
                                    int32_t size,
-                                   const SDL_Color& fg)
+                                   const SDL_Color& fg,
+                                   int32_t max_width)
 {
   if (!load_registry(game_root)) {
     logger->error("Registry failed to initialize");
@@ -115,10 +123,11 @@ std::shared_ptr<Text> Text::create(const FileInfo& game_root,
   }
 
   std::shared_ptr<Text> text_obj(new Text);
-  auto renderable = TTF_RenderText_Solid(
+  auto renderable = TTF_RenderText_Blended_Wrapped(
     ttf->second.get(),
     text.c_str(),
-    fg
+    fg,
+    max_width
   );
 
   text_obj->surface.reset(renderable);
