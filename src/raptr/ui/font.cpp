@@ -123,11 +123,10 @@ std::shared_ptr<Text> Text::create(const FileInfo& game_root,
   }
 
   std::shared_ptr<Text> text_obj(new Text);
-  auto renderable = TTF_RenderText_Blended_Wrapped(
+  auto renderable = TTF_RenderText_Solid(
     ttf->second.get(),
     text.c_str(),
-    fg,
-    max_width
+    fg
   );
 
   text_obj->surface.reset(renderable);

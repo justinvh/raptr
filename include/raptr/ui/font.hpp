@@ -23,7 +23,7 @@ class Text {
                                        const std::string& text,
                                        int32_t size,
                                        const SDL_Color& fg,
-                                       int32_t max_width = 200);
+                                       int32_t max_width = 400);
 };
 
 }

@@ -43,7 +43,7 @@ bool Game::run()
 
   auto dialog = Dialog::from_toml(game_path.from_root("dialog/demo/dialog.toml"));
   dialog->attach_controller(controllers.begin()->second);
-  //dialog->start();
+  dialog->start();
 
   /*
   {
