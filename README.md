@@ -18,7 +18,7 @@ it's time you escape. Maybe it's time you find a way out of this all.
 
 This project is maintained at [GitHub](https://github.com/justinvh/raptr). 
 Additional developer insight and blog can be found at 
-[https://vh.io/](https://vh.io). *Lots of screenshots there*
+[https://vh.io/](https://vh.io). **Lots of screenshots there. No, really.**
 
 ## Getting Started
 
