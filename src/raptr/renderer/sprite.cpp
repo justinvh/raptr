@@ -218,6 +218,10 @@ void Sprite::render(std::shared_ptr<Renderer>& renderer)
   renderer->add(texture, src, dst, angle, flip_x, flip_y);
 }
 
+bool Sprite::has_animation(const std::string& name)
+{
+  return animations.find(name) != animations.end();
+}
 
 bool Sprite::set_animation(const std::string& name, bool hold_last_frame)
 {

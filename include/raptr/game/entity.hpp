@@ -66,6 +66,7 @@ class Entity {
     \return Whether an intersection occured
   */
   virtual bool intersects(const Entity* other) const = 0;
+  virtual bool intersects(const Rect& bbox) const = 0;
 
   /*!
     This method will determine how the entity interacts with the game.

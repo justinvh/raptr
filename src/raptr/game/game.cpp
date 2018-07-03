@@ -43,8 +43,9 @@ bool Game::run()
 
   auto dialog = Dialog::from_toml(game_path.from_root("dialog/demo/dialog.toml"));
   dialog->attach_controller(controllers.begin()->second);
-  dialog->start();
+  //dialog->start();
 
+  /*
   {
     auto mesh = StaticMesh::from_toml(game_path.from_root("staticmeshes/platform.toml"));
     if (!mesh) {
@@ -86,8 +87,10 @@ bool Game::run()
     entities.push_back(mesh);
     entity_lut[mesh->id()] = mesh;
   }
+  */
 
   {
+    /*
     auto mesh = StaticMesh::from_toml(game_path.from_root("staticmeshes/fire.toml"));
     if (!mesh) {
       logger->error("Failed to load fire static mesh");
@@ -106,6 +109,28 @@ bool Game::run()
 
     entities.push_back(mesh);
     entity_lut[mesh->id()] = mesh;
+    */
+  }
+
+  {
+    auto mesh = StaticMesh::from_toml(game_path.from_root("staticmeshes/demo.toml"));
+    if (!mesh) {
+      logger->error("Failed to load demo static mesh");
+      return false;
+    }
+    auto& pos = mesh->position();
+    pos.x = 0;
+    pos.y = 0;
+
+    const auto& bounds = mesh->bounds();
+    last_known_entity_pos[mesh] = mesh->position();
+
+    for (const auto& b : bounds) {
+      rtree.Insert(b.min, b.max, mesh.get());
+    }
+
+    entities.push_back(mesh);
+    entity_lut[mesh->id()] = mesh;
   }
 
   {
@@ -114,6 +139,8 @@ bool Game::run()
       logger->error("Failed to load raptr character");
       return false;
     }
+    auto& pos = character_raptr->position();
+    pos.y = 100;
 
     entities.push_back(character_raptr);
     character_raptr->attach_controller(controllers.begin()->second);
@@ -161,7 +188,9 @@ bool Game::run()
       const Point& old_point = last_known_entity_pos[entity];
       const Point& new_point = entity->position();
 
-      if (!old_point.x - new_point.x > 1e-5 || old_point.y - new_point.y > 1e-5) {
+      if (std::fabs(old_point.x - new_point.x) > 0.5 ||
+          std::fabs(old_point.y - new_point.y) > 0.5) 
+      {
         for (auto& b : last_known_entity_bounds[entity]) {
           rtree.Remove(b.min, b.max, entity.get());
         }
@@ -206,12 +235,10 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
       return true;
     }
 
-    for (const auto& b : found->bbox()) {
-      if (SDL_HasIntersection(&condition->bbox, &b)) {
-        condition->intersected = true;
-        condition->found = found;
-        return false;
-      }
+    if (found->intersects(condition->bbox)) {
+      condition->intersected = true;
+      condition->found = found;
+      return false;
     }
 
     return true;

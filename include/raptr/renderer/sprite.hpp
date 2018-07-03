@@ -125,6 +125,13 @@ class Sprite {
   */
   bool set_animation(const std::string& name, bool hold_last_frame = false);
 
+  /*!
+    Check if a given animation exists
+    /param name - The name of the animation to check
+    /return Whether the animation exists
+  */
+  bool has_animation(const std::string& name);
+
  public:
   //! A mapping of animation names to the animation itself
   AnimationTable animations;

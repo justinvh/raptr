@@ -1,0 +1,6 @@
+[staticmesh]
+name = "demo"
+
+[sprite]
+path = "maps/demo/demo.json"
+scale = 1.0

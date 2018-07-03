@@ -73,6 +73,12 @@ std::shared_ptr<StaticMesh> StaticMesh::from_toml(const FileInfo& toml_path)
   staticmesh->sprite->x = 0;
   staticmesh->sprite->y = 0;
 
+  staticmesh->do_pixel_collision_test = false;
+  if (staticmesh->sprite->has_animation("Collision")) {
+    staticmesh->collision_frame = &staticmesh->sprite->animations["Collision"].frames[0];
+    staticmesh->do_pixel_collision_test = true;
+  }
+
   auto& pos = staticmesh->position();
   auto& vel = staticmesh->velocity();
   auto& acc = staticmesh->acceleration();
@@ -89,21 +95,69 @@ bool StaticMesh::intersects(const Entity* other) const
     return false;
   }
 
-  const auto& self_boxes = this->bbox();
-  const auto& other_boxes = other->bbox();
-
-  for (const auto& self_box : self_boxes) {
-    for (const auto& other_box : self_boxes) {
-      Rect res_box;
-      if (!SDL_IntersectRect(&self_box, &other_box, &res_box)) {
-        return false;
+  for (auto& self_box : this->bbox()) {
+    for (auto& other_box : other->bbox()) {
+      if (other->intersects(self_box) && this->intersects(other_box)) {
+        return true;
       }
     }
   }
 
-  std::clog << other->id() << " is intersecting with " << this->id() << "\n";
+  return false;
+}
 
-  return true;
+bool StaticMesh::intersects(const Rect& bbox) const
+{
+  if (this->do_pixel_collision_test) {
+    return this->intersect_slow(bbox);
+  } else {
+    return this->intersect_fast(bbox);
+  }
+}
+
+bool StaticMesh::intersect_slow(const Rect& other_box) const
+{
+  const auto& surface = sprite->surface;
+  const uint8_t* pixels = reinterpret_cast<uint8_t*>(surface->pixels);
+  int32_t bpp = surface->format->BytesPerPixel;
+
+  auto& pos = this->position();
+  auto& frame = collision_frame;
+
+  // x0 position
+  int32_t x0_min = static_cast<int32_t>(std::max(other_box.x, pos.x));
+  int32_t x0_max = static_cast<int32_t>(std::min(other_box.x + other_box.w,
+                                                 pos.x + frame->w - 1));
+
+  // y0 position
+  int32_t y0_min = static_cast<int32_t>(std::max(other_box.y, pos.y));
+  int32_t y0_max = static_cast<int32_t>(std::min(other_box.y + other_box.h,
+                                                 pos.y + frame->h - 1));
+
+  for (int32_t x0 = x0_min; x0 <= x0_max; ++x0) {
+    for (int32_t y0 = y0_min; y0 <= y0_max; ++y0) {
+      int32_t idx = ((frame->y + y0) * surface->pitch) + (x0 + frame->x) * bpp;
+      const uint8_t* px = pixels + idx;
+      if (*px > 0) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+bool StaticMesh::intersect_fast(const Rect& other_box) const
+{
+  const auto& self_boxes = this->bbox();
+
+  for (const auto& self_box : self_boxes) {
+    if (SDL_HasIntersection(&self_box, &other_box)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 std::vector<Rect> StaticMesh::bbox() const

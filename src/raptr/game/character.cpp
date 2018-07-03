@@ -159,11 +159,15 @@ void Character::think(std::shared_ptr<Game>& game)
       sprite->flip_x = true;
     }
     pos.x = want_x.x;
+  } else {
+    vel.x = 0;
   }
 
   if (!game->intersect_world(this, want_y)) {
     pos.y = want_y.y;
-  } 
+  } else {
+    vel.y = 0;
+  }
 
   sprite->x = pos.x;
   sprite->y = pos.y;
@@ -254,21 +258,28 @@ bool Character::intersects(const Entity* other) const
     return false;
   }
 
-  const auto& self_boxes = this->bbox();
-  const auto& other_boxes = other->bbox();
-
-  for (const auto& self_box : self_boxes) {
-    for (const auto& other_box : self_boxes) {
-      Rect res_box;
-      if (!SDL_IntersectRect(&self_box, &other_box, &res_box)) {
-        return false;
+  for (const auto& self_box : this->bbox()) {
+    for (const auto& other_box : other->bbox()) {
+      if (other->intersects(self_box) && this->intersects(other_box)) {
+        return true;
       }
     }
   }
 
-  std::clog << other->id() << " is intersecting with " << this->id() << "\n";
+  return false;
+}
 
-  return true;
+bool Character::intersects(const Rect& other_box) const
+{
+  const auto& self_boxes = this->bbox();
+
+  for (const auto& self_box : self_boxes) {
+    if (SDL_HasIntersection(&self_box, &other_box)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 std::vector<Rect> Character::bbox() const

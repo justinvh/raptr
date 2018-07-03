@@ -66,6 +66,7 @@ class Character : public Entity {
     \return Whether an intersection occured
   */
   virtual bool intersects(const Entity* other) const;
+  virtual bool intersects(const Rect& bbox) const;
 
   /*! Stop all movement and return back to an idle position and animation */
   virtual void stop();
