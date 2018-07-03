@@ -6,11 +6,23 @@ it's time you escape. Maybe it's time you find a way out of this all.
 
 ![Our Dinosaur Warrior][raptr-idle]
 
+## Features with some Hyperbole
+
+- A state-of-the-art PHY-101 physics system
+- An immersive and childish dialog and decision making system
+- Pixel perfect platforming with that keeps you on the edge of your seat
+- A flexible mapping system that makes modding a painless process
+- Music that will cut you to your core
+
 ## Development Updates
 
 This project is maintained at [GitHub](https://github.com/justinvh/raptr). 
 Additional developer insight and blog can be found at 
-[https://vh.io/](https://vh.io).
+[https://vh.io/](https://vh.io). In the meantime, here are screenshots from the blog:
+
+- Fast and dirty alpha channel collisions ![Fast and Dirty Alpha Channel Collisions][raptr-alpha]
+- Dialog system with branching, triggers, and decisions. ![Feel the emotions][raptr-dialog]
+- Pixelly drawn by hand with love ![Feel the love][raptr-emotions]
 
 ## Getting Started
 
@@ -91,3 +103,6 @@ To be added
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
 
 [raptr-idle]: https://i.imgur.com/sqVdbnN.gif
+[raptr-alpha]: https://i.imgur.com/Lxa18EC.gif
+[raptr-dialog]: https://i.imgur.com/3vOIo3g.gif
+[raptr-emotions]: https://i.imgur.com/CP0NvDQ.gif
