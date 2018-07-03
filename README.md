@@ -18,11 +18,7 @@ it's time you escape. Maybe it's time you find a way out of this all.
 
 This project is maintained at [GitHub](https://github.com/justinvh/raptr). 
 Additional developer insight and blog can be found at 
-[https://vh.io/](https://vh.io). In the meantime, here are screenshots from the blog:
-
-- Fast and dirty alpha channel collisions ![Fast and Dirty Alpha Channel Collisions][raptr-alpha]
-- Dialog system with branching, triggers, and decisions. ![Feel the emotions][raptr-dialog]
-- Pixelly drawn by hand with love ![Feel the love][raptr-emotions]
+[https://vh.io/](https://vh.io). *Lots of screenshots there*
 
 ## Getting Started
 
