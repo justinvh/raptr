@@ -45,41 +45,12 @@ class StaticMesh : public Entity {
   static std::shared_ptr<StaticMesh> from_toml(const FileInfo& path);
 
   /*!
-    Returns true if this static mesh intersects with another entity
-    \param other - The entity that this entity will attempt to intersect against
-    \return Whether an intersection occured
-  */
-  virtual bool intersects(const Entity* other) const;
-  virtual bool intersects(const Rect& bbox) const;
-
-  /*!
-    A fast bounding box intersection
-    \param other - The entity this entity will attempt to intersect against
-    \return Whether an intersection occured
-  */
-  bool intersect_fast(const Rect& bbox) const;
-
-  /*!
-    A slower per-pixel bounding box intersection test
-    \param other - THe entity this entity will attempt to intersect against
-    \return Whether an intersection occured
-  */
-  bool intersect_slow(const Rect& bbox) const;
-
-  /*!
     The static mesh just needs to render. It is a simple function.
     \param game - An instance of the game to retrieve event states, such as the current renderer
   */
   virtual void think(std::shared_ptr<Game>& game);
 
  public:
-  //! If set, then the collisions will be done on the collision tagged mesh
-  bool do_pixel_collision_test;
-  
-  //! The sprite that this Static Mesh uses to render and derive parameters
-  std::shared_ptr<Sprite> sprite;
-  AnimationFrame* collision_frame;
-
   //! A unique world id
   int32_t _id;
 };

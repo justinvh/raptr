@@ -13,6 +13,8 @@
 namespace raptr {
 
 class Game;
+class Sprite;
+struct AnimationFrame;
 
 /*!
   An Entity is any object in the world that can be interacted with by the player.
@@ -60,13 +62,30 @@ class Entity {
   */
   virtual int32_t id() const;
 
+
   /*!
-    Returns true if this entity intersects with another entity
-    \param other - The entity that this entity will attempt to intersect against
-    \return Whether an intersection occured
+  Returns true if this static mesh intersects with another entity
+  \param other - The entity that this entity will attempt to intersect against
+  \return Whether an intersection occured
   */
-  virtual bool intersects(const Entity* other) const = 0;
-  virtual bool intersects(const Rect& bbox) const = 0;
+  virtual bool intersects(const Entity* other) const;
+  virtual bool intersects(const Rect& bbox) const;
+  virtual bool intersects(const Entity* other, const Rect& bbox) const;
+
+  /*!
+  A fast bounding box intersection
+  \param other - The entity this entity will attempt to intersect against
+  \return Whether an intersection occured
+  */
+  virtual bool intersect_fast(const Rect& bbox) const;
+
+  /*!
+  A slower per-pixel bounding box intersection test
+  \param other - THe entity this entity will attempt to intersect against
+  \return Whether an intersection occured
+  */
+  virtual bool intersect_slow(const Rect& bbox) const;
+  virtual bool intersect_slow(const Entity* other, const Rect& bbox) const;
 
   /*!
     This method will determine how the entity interacts with the game.
@@ -127,6 +146,15 @@ class Entity {
 
   //! How long the entity has been falling in milliseconds, if any
   uint32_t fall_time_ms;
+
+  //! Collision test per pixel
+  bool do_pixel_collision_test;
+
+  //! The sprite that is used to render this character
+  std::shared_ptr<Sprite> sprite;
+
+  //! Specific frame used for collisions
+  AnimationFrame* collision_frame;
 
  private:
   //! A simple ID counter

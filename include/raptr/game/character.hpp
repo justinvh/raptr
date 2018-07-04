@@ -60,14 +60,6 @@ class Character : public Entity {
   */
   static std::shared_ptr<Character> from_toml(const FileInfo& path);
 
-  /*! 
-    Returns true if this character intersects with another entity
-    \param other - The entity that this character will attempt to intersect against
-    \return Whether an intersection occured
-  */
-  virtual bool intersects(const Entity* other) const;
-  virtual bool intersects(const Rect& bbox) const;
-
   /*! Stop all movement and return back to an idle position and animation */
   virtual void stop();
 
@@ -107,8 +99,6 @@ class Character : public Entity {
   virtual bool on_left_joy(const ControllerState& state);
 
  public:
-  //! The sprite that is used to render this character
-  std::shared_ptr<Sprite> sprite;
 
   //! The controller that is bound to this character
   std::shared_ptr<Controller> controller;

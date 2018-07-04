@@ -141,6 +141,7 @@ bool Game::run()
     }
     auto& pos = character_raptr->position();
     pos.y = 100;
+    pos.x = 0;
 
     entities.push_back(character_raptr);
     character_raptr->attach_controller(controllers.begin()->second);
@@ -235,7 +236,14 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
       return true;
     }
 
-    if (found->intersects(condition->bbox)) {
+    bool has_intersection = false;
+    if (self->do_pixel_collision_test && found->do_pixel_collision_test) {
+      has_intersection = self->intersects(found, condition->bbox);
+    } else {
+      has_intersection = self->intersects(condition->bbox);
+    }
+
+    if (has_intersection) {
       condition->intersected = true;
       condition->found = found;
       return false;
@@ -262,7 +270,7 @@ bool Game::init()
   }
 
   config.reset(new Config());
-  gravity = -4000;
+  gravity = -4500;
 
   if (!this->init_renderer()) {
     logger->error("Failed to initialize renderer");

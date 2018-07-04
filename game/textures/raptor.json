@@ -33,7 +33,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "sourceSize": { "w": 60, "h": 32 },
-    "duration": 200
+    "duration": 500
    },
    {
     "filename": "raptr 4.aseprite",
@@ -60,7 +60,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "sourceSize": { "w": 60, "h": 32 },
-    "duration": 125
+    "duration": 200
    },
    {
     "filename": "raptr 7.aseprite",
@@ -69,7 +69,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "sourceSize": { "w": 60, "h": 32 },
-    "duration": 125
+    "duration": 200
    },
    {
     "filename": "raptr 8.aseprite",
@@ -87,7 +87,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "sourceSize": { "w": 60, "h": 32 },
-    "duration": 500
+    "duration": 125
    },
    {
     "filename": "raptr 10.aseprite",
@@ -96,7 +96,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "sourceSize": { "w": 60, "h": 32 },
-    "duration": 500
+    "duration": 125
    },
    {
     "filename": "raptr 11.aseprite",
@@ -105,7 +105,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "sourceSize": { "w": 60, "h": 32 },
-    "duration": 500
+    "duration": 200
    },
    {
     "filename": "raptr 12.aseprite",
@@ -114,7 +114,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "sourceSize": { "w": 60, "h": 32 },
-    "duration": 500
+    "duration": 200
    },
    {
     "filename": "raptr 13.aseprite",
@@ -141,7 +141,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "sourceSize": { "w": 60, "h": 32 },
-    "duration": 200
+    "duration": 1000
    },
    {
     "filename": "raptr 16.aseprite",
@@ -150,7 +150,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "sourceSize": { "w": 60, "h": 32 },
-    "duration": 200
+    "duration": 1000
    },
    {
     "filename": "raptr 17.aseprite",
@@ -169,24 +169,6 @@
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
     "sourceSize": { "w": 60, "h": 32 },
     "duration": 1000
-   },
-   {
-    "filename": "raptr 19.aseprite",
-    "frame": { "x": 1140, "y": 0, "w": 60, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
-    "sourceSize": { "w": 60, "h": 32 },
-    "duration": 1000
-   },
-   {
-    "filename": "raptr 20.aseprite",
-    "frame": { "x": 1200, "y": 0, "w": 60, "h": 32 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
-    "sourceSize": { "w": 60, "h": 32 },
-    "duration": 1000
    }
  ],
  "meta": {
@@ -194,17 +176,18 @@
   "version": "1.2.8-x64",
   "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\textures\\raptor-spritesheet.png",
   "format": "RGBA8888",
-  "size": { "w": 1260, "h": 32 },
+  "size": { "w": 1140, "h": 32 },
   "scale": "1",
   "frameTags": [
-   { "name": "Idle", "from": 0, "to": 2, "direction": "pingpong" },
-   { "name": "Walk", "from": 3, "to": 5, "direction": "pingpong" },
-   { "name": "Run", "from": 6, "to": 8, "direction": "pingpong" },
-   { "name": "Jump", "from": 9, "to": 12, "direction": "forward" },
-   { "name": "Happy", "from": 13, "to": 14, "direction": "pingpong" },
-   { "name": "Angry", "from": 15, "to": 16, "direction": "forward" },
-   { "name": "Sad", "from": 17, "to": 18, "direction": "forward" },
-   { "name": "Afraid", "from": 19, "to": 20, "direction": "forward" }
+   { "name": "Collision", "from": 0, "to": 0, "direction": "forward" },
+   { "name": "Idle", "from": 1, "to": 3, "direction": "pingpong" },
+   { "name": "Walk", "from": 4, "to": 6, "direction": "pingpong" },
+   { "name": "Jump", "from": 7, "to": 7, "direction": "forward" },
+   { "name": "Run", "from": 8, "to": 10, "direction": "pingpong" },
+   { "name": "Happy", "from": 11, "to": 12, "direction": "pingpong" },
+   { "name": "Angry", "from": 13, "to": 14, "direction": "forward" },
+   { "name": "Sad", "from": 15, "to": 16, "direction": "forward" },
+   { "name": "Afraid", "from": 17, "to": 18, "direction": "forward" }
   ],
   "layers": [
    { "name": "Rear Leg", "opacity": 255, "blendMode": "normal" },

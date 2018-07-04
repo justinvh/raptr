@@ -99,6 +99,12 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   character->sprite->y = 0;
   character->jump_count = 0;
 
+  character->do_pixel_collision_test = false;
+  if (character->sprite->has_animation("Collision")) {
+    character->collision_frame = &character->sprite->animations["Collision"].frames[0];
+    character->do_pixel_collision_test = true;
+  }
+
   auto& pos = character->position();
   auto& vel = character->velocity();
   auto& acc = character->acceleration();
@@ -145,6 +151,13 @@ void Character::think(std::shared_ptr<Game>& game)
       jump_time_ms = 0;
       fast_fall = false;
       vel.y = 0;
+      if (vel.x > walk_speed) {
+        sprite->set_animation("Run");
+      } else if (vel.x > 0) {
+        sprite->set_animation("Walk");
+      } else {
+        sprite->set_animation("Idle");
+      }
     }
     falling = false;
   }
@@ -198,7 +211,9 @@ void Character::stop()
 {
   auto& vel = this->velocity();
   vel.x = 0.0;
-  sprite->set_animation("Idle");
+  if (!falling) {
+    sprite->set_animation("Idle");
+  }
 }
 
 bool Character::on_left_joy(const ControllerState& state)
@@ -220,7 +235,6 @@ bool Character::on_left_joy(const ControllerState& state)
   return false;
 }
 
-
 bool Character::on_button_down(const ControllerState& state)
 {
   auto& vel = this->velocity();
@@ -236,7 +250,6 @@ bool Character::on_button_down(const ControllerState& state)
     }
 
     jump_time_ms = 0;
-    logger->debug("Jump should take {}ms. Clicked at {}. Delta is {}", peak_time_ms, jump_time_ms, button_time);
     sprite->set_animation("Jump");
     ++jump_count;
   }
@@ -250,36 +263,6 @@ void Character::attach_controller(std::shared_ptr<Controller>& controller_)
   controller = controller_;
   controller->on_left_joy(std::bind(&Character::on_left_joy, this, _1));
   controller->on_button_down(std::bind(&Character::on_button_down, this, _1));
-}
-
-bool Character::intersects(const Entity* other) const
-{
-  if (other->id() == this->id()) {
-    return false;
-  }
-
-  for (const auto& self_box : this->bbox()) {
-    for (const auto& other_box : other->bbox()) {
-      if (other->intersects(self_box) && this->intersects(other_box)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-bool Character::intersects(const Rect& other_box) const
-{
-  const auto& self_boxes = this->bbox();
-
-  for (const auto& self_box : self_boxes) {
-    if (SDL_HasIntersection(&self_box, &other_box)) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 std::vector<Rect> Character::bbox() const
