@@ -14,6 +14,13 @@ it's time you escape. Maybe it's time you find a way out of this all.
 - A flexible mapping system that makes modding a painless process
 - Music that will cut you to your core
 
+## Current State
+
+It is a complete alpha that is probably unplayable. Here is a quick gif with a mix-mash of features 
+as they're being developed.
+
+![Feature Mash][raptr-0.1-alpha]
+
 ## Development Updates
 
 This project is maintained at [GitHub](https://github.com/justinvh/raptr). 
@@ -102,3 +109,4 @@ To be added
 [raptr-alpha]: https://i.imgur.com/Lxa18EC.gif
 [raptr-dialog]: https://i.imgur.com/3vOIo3g.gif
 [raptr-emotions]: https://i.imgur.com/CP0NvDQ.gif
+[raptr-0.1-alpha]: https://i.imgur.com/s6YP2qo.gif
