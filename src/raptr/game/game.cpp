@@ -141,7 +141,7 @@ bool Game::run()
     }
     auto& pos = character_raptr->position();
     pos.y = 100;
-    pos.x = 0;
+    pos.x = 50;
 
     entities.push_back(character_raptr);
     character_raptr->attach_controller(controllers.begin()->second);
@@ -158,16 +158,13 @@ bool Game::run()
   }
 
   SDL_Event e;
-  auto frame_last_time = Time::now();
-  using ms = std::chrono::milliseconds;
+  auto frame_last_time = clock::ticks();
 
   while (true) {
-    auto frame_curr_time = Time::now();
-    auto frame_delta = std::chrono::duration_cast<ms>(frame_curr_time - frame_last_time);
-    frame_delta_ms = frame_delta.count();
+    frame_delta_us = (clock::ticks() - frame_last_time);
 
-    if (frame_delta_ms == 0) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    if (frame_delta_us == 0) {
+      std::this_thread::sleep_for(std::chrono::microseconds(1));
       continue;
     }
 
@@ -187,7 +184,7 @@ bool Game::run()
       entity->think(this->shared_from_this());
 
       const Point& old_point = last_known_entity_pos[entity];
-      const Point& new_point = entity->position();
+      Point& new_point = entity->position();
 
       if (std::fabs(old_point.x - new_point.x) > 0.5 ||
           std::fabs(old_point.y - new_point.y) > 0.5) 
@@ -201,12 +198,16 @@ bool Game::run()
         }
         last_known_entity_pos[entity] = entity->position();
       }
+
+      if (new_point.y > 1000) {
+        new_point.y = -500;
+      }
     }
 
     dialog->think(this->shared_from_this());
 
     renderer->run_frame();
-    frame_last_time = Time::now();
+    frame_last_time = clock::ticks();
   }
 
   return true;

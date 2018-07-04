@@ -38,6 +38,7 @@ set(RAPTR_CPP
     # Common sources
     src/raptr/common/filesystem.cpp
     src/raptr/common/logger.cpp
+    src/raptr/common/clock.cpp
 
     # Game sources
     src/raptr/game/character.cpp
@@ -67,6 +68,7 @@ set(RAPTR_CPP
 
 set(RAPTR_HPP
     # Common headers
+    include/raptr/common/clock.hpp
     include/raptr/common/rect.hpp
     include/raptr/common/rtree.hpp
     include/raptr/common/filesystem.hpp

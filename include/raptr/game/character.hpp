@@ -116,7 +116,7 @@ class Character : public Entity {
   double fast_fall_scale;
 
   //! How long the character has been jumping
-  int64_t jump_time_ms;
+  int64_t jump_time_us;
 
   //! Current jump count
   uint32_t jump_count;

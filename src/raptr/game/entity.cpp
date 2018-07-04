@@ -12,7 +12,7 @@ int32_t Entity::global_id = 0;
 Entity::Entity()
 {
   id_ = ++global_id;
-  fall_time_ms = 0;
+  fall_time_us = 0;
   logger->info("Registering entity with id {}", id_);
 }
 
@@ -21,9 +21,9 @@ int32_t Entity::id() const
   return id_;
 }
 
-std::vector<Rect> Entity::want_position_x(int64_t delta_ms)
+std::vector<Rect> Entity::want_position_x(int64_t delta_us)
 {
-  double dt = delta_ms / 1000.0;
+  double dt = delta_us / 1e6;
   Point pos = this->position();
   const Point& vel = this->velocity();
   const Point& acc = this->acceleration();
@@ -39,9 +39,9 @@ std::vector<Rect> Entity::want_position_x(int64_t delta_ms)
   return rects;
 }
 
-std::vector<Rect> Entity::want_position_y(int64_t delta_ms)
+std::vector<Rect> Entity::want_position_y(int64_t delta_us)
 {
-  double dt = delta_ms / 1000.0;
+  double dt = delta_us / 1e6;
   Point pos = this->position();
   const Point& vel = this->velocity();
   const Point& acc = this->acceleration();

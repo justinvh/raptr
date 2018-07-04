@@ -104,7 +104,7 @@ class Dialog {
   bool on_right_joy(const ControllerState& state);
 
  private:
-  uint32_t last_ticks;
+  int64_t last_ticks;
   bool parse_error;
   FileInfo toml_path;
   std::shared_ptr<Controller> controller;

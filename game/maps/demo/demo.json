@@ -21,7 +21,7 @@
  "meta": {
   "app": "http://www.aseprite.org/",
   "version": "1.2.8-x64",
-  "image": "C:\\Users\\justi\\projects\\raptr\\game\\maps\\demo\\demo.png",
+  "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\maps\\demo\\demo.png",
   "format": "I8",
   "size": { "w": 960, "h": 270 },
   "scale": "1",

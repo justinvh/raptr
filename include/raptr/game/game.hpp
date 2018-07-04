@@ -16,6 +16,7 @@
 #include <raptr/common/filesystem.hpp>
 #include <raptr/common/rtree.hpp>
 #include <raptr/common/rect.hpp>
+#include <raptr/common/clock.hpp>
 
 namespace raptr {
 
@@ -24,9 +25,6 @@ class Controller;
 class Entity;
 class Renderer;
 class Sound;
-
-typedef std::chrono::high_resolution_clock Time;
-typedef decltype(Time::now) TimePoint;
 
 /*!
   The Game is a class that ties together the Renderer, Sound, Input, and Entities
@@ -135,7 +133,7 @@ class Game : public std::enable_shared_from_this<Game> {
   double gravity;
 
   //! The number of ms since the last frame
-  int64_t frame_delta_ms;
+  int64_t frame_delta_us;
 
  public:
   //! If set, then all initialization has happened successfully

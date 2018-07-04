@@ -2,7 +2,7 @@
 name = "Raptr"
 walk_speed = 100
 run_speed = 400
-jump_vel = 500
+jump_vel = 550
 jumps_allowed = 2
 jump_perfect_scale = 1.50
 fast_fall_scale = 2.5

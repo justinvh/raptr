@@ -86,10 +86,10 @@ class Animation {
   /*!
     AnimationFrames have a duration. If the time between this clock time and
     first time has exceeded the duration of the frame, then the frame will be advanced.
-    /param clock_ms - The SDL_GetTicks() milliseconds
+    /param clock_ms - The clock::ticks() milliseconds
     /return Whether the frame was advanced
   */
-  bool next(uint32_t clock_ms);
+  bool next(int64_t clock_us);
 };
 
 //! A mapping of Animation names to the Animation themselves
@@ -161,7 +161,7 @@ class Sprite {
   double scale;
 
   //! When the Sprite was last rendered
-  uint32_t last_frame_tick;
+  int64_t last_frame_tick;
 };
 
 } // namespace raptr

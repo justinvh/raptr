@@ -10,6 +10,7 @@
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/common/logging.hpp>
+#include <raptr/common/clock.hpp>
 
 namespace { auto logger = raptr::_get_logger(__FILE__); };
 
@@ -34,10 +35,10 @@ AnimationFrame& Animation::current_frame()
   return frames[frame];
 }
 
-bool Animation::next(uint32_t clock)
+bool Animation::next(int64_t clock)
 {
-  uint32_t curr = SDL_GetTicks();
-  if ((curr - clock) <= frames[frame].duration / speed) {
+  int64_t curr = clock::ticks();
+  if ((curr - clock) / 1e3 <= frames[frame].duration / speed) {
     return false;
   }
 
@@ -174,7 +175,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   }
 
   sprite->current_animation = &sprite->animations["Idle"];
-  sprite->last_frame_tick = SDL_GetTicks();
+  sprite->last_frame_tick = clock::ticks();
   sprite->scale = 1.0;
   sprite->flip_x = false;
   sprite->flip_y = false;
@@ -200,7 +201,7 @@ void Sprite::render(std::shared_ptr<Renderer>& renderer)
 
   auto frame = current_animation->frames[current_animation->frame];
   if (current_animation->next(last_frame_tick)) {
-    last_frame_tick = SDL_GetTicks();
+    last_frame_tick = clock::ticks();
   }
 
   SDL_Rect src, dst;

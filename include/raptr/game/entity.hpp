@@ -99,13 +99,13 @@ class Entity {
     Given the current position, velocity, and acceleration, where does this entity *want* to go in X
     \return The rectangle this entity *wants* to occupy in the X direction
   */
-  virtual std::vector<Rect> want_position_x(int64_t delta_ms);
+  virtual std::vector<Rect> want_position_x(int64_t delta_us);
 
   /*!
     Given the current position, velocity, and acceleration, where does this entity *want* to go in Y
     \return The rectangle this entity *wants* to occupy in the Y direction
   */
-  virtual std::vector<Rect> want_position_y(int64_t delta_ms);
+  virtual std::vector<Rect> want_position_y(int64_t delta_us);
 
   /*!
     Return the current position of the entity
@@ -145,7 +145,7 @@ class Entity {
   Point acc_;
 
   //! How long the entity has been falling in milliseconds, if any
-  uint32_t fall_time_ms;
+  uint32_t fall_time_us;
 
   //! Collision test per pixel
   bool do_pixel_collision_test;

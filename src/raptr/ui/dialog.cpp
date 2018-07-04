@@ -114,7 +114,7 @@ std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path)
     return nullptr;
   }
 
-  dialog->last_ticks = SDL_GetTicks();
+  dialog->last_ticks = clock::ticks();
   return dialog;
 }
 
@@ -368,7 +368,7 @@ bool Dialog::on_right_joy(const ControllerState& state)
     return true;
   }
 
-  if ((SDL_GetTicks() - last_ticks) < 250) {
+  if (((clock::ticks() - last_ticks) / 1e-3) < 250) {
     return false;
   }
   
@@ -377,13 +377,13 @@ bool Dialog::on_right_joy(const ControllerState& state)
     if (selected_choice >= active_prompt->choices.size()) {
       selected_choice = 0;
     }
-    last_ticks = SDL_GetTicks();
+    last_ticks = clock::ticks();
   } else if (state.y > 0.5) {
     --selected_choice;
     if (selected_choice < 0) {
       selected_choice = static_cast<int32_t>(active_prompt->choices.size() - 1);
     }
-    last_ticks = SDL_GetTicks();
+    last_ticks = clock::ticks();
   }
 
   return false;

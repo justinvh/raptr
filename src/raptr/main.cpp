@@ -26,9 +26,14 @@ int main(int argc, char** argv)
     spdlog::set_level(spdlog::level::info);
   }
 
-  std::string game_root = options["game"].as<std::string>();
-  auto game = raptr::Game::create(game_root);
-  game->run();
+  {
+    std::string game_root = options["game"].as<std::string>();
+    auto game = raptr::Game::create(game_root);
+    game->run();
+  }
+
+  logger->info("Okay, quitting. Bye Bye.");
+  std::cin.get();
 
   return 0;
 }

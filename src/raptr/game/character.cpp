@@ -122,33 +122,33 @@ void Character::crouch()
 
 void Character::think(std::shared_ptr<Game>& game)
 {
-  int64_t delta_ms = game->frame_delta_ms;
+  int64_t delta_us = game->frame_delta_us;
   auto& vel = this->velocity();
   auto& acc = this->acceleration();
   auto& pos = this->position();
 
   if (jump_count) {
-    jump_time_ms += delta_ms;
+    jump_time_us += delta_us;
   }
 
   acc.y = game->gravity;
 
   // External forces, like gravity
-  Rect fall_check = this->want_position_y(delta_ms)[0];
+  Rect fall_check = this->want_position_y(delta_us)[0];
   fall_check.y += 0.1;
 
   auto intersected_entity = game->intersect_world(this, fall_check);
   if (!intersected_entity) {
     if (fast_fall) {
-      vel.y += fast_fall_scale * game->gravity * delta_ms / 1000.0;
+      vel.y += fast_fall_scale * game->gravity * delta_us / 1e6;
     } else {
-      vel.y += game->gravity * delta_ms / 1000.0;
+      vel.y += game->gravity * delta_us / 1e6;
     }
     falling = true;
   } else {
     if (falling) {
       jump_count = 0;
-      jump_time_ms = 0;
+      jump_time_us = 0;
       fast_fall = false;
       vel.y = 0;
       if (vel.x > walk_speed) {
@@ -162,8 +162,8 @@ void Character::think(std::shared_ptr<Game>& game)
     falling = false;
   }
 
-  Rect want_x = this->want_position_x(delta_ms)[0];
-  Rect want_y = this->want_position_y(delta_ms)[0];
+  Rect want_x = this->want_position_x(delta_us)[0];
+  Rect want_y = this->want_position_y(delta_us)[0];
 
   if (!game->intersect_world(this, want_x)) {
     if (vel.x < 0) {
@@ -222,9 +222,9 @@ bool Character::on_left_joy(const ControllerState& state)
 
   if (mag_x < 0.01f) {
     this->stop();
-  } else if (mag_x < 0.5f) {
-    this->walk(state.x / 0.5f);
-  } else if (mag_x >= 0.5f) {
+  } else if (mag_x < 0.25f) {
+    this->walk(state.x / 0.25f);
+  } else if (mag_x >= 0.25f) {
     this->run(state.x / 1.0f);
   }
 
@@ -240,16 +240,16 @@ bool Character::on_button_down(const ControllerState& state)
   auto& vel = this->velocity();
   auto& acc = this->acceleration();
   if (state.button == Button::a && jump_count < jumps_allowed) {
-    int32_t peak_time_ms = static_cast<int32_t>(std::fabs(jump_vel / acc.y * 1000.0));
-    int32_t button_time = static_cast<int32_t>(std::abs(jump_time_ms - peak_time_ms));
+    int32_t peak_time_us = static_cast<int32_t>(std::fabs(jump_vel / acc.y * 1e6));
+    int32_t button_time = static_cast<int32_t>(std::abs(jump_time_us - peak_time_us));
 
-    if (falling && button_time < 32) {
+    if (falling && button_time < 32 * 1e3) {
       vel.y -= -jump_vel * jump_perfect_scale;
     } else {
-      vel.y -= -jump_vel * 1.0 / (jump_count + 1.0);
+      vel.y -= -jump_vel;
     }
 
-    jump_time_ms = 0;
+    jump_time_us = 0;
     sprite->set_animation("Jump");
     ++jump_count;
   }
