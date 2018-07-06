@@ -135,6 +135,18 @@ class Character : public Entity {
 
   //! The initial velocity (v(0)) for computing how high the character will jump
   int32_t jump_vel;
+
+  //! Dashing is a multiplier of 1.25
+  bool dashing;
+
+  //! Dash multiplier
+  double dash_scale;
+
+  int64_t dash_check_timer;
+
+  int32_t dash_move_check;
+
+  int32_t bunny_hop_count;
 };
 
 } // namespace raptr

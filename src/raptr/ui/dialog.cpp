@@ -368,7 +368,7 @@ bool Dialog::on_right_joy(const ControllerState& state)
     return true;
   }
 
-  if (((clock::ticks() - last_ticks) / 1e-3) < 250) {
+  if (((clock::ticks() - last_ticks) / 1e3) < 250) {
     return false;
   }
   
