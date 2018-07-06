@@ -115,4 +115,4 @@ To be added
 [raptr-dialog]: https://i.imgur.com/3vOIo3g.gif
 [raptr-emotions]: https://i.imgur.com/CP0NvDQ.gif
 [raptr-0.1-alpha.1]: https://i.imgur.com/s6YP2qo.gif
-[raptr-0.1-alpha.2]: https://i.imgur.com/ojsGa3j.gif
+[raptr-0.1-alpha.2]: https://thumbs.gfycat.com/AfraidFatalGrison-size_restricted.gif
