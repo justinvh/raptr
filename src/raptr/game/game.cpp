@@ -43,7 +43,7 @@ bool Game::run()
 
   auto dialog = Dialog::from_toml(game_path.from_root("dialog/demo/dialog.toml"));
   dialog->attach_controller(controllers.begin()->second);
-  dialog->start();
+  //dialog->start();
 
   /*
   {
@@ -133,18 +133,50 @@ bool Game::run()
     entity_lut[mesh->id()] = mesh;
   }
 
-  auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
-  {
+  std::vector<std::shared_ptr<Entity>> characters;
+
+  int64_t x_off = 1000;
+  for (auto controller : controllers) {
+    auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
     if (!character_raptr) {
       logger->error("Failed to load raptr character");
       return false;
     }
     auto& pos = character_raptr->position();
     pos.y = 100;
-    pos.x = 50;
+    pos.x = x_off;
+    x_off += 64;
 
     entities.push_back(character_raptr);
-    character_raptr->attach_controller(controllers.begin()->second);
+    characters.push_back(character_raptr);
+    character_raptr->attach_controller(controller.second);
+
+    auto all_bounds = character_raptr->bounds();
+    last_known_entity_pos[character_raptr] = character_raptr->position();
+    last_known_entity_bounds[character_raptr] = character_raptr->bounds();
+
+    for (const auto& bounds : all_bounds) {
+      rtree.Insert(bounds.min, bounds.max, character_raptr.get());
+    }
+
+    entity_lut[character_raptr->id()] = character_raptr;
+  }
+
+  x_off = 135;
+  for (int i = 0; i < 2; ++i) {
+    auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
+    if (!character_raptr) {
+      logger->error("Failed to load raptr character");
+      return false;
+    }
+    auto& pos = character_raptr->position();
+    pos.y = 100;
+    pos.x = x_off;
+    x_off += 60;
+
+    entities.push_back(character_raptr);
+    characters.push_back(character_raptr);
+    //character_raptr->attach_controller(controller.second);
 
     auto all_bounds = character_raptr->bounds();
     last_known_entity_pos[character_raptr] = character_raptr->position();
@@ -160,16 +192,17 @@ bool Game::run()
   SDL_Event e;
   auto frame_last_time = clock::ticks();
 
-  std::shared_ptr<Entity> camera_entity(character_raptr);
-
-  renderer->camera_follow(camera_entity);
+  renderer->camera_follow(characters);
   renderer->camera.left = 0;
   renderer->camera.right = 2000;
   renderer->camera.top = -270;
   renderer->camera.bottom = 270;
 
+  int64_t last_render_time_us = 0;
+
   while (true) {
-    frame_delta_us = (clock::ticks() - frame_last_time);
+    auto current_time_us = clock::ticks();
+    frame_delta_us = (current_time_us - frame_last_time);
 
     if (frame_delta_us == 0) {
       std::this_thread::sleep_for(std::chrono::microseconds(1));
@@ -214,8 +247,11 @@ bool Game::run()
 
     dialog->think(this->shared_from_this());
 
-    renderer->run_frame();
     frame_last_time = clock::ticks();
+    if ((current_time_us - last_render_time_us) / 1e3 >= 16) {
+      renderer->run_frame();
+      last_render_time_us = frame_last_time;
+    }
   }
 
   return true;
@@ -365,6 +401,10 @@ bool Game::init_controllers()
   }
 
   for (int32_t i = 0; i < SDL_NumJoysticks(); ++i) {
+    logger->debug("Is {} a game controller? {}",
+                  SDL_JoystickNameForIndex(i),
+                  SDL_IsGameController(i) ? "Yes" : "No");
+
     if (!SDL_IsGameController(i)) {
       continue;
     }

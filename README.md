@@ -9,17 +9,15 @@ it's time you escape. Maybe it's time you find a way out of this all.
 ## Features with some Hyperbole
 
 - A state-of-the-art PHY-101 physics system
+- A seamless and fluid split screen local multiplayer
 - An immersive and childish dialog and decision making system
 - Pixel perfect platforming with that keeps you on the edge of your seat
 - A flexible mapping system that makes modding a painless process
 - Music that will cut you to your core
 
-## Current State
+## Current State: 0.1-alpha.2
 
-It is a complete alpha that is probably unplayable. Here is a quick gif with a mix-mash of features 
-as they're being developed.
-
-![Feature Mash][raptr-0.1-alpha]
+![Feature Mash][raptr-0.1-alpha.2]
 
 ## Development Updates
 
@@ -105,8 +103,16 @@ To be added
 * [tinytoml](https://github.com/mayah/tinytoml) - A header only C++11 library for parsing TOML
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
 
+## Other Screenshots
+
+![Feature Mash][raptr-0.1-alpha.1]
+![Alpha Blending][raptr-alpha]
+![Dialog][raptr-dialog]
+![Emotions][raptr-emotions]
+
 [raptr-idle]: https://i.imgur.com/sqVdbnN.gif
 [raptr-alpha]: https://i.imgur.com/Lxa18EC.gif
 [raptr-dialog]: https://i.imgur.com/3vOIo3g.gif
 [raptr-emotions]: https://i.imgur.com/CP0NvDQ.gif
-[raptr-0.1-alpha]: https://i.imgur.com/s6YP2qo.gif
+[raptr-0.1-alpha.1]: https://i.imgur.com/s6YP2qo.gif
+[raptr-0.1-alpha.2]: https://i.imgur.com/ojsGa3j.gif

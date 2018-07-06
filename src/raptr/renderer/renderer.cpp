@@ -1,4 +1,5 @@
 #include <memory>
+#include <algorithm>
 
 #include <raptr/game/entity.hpp>
 #include <raptr/config.hpp>
@@ -53,38 +54,102 @@ bool Renderer::init(std::shared_ptr<Config>& config_)
 void Renderer::run_frame()
 {
   SDL_RenderClear(sdl.renderer);
+  size_t num_entities = entities_followed.size();
+  size_t index = 0;
 
-  if (entity_followed) {
-    auto& pos = entity_followed->position();
-    int64_t left = pos.x - GAME_WIDTH / 2;
-    int64_t right = pos.x + GAME_WIDTH / 2;
-    int64_t top = pos.y - GAME_HEIGHT / 2;
-    int64_t bottom = pos.y + GAME_HEIGHT / 2;
+  struct ClipCamera {
+    SDL_Rect clip, viewport;
+  };
 
-    if (left >= camera.left && right <= camera.right)
+  // Determine the cameras
+  std::vector<ClipCamera> clippings;
+
+  // Sort the entities being followed left to right to figure
+  // out how we're going to clip them
+  std::sort(entities_followed.begin(),
+            entities_followed.end(),
+            [](const auto& lhs, const auto& rhs)
+            {
+              auto& p1 = lhs->position();
+              auto& p2 = rhs->position();
+              return p1.x < p2.x;
+            });
+
+  int32_t min_rect_w = (GAME_WIDTH / num_entities);
+  int32_t min_rect_hw = min_rect_w / 2;
+
+  int32_t current_entity_index = 0;
+  int32_t num_clips = 1;
+  int32_t last_left = 0;
+  while (current_entity_index < num_entities) {
+    int64_t left, right, top, bottom;
+    ClipCamera clip_cam;
+
+    // Setup the initial camera where we are going to try and merge players together
     {
-      camera.pos.x = left;
+      const auto& entity = entities_followed[current_entity_index];
+      auto& pos = entity->position();
+      auto bbox = entity->bbox()[0];
+
+      int64_t x = (pos.x + bbox.w / 2.0);
+      left = x - min_rect_hw;
+      right = x + min_rect_hw;
+      top = 0;
+      bottom = GAME_HEIGHT;
     }
 
-    if (bottom <= camera.bottom && top >= camera.top) {
-      camera.pos.y = top;
+    int32_t t_right = right;
+    while (++current_entity_index < num_entities) {
+      const auto& entity = entities_followed[current_entity_index];
+      auto& pos = entity->position();
+      auto bbox = entity->bbox()[0];
+      int64_t x = (pos.x + bbox.w / 2.0);
+      t_right += min_rect_hw;
+      if (x <= t_right) {
+        right += min_rect_w;
+        t_right = right;
+      } else {
+        break;
+      }
     }
+
+    clip_cam.clip.x = left;
+    clip_cam.clip.y = top;
+    clip_cam.clip.w = (right - left);
+    clip_cam.clip.h = GAME_HEIGHT;
+
+    clip_cam.viewport.x = last_left;
+    clip_cam.viewport.y = 0;
+    clip_cam.viewport.w = clip_cam.clip.w - 1;
+    clip_cam.viewport.h = clip_cam.clip.h;
+
+    last_left += clip_cam.clip.w;
+
+    clippings.push_back(clip_cam);
+    ++num_clips;
   }
 
-  for (auto w : will_render) {
-    auto transformed_dst = w.dst;
+  for (const auto& clip_cam : clippings) {
+    SDL_RenderSetViewport(sdl.renderer, &clip_cam.viewport);
 
-    if (!w.absolute_positioning) {
-      transformed_dst.x -= camera.pos.x;
-      transformed_dst.y -= camera.pos.y;
+    for (auto w : will_render) {
+      auto transformed_dst = w.dst;
+
+      if (!w.absolute_positioning) {
+        transformed_dst.x -= clip_cam.clip.x;
+        transformed_dst.y -= clip_cam.clip.y;
+      }
+
+      SDL_RenderCopyEx(sdl.renderer, w.texture.get(), &w.src, &transformed_dst,
+        w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
+
     }
 
-    SDL_RenderCopyEx(sdl.renderer, w.texture.get(), &w.src, &transformed_dst,
-                     w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
+    ++index;
   }
 
-  will_render.clear();
   SDL_RenderPresent(sdl.renderer);
+  will_render.clear();
   ++frame_count;
 }
 
@@ -99,9 +164,9 @@ bool Renderer::toggle_fullscreen()
   }
 }
 
-void Renderer::camera_follow(std::shared_ptr<Entity>& entity)
+void Renderer::camera_follow(std::vector<std::shared_ptr<Entity>>& entities)
 {
-  entity_followed = entity;
+  entities_followed = entities;
 }
 
 SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) const
