@@ -273,8 +273,8 @@ bool Game::init()
   config.reset(new Config());
   gravity = -4500;
 
-  if (!this->init_renderer()) {
-    logger->error("Failed to initialize renderer");
+  if (!this->init_controllers()) {
+    logger->error("Failed to initialize controllers");
     return false;
   }
 
@@ -283,8 +283,8 @@ bool Game::init()
     return false;
   }
 
-  if (!this->init_controllers()) {
-    logger->error("Failed to initialize controllers");
+  if (!this->init_renderer()) {
+    logger->error("Failed to initialize renderer");
     return false;
   }
 
@@ -293,8 +293,66 @@ bool Game::init()
 
 bool Game::init_controllers()
 {
-  if (SDL_NumJoysticks() < 1) {
-    logger->error("There are no controllers connected. What's the point of playing?");
+  int32_t num_gamepads = 0;
+  for (int32_t i = 0; i < SDL_NumJoysticks(); ++i) {
+    if (SDL_IsGameController(i)) {
+      num_gamepads++;
+    }
+  }
+
+  if (num_gamepads == 0) {
+
+    int32_t attempts = 60;
+    logger->error("No controllers connected. Waiting {}s for you to go find a controller. Hurry up.", attempts);
+    while (--attempts) {
+      SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
+      SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
+      for (int32_t i = 0; i < SDL_NumJoysticks(); ++i) {
+        if (SDL_IsGameController(i)) {
+          num_gamepads++;
+        }
+      }
+
+      if (num_gamepads) {
+        logger->info("Nice. Moving on.");
+        break;
+      }
+
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+
+      switch (attempts) {
+        case 55:
+          logger->error("Your controller has met a terrible fate, hasn't it? {}s left.", attempts);
+          break;
+        case 50:
+          logger->error("The world darkens as our player scrambles for a controller.");
+          break;
+        case 45:
+          logger->error("In the distance a soft cry is heard. That of our player's controller?");
+          break;
+        case 40:
+          logger->error("At this point, we fear for the player. Not for his health, but his disorganization.");
+          break;
+        case 30:
+          logger->error("Maybe it's not the player. Maybe they loaned their controller out. A true friend.");
+          break;
+        case 20:
+          logger->error("Nonsense. They would have exited by now.");
+          break;
+        case 10:
+          logger->error("The world darkens even more. There isn't much hope.");
+          break;
+        case 5:
+          logger->error("I hope you tried. I really hope you did.");
+          break;
+      }
+    }
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
+
+  if (num_gamepads == 0) {
+    logger->error("Well, that's the most I can do. No controllers detected.");
     return false;
   }
 
