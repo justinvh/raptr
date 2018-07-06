@@ -180,6 +180,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   sprite->flip_x = false;
   sprite->flip_y = false;
   sprite->angle = 0.0;
+  sprite->absolute_positioning = false;
 
   std::shared_ptr<Sprite> cache(new Sprite(*sprite));
   SPRITE_CACHE[path.file_relative] = cache;
@@ -216,7 +217,7 @@ void Sprite::render(std::shared_ptr<Renderer>& renderer)
   dst.x = static_cast<int32_t>(x);
   dst.y = static_cast<int32_t>(y);
 
-  renderer->add(texture, src, dst, angle, flip_x, flip_y);
+  renderer->add(texture, src, dst, angle, flip_x, flip_y, absolute_positioning);
 }
 
 bool Sprite::has_animation(const std::string& name)

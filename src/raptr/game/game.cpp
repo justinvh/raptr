@@ -133,8 +133,8 @@ bool Game::run()
     entity_lut[mesh->id()] = mesh;
   }
 
+  auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
   {
-    auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
     if (!character_raptr) {
       logger->error("Failed to load raptr character");
       return false;
@@ -159,6 +159,14 @@ bool Game::run()
 
   SDL_Event e;
   auto frame_last_time = clock::ticks();
+
+  std::shared_ptr<Entity> camera_entity(character_raptr);
+
+  renderer->camera_follow(camera_entity);
+  renderer->camera.left = 0;
+  renderer->camera.right = 2000;
+  renderer->camera.top = -270;
+  renderer->camera.bottom = 270;
 
   while (true) {
     frame_delta_us = (clock::ticks() - frame_last_time);

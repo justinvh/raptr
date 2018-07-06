@@ -1,20 +1,20 @@
 { "frames": [
    {
     "filename": "demo 0.aseprite",
-    "frame": { "x": 0, "y": 0, "w": 480, "h": 270 },
+    "frame": { "x": 0, "y": 0, "w": 2000, "h": 270 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 480, "h": 270 },
-    "sourceSize": { "w": 480, "h": 270 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 2000, "h": 270 },
+    "sourceSize": { "w": 2000, "h": 270 },
     "duration": 100
    },
    {
     "filename": "demo 1.aseprite",
-    "frame": { "x": 480, "y": 0, "w": 480, "h": 270 },
+    "frame": { "x": 2000, "y": 0, "w": 2000, "h": 270 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 480, "h": 270 },
-    "sourceSize": { "w": 480, "h": 270 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 2000, "h": 270 },
+    "sourceSize": { "w": 2000, "h": 270 },
     "duration": 100
    }
  ],
@@ -23,7 +23,7 @@
   "version": "1.2.8-x64",
   "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\maps\\demo\\demo.png",
   "format": "I8",
-  "size": { "w": 960, "h": 270 },
+  "size": { "w": 4000, "h": 270 },
   "scale": "1",
   "frameTags": [
    { "name": "Idle", "from": 0, "to": 0, "direction": "forward" },

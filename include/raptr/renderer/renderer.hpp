@@ -10,6 +10,8 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
+#include <raptr/common/rect.hpp>
+
 #include <vector>
 #include <memory>
 
@@ -25,6 +27,12 @@ struct SDLDeleter {
 namespace raptr {
 
 class Config;
+class Entity;
+
+struct Camera {
+  SDL_Point pos;
+  int32_t left, right, top, bottom;
+};
 
 /*!
   A renderable surface should construct a Renderable struct that defines the
@@ -50,6 +58,9 @@ struct Renderable {
 
   //! Flip the texture along the Y-axis, after the sr has been cropped out
   bool flip_y;
+
+  //! Positioning
+  bool absolute_positioning;
 
   /*!
     Convenience method to translate the flip booleans into SDL masks
@@ -97,7 +108,14 @@ class Renderer {
   */
   void add(std::shared_ptr<SDL_Texture>& texture,
            SDL_Rect src, SDL_Rect dst,
-           float angle,  bool flip_x, bool flip_y);
+           float angle,  bool flip_x, bool flip_y, bool absolute_positioning = false);
+
+  /*!
+    Follow an entity so that the camera is centered on it
+    /param entity - The entity to follow
+  */
+  void camera_follow(std::shared_ptr<Entity>& entity);
+
   /*!
     A utility method to create an SDL_Texture from an SDL_Surface using the current
     initialized SDL_Renderer
@@ -131,6 +149,9 @@ class Renderer {
   //! How many frames have been rendered
   uint64_t frame_count;
 
+  //! Camera position
+  Camera camera;
+
  private:
   /*!
     An internal object for representing the SDL state of the renderer
@@ -142,6 +163,7 @@ class Renderer {
 
   //! A list of Renderable objects that will be rendered on the next run_frame()
   std::vector<Renderable> will_render;
+  std::shared_ptr<Entity> entity_followed;
 };
 
 } // namespace raptr

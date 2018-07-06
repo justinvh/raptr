@@ -90,6 +90,7 @@ std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path)
   dialog->dialog_box->set_animation("Idle");
   dialog->dialog_box->x = 0;
   dialog->dialog_box->y = 0;
+  dialog->dialog_box->absolute_positioning = true;
 
   int32_t check = 0;
   while (++check) {
@@ -177,17 +178,20 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
   std::string speaker_id = dict["speaker"]->as<std::string>();
   FileInfo sprite_path = toml_path.from_root(fs::path("textures") / (speaker_id + ".json"));
   prompt->speaker = Sprite::from_json(sprite_path);
-  prompt->speaker->scale = 1.5;
-  prompt->speaker->x = 15;
-  prompt->speaker->y = 25;
-  prompt->speaker->flip_x = true;
-  prompt->section = section_name;
+
   if (!prompt->speaker) {
     parse_error = true;
     logger->error("{}: Failed to load speaker: {} (tried {})", 
       section_name, speaker_id, sprite_path.file_path);
     return false;
   }
+
+  prompt->speaker->scale = 1.5;
+  prompt->speaker->x = 15;
+  prompt->speaker->y = 25;
+  prompt->speaker->flip_x = true;
+  prompt->section = section_name;
+  prompt->speaker->absolute_positioning = true;
 
   std::string animation_name = dict["expression"]->as<std::string>();
   if (!prompt->speaker->set_animation(animation_name)) {
@@ -429,7 +433,7 @@ bool Dialog::think(std::shared_ptr<Game>& game)
     dst.h = bbox.h;
     dst.x = static_cast<int32_t>(speaker->x + current_frame.w + 16);
     dst.y = 32;
-    renderer->add(texture, bbox, dst, 0.0, false, false);
+    renderer->add(texture, bbox, dst, 0.0, false, false, true);
   }
 
   // Name of the Character
@@ -443,7 +447,7 @@ bool Dialog::think(std::shared_ptr<Game>& game)
     dst.h = bbox.h;
     dst.x = 32;
     dst.y = 8;
-    renderer->add(texture, bbox, dst, 0.0, false, false);
+    renderer->add(texture, bbox, dst, 0.0, false, false, true);
   }
 
   // Available choices
@@ -461,7 +465,7 @@ bool Dialog::think(std::shared_ptr<Game>& game)
       dst.h = bbox.h;
       dst.x = choice_x;
       dst.y = choice_y;
-      renderer->add(texture, bbox, dst, 0.0, false, false);
+      renderer->add(texture, bbox, dst, 0.0, false, false, true);
       choice_y += 24;
     }
   }

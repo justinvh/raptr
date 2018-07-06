@@ -162,6 +162,9 @@ class Sprite {
 
   //! When the Sprite was last rendered
   int64_t last_frame_tick;
+
+  //! Absolute positioning
+  bool absolute_positioning;
 };
 
 } // namespace raptr
