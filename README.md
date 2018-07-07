@@ -15,9 +15,9 @@ it's time you escape. Maybe it's time you find a way out of this all.
 - A flexible mapping system that makes modding a painless process
 - Music that will cut you to your core
 
-## Current State: 0.1-alpha.2
+## Current State: 0.1-alpha.3
 
-![Feature Mash][raptr-0.1-alpha.2]
+![Feature Mash][raptr-0.1-alpha.3]
 
 ## Development Updates
 
@@ -105,6 +105,9 @@ To be added
 
 ## Other Screenshots
 
+7/5/2018 - Fluid split screen local multiplayer
+![Split Screen][raptr-0.1-alpha.2]
+
 7/4/2018 - A dialog system with branching, decision making, and triggers. Also showing some of the movement.
 ![Feature Mash][raptr-0.1-alpha.1]
 
@@ -123,3 +126,4 @@ To be added
 [raptr-emotions]: https://i.imgur.com/CP0NvDQ.gif
 [raptr-0.1-alpha.1]: https://i.imgur.com/s6YP2qo.gif
 [raptr-0.1-alpha.2]: https://thumbs.gfycat.com/AfraidFatalGrison-size_restricted.gif
+[raptr-0.1-alpha.3]: https://i.imgur.com/szO854w.gif
