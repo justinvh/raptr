@@ -15,15 +15,15 @@ Additional developer insight and blog can be found at
 
 It's pretty dang simple under 64-bit Windows right now.
 
-1. [Download the 0.1-alpha.3 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.3/raptr-0.1.0-alpha.3-win64.zip)
+1. [Download the 0.1-alpha.4 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.4/raptr-0.1.0-alpha.4-win64.zip)
 2. Extract that anywhere your heart desires.
 3. Plug in a 360, GameCube, or Steam controller.
 4. Go into the bin/ folder and run raptr.exe
 5. Realize how much of an alpha this is :)
 
-## Current State: v0.1-alpha.3
+## Current State: v0.1-alpha.4
 
-![Feature Mash][raptr-0.1-alpha.3]
+![Feature Mash][raptr-0.1-alpha.4]
 
 ## Features with some Hyperbole
 
@@ -33,10 +33,11 @@ It's pretty dang simple under 64-bit Windows right now.
 - Pixel perfect platforming with that keeps you on the edge of your seat
 - A flexible mapping system that makes modding a painless process
 - Music that will cut you to your core
+- Parallax backgrounds of untold depth
 
 ## Building and Running Raptr with CMake
 
-1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.3/vcpkg-export-20180707-072728.7z) (or [zip](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.3/vcpkg-export-20180707-072728.zip))
+1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.4/vcpkg-export-20180707-072728.7z) (or [zip](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.4/vcpkg-export-20180707-072728.zip))
 
 ```
 $ git clone https://github.com/justinvh/raptr.git raptr
@@ -130,6 +131,10 @@ To be added
 
 ## Other Screenshots
 
+7/7/2018 - Modeling player friction
+
+![Split Screen][raptr-0.1-alpha.3]
+
 7/5/2018 - Fluid split screen local multiplayer
 
 ![Split Screen][raptr-0.1-alpha.2]
@@ -157,3 +162,4 @@ To be added
 [raptr-0.1-alpha.1]: https://i.imgur.com/s6YP2qo.gif
 [raptr-0.1-alpha.2]: https://thumbs.gfycat.com/AfraidFatalGrison-size_restricted.gif
 [raptr-0.1-alpha.3]: https://i.imgur.com/szO854w.gif
+[raptr-0.1-alpha.4]: https://i.imgur.com/DQ5CTNO.gif
