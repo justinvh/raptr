@@ -72,7 +72,7 @@ std::shared_ptr<Background> Background::from_toml(const FileInfo& toml_path)
     }
 
     layer.bbox.x = 0;
-    layer.bbox.y = 0;
+    layer.bbox.y = 0; //-layer.surface->h + GAME_HEIGHT;
     layer.bbox.w = layer.surface->w;
     layer.bbox.h = layer.surface->h;
 
@@ -96,7 +96,8 @@ void Background::render(Renderer* renderer, const SDL_Rect& clip)
 
     auto transformed_dst = layer.bbox;
     transformed_dst.x -= cx * (1.0 - (layer.z_index / 100.0));
-    transformed_dst.y -= cy * (layer.z_index / 100.0);
+    //transformed_dst.y -= cy * (layer.z_index / 100.0);
+    transformed_dst.y = -layer.surface->h + GAME_HEIGHT - (clip.y * (layer.z_index / 100.0));
 
     SDL_RenderCopyEx(renderer->sdl.renderer, layer.texture.get(), &layer.bbox, &transformed_dst, 0, nullptr, SDL_FLIP_NONE);
   }

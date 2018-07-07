@@ -6,28 +6,24 @@ name = "Night Sky"
 
 [[layer]]
 texture = "textures/background/nightsky/nightsky_1.png"
-z = 1
-
-[[layer]]
-texture = "textures/background/nightsky/nightsky_2.png"
-z = 5
+z = 40
 
 [[layer]]
 texture = "textures/background/nightsky/nightsky_3.png"
-z = 10
+z = 60
 
 [[layer]]
 texture = "textures/background/nightsky/nightsky_4.png"
-z = 25
+z = 75
 
 [[layer]]
 texture = "textures/background/nightsky/nightsky_5.png"
-z = 30
+z = 80
 
 [[layer]]
 texture = "textures/background/nightsky/nightsky_6.png"
-z = 50
+z = 85
 
 [[layer]]
 texture = "textures/background/nightsky/nightsky_7.png"
-z = 50
+z = 85

@@ -8,9 +8,6 @@
 #include <raptr/renderer/background.hpp>
 #include <raptr/common/clock.hpp>
 
-constexpr int32_t GAME_WIDTH = 480;
-constexpr int32_t GAME_HEIGHT = 270;
-
 void SDLDeleter::operator()(SDL_Texture* p) const
 {
   SDL_DestroyTexture(p);
@@ -64,6 +61,8 @@ void Renderer::run_frame(bool force_render)
   if (!force_render && ms < 16) {
     return;
   }
+
+  SDL_RenderClear(sdl.renderer);
   size_t num_entities = entities_followed.size();
   size_t index = 0;
 
@@ -128,7 +127,7 @@ void Renderer::run_frame(bool force_render)
 
     int32_t min_player = *std::max_element(y_pos.begin(), y_pos.end());
     clip_cam.clip.x = left;
-    clip_cam.clip.y = (std::accumulate(y_pos.begin(), y_pos.end(), 0) / y_pos.size() - GAME_HEIGHT) + 32;
+    clip_cam.clip.y = (y_pos[0] + 32) - GAME_HEIGHT; // GAME_HEIGHT - std::accumulate(y_pos.begin(), y_pos.end(), 0) / y_pos.size();
     clip_cam.clip.w = (right - left);
     clip_cam.clip.h = GAME_HEIGHT;
 
@@ -149,7 +148,6 @@ void Renderer::run_frame(bool force_render)
 
   for (const auto& clip_cam : clippings) {
     SDL_RenderSetViewport(sdl.renderer, &clip_cam.viewport);
-    SDL_RenderClear(sdl.renderer);
 
     for (auto& background : backgrounds) {
       background->render(this, clip_cam.clip);

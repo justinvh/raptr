@@ -151,7 +151,7 @@ bool Game::run()
       return false;
     }
     auto& pos = character_raptr->position();
-    pos.y = 100;
+    pos.y = 0;
     pos.x = x_off;
     x_off += 64;
 
@@ -233,12 +233,13 @@ bool Game::run()
     }
 
     auto current_time_us = clock::ticks();
-    frame_delta_us = (current_time_us - frame_last_time);
 
-    if (frame_delta_us < 100) {
+    if ((current_time_us - frame_last_time) < 100) {
       std::this_thread::sleep_for(std::chrono::microseconds(100));
       continue;
     }
+
+    frame_delta_us = (current_time_us - frame_last_time);
 
     for (auto& entity : entities) {
       entity->think(this->shared_from_this());

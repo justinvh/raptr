@@ -26,6 +26,9 @@ struct SDLDeleter {
 
 namespace raptr {
 
+constexpr int32_t GAME_WIDTH = 480;
+constexpr int32_t GAME_HEIGHT = 270;
+
 class Config;
 class Entity;
 class Background;
