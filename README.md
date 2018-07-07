@@ -6,6 +6,20 @@ it's time you escape. Maybe it's time you find a way out of this all.
 
 ![Our Dinosaur Warrior][raptr-idle]
 
+## Installing and Running v0.1-alpha.3
+
+It's pretty dang simple under 64-bit Windows right now.
+
+1. [Download the 0.1-alpha.3 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.3/raptr-0.1.0-alpha.3-win64.zip)
+2. Extract that anywhere your heart desires.
+3. Plug in a 360, GameCube, or Steam controller.
+4. Go into the bin/ folder and run raptr.exe
+5. Realize how much of an alpha this is :)
+
+## Current State: v0.1-alpha.3
+
+![Feature Mash][raptr-0.1-alpha.3]
+
 ## Features with some Hyperbole
 
 - A state-of-the-art PHY-101 physics system
@@ -14,10 +28,6 @@ it's time you escape. Maybe it's time you find a way out of this all.
 - Pixel perfect platforming with that keeps you on the edge of your seat
 - A flexible mapping system that makes modding a painless process
 - Music that will cut you to your core
-
-## Current State: 0.1-alpha.3
-
-![Feature Mash][raptr-0.1-alpha.3]
 
 ## Development Updates
 
