@@ -106,18 +106,23 @@ To be added
 ## Other Screenshots
 
 7/5/2018 - Fluid split screen local multiplayer
+
 ![Split Screen][raptr-0.1-alpha.2]
 
 7/4/2018 - A dialog system with branching, decision making, and triggers. Also showing some of the movement.
+
 ![Feature Mash][raptr-0.1-alpha.1]
 
 7/2/2018 - Quickly prototype maps by using the alpha channel of a texture to denote collisions.
+
 ![Alpha Blending][raptr-alpha]
 
 6/28/2018 - Another look at the dialog system
+
 ![Dialog][raptr-dialog]
 
 6/24/2018 - Emotions are tagged in Aseprite's export making it easy to add new ones.
+
 ![Emotions][raptr-emotions]
 
 [raptr-idle]: https://i.imgur.com/sqVdbnN.gif
