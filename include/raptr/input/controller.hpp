@@ -101,6 +101,12 @@ class Controller : public std::enable_shared_from_this<Controller> {
   void process_event(const SDL_Event& e);
 
   /*!
+    Returns true if the controller is an SDL gamepad
+    /return Whether the controller is a gamepad
+  */
+  bool is_gamepad();
+
+  /*!
     The controller id that this class is responsible for
     /return The controller id
   */

@@ -162,6 +162,7 @@ bool Game::run()
     entity_lut[character_raptr->id()] = character_raptr;
   }
 
+  /*
   x_off = 135;
   for (int i = 0; i < 2; ++i) {
     auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
@@ -188,6 +189,7 @@ bool Game::run()
 
     entity_lut[character_raptr->id()] = character_raptr;
   }
+  */
 
   SDL_Event e;
   auto frame_last_time = clock::ticks();
@@ -218,6 +220,15 @@ bool Game::run()
         controllers[controller_id]->process_event(e);
       } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F1) {
         renderer->toggle_fullscreen();
+      } else if (e.type == SDL_JOYAXISMOTION ||
+        e.type == SDL_JOYBUTTONDOWN ||
+        e.type == SDL_JOYBUTTONUP)
+      {
+        int32_t controller_id = e.jdevice.which;
+        auto& controller = controllers[controller_id];
+        if (!controller->is_gamepad()) {
+          controller->process_event(e);
+        }
       }
     }
 
@@ -337,11 +348,16 @@ bool Game::init()
 
 bool Game::init_controllers()
 {
+  SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
+  SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
+
+  auto mapping_file = game_path.from_root(fs::path("controls") / "gamecontrollerdb.txt").file_path;
+  auto mapping_file_str = mapping_file.string();
+  SDL_GameControllerAddMappingsFromFile(mapping_file_str.c_str());
+
   int32_t num_gamepads = 0;
   for (int32_t i = 0; i < SDL_NumJoysticks(); ++i) {
-    if (SDL_IsGameController(i)) {
-      num_gamepads++;
-    }
+    num_gamepads++;
   }
 
   if (num_gamepads == 0) {
@@ -404,10 +420,6 @@ bool Game::init_controllers()
     logger->debug("Is {} a game controller? {}",
                   SDL_JoystickNameForIndex(i),
                   SDL_IsGameController(i) ? "Yes" : "No");
-
-    if (!SDL_IsGameController(i)) {
-      continue;
-    }
 
     auto controller = Controller::open(game_path, i);
     controllers[controller->id()] = controller;
