@@ -12,7 +12,7 @@
 #     tinytoml::tinytoml
 #
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 pkg_check_modules(tinytoml QUIET tinytoml)
 
 find_path(TINYTOML_INCLUDE_DIR

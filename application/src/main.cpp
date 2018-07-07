@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 
   options.add_options()
     ("q,quiet", "Quiet the logger")
-    ("g,game", "Game root path", cxxopts::value<std::string>()->default_value("../game"))
+    ("g,game", "Game root path", cxxopts::value<std::string>()->default_value("../../game"))
     ;
 
   options.parse(argc, argv);

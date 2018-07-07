@@ -13,7 +13,7 @@
 #
 # Author: Pablo Arias - pabloariasal@gmail.com
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 pkg_check_modules(Picojson QUIET Picojson)
 
 find_path(PICOJSON_INCLUDE_DIR

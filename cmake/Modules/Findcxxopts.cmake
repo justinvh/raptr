@@ -12,7 +12,7 @@
 #     cxxopts::cxxopts
 #
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 pkg_check_modules(cxxopts QUIET cxxopts)
 
 find_path(CXXOPTS_INCLUDE_DIR

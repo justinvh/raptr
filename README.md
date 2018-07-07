@@ -107,7 +107,8 @@ build documentation.
 
 ## Running the tests
 
-None available yet
+Raptr is built with Catch2 and CMake's CTest. You can run tests by building the `raptr-tests` component
+and then running the `RUN TESTS` target.
 
 ## Checklist
 

@@ -1,0 +1,222 @@
+{ "frames": [
+   {
+    "filename": "raptr 0.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 500
+   },
+   {
+    "filename": "raptr 1.aseprite",
+    "frame": { "x": 60, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 500
+   },
+   {
+    "filename": "raptr 2.aseprite",
+    "frame": { "x": 120, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 500
+   },
+   {
+    "filename": "raptr 3.aseprite",
+    "frame": { "x": 180, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "raptr 4.aseprite",
+    "frame": { "x": 240, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "raptr 5.aseprite",
+    "frame": { "x": 300, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "raptr 6.aseprite",
+    "frame": { "x": 360, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 125
+   },
+   {
+    "filename": "raptr 7.aseprite",
+    "frame": { "x": 420, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 125
+   },
+   {
+    "filename": "raptr 8.aseprite",
+    "frame": { "x": 480, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 125
+   },
+   {
+    "filename": "raptr 9.aseprite",
+    "frame": { "x": 540, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 500
+   },
+   {
+    "filename": "raptr 10.aseprite",
+    "frame": { "x": 600, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 500
+   },
+   {
+    "filename": "raptr 11.aseprite",
+    "frame": { "x": 660, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 500
+   },
+   {
+    "filename": "raptr 12.aseprite",
+    "frame": { "x": 720, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 500
+   },
+   {
+    "filename": "raptr 13.aseprite",
+    "frame": { "x": 780, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "raptr 14.aseprite",
+    "frame": { "x": 840, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "raptr 15.aseprite",
+    "frame": { "x": 900, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "raptr 16.aseprite",
+    "frame": { "x": 960, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "raptr 17.aseprite",
+    "frame": { "x": 1020, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "raptr 18.aseprite",
+    "frame": { "x": 1080, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "raptr 19.aseprite",
+    "frame": { "x": 1140, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "raptr 20.aseprite",
+    "frame": { "x": 1200, "y": 0, "w": 60, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 32 },
+    "sourceSize": { "w": 60, "h": 32 },
+    "duration": 1000
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.8-x64",
+  "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\aseprite\\raptr.png",
+  "format": "RGBA8888",
+  "size": { "w": 1260, "h": 32 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "Idle", "from": 0, "to": 2, "direction": "pingpong" },
+   { "name": "Walk", "from": 3, "to": 5, "direction": "pingpong" },
+   { "name": "Run", "from": 6, "to": 8, "direction": "pingpong" },
+   { "name": "Jump", "from": 9, "to": 12, "direction": "forward" },
+   { "name": "Happy", "from": 13, "to": 14, "direction": "pingpong" },
+   { "name": "Angry", "from": 15, "to": 16, "direction": "forward" },
+   { "name": "Sad", "from": 17, "to": 18, "direction": "forward" },
+   { "name": "Afraid", "from": 19, "to": 20, "direction": "forward" }
+  ],
+  "layers": [
+   { "name": "Rear Leg", "opacity": 255, "blendMode": "normal" },
+   { "name": "Body", "opacity": 255, "blendMode": "normal" },
+   { "name": "Front Leg", "opacity": 255, "blendMode": "normal" },
+   { "name": "Tail", "opacity": 255, "blendMode": "normal" },
+   { "name": "Head + Neck", "opacity": 255, "blendMode": "normal" },
+   { "name": "Layer 2", "opacity": 255, "blendMode": "normal" },
+   { "name": "Arms", "opacity": 255, "blendMode": "normal" },
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}
