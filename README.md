@@ -4,6 +4,11 @@ You're a dinosaur without feathers struggling to understand your place in
 the world. The humans see you as a threat and a form of entertainment. Maybe 
 it's time you escape. Maybe it's time you find a way out of this all.
 
+This project is maintained at [GitHub](https://github.com/justinvh/raptr). 
+Additional developer insight and blog can be found at 
+[https://vh.io/](https://vh.io)
+
+
 ![Our Dinosaur Warrior][raptr-idle]
 
 ## Installing and Running v0.1-alpha.3
@@ -29,23 +34,43 @@ It's pretty dang simple under 64-bit Windows right now.
 - A flexible mapping system that makes modding a painless process
 - Music that will cut you to your core
 
-## Development Updates
+## Building and Running Raptr with CMake
 
-This project is maintained at [GitHub](https://github.com/justinvh/raptr). 
-Additional developer insight and blog can be found at 
-[https://vh.io/](https://vh.io). **Lots of screenshots there. No, really.**
+1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.3/vcpkg-export-20180707-072728.7z) (or [zip](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.3/vcpkg-export-20180707-072728.zip))
 
-## Getting Started
+```
+$ git clone https://github.com/justinvh/raptr.git raptr
+$ cd raptr
+$ 7z e vcpkg-export-20180707-072728.7z
+$ cd build
+$ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="../vcpkg/scripts/buildsystems/vcpkg.cmake" -G "Visual Studio 15 2017 Win64" ..
+```
 
-These instructions will get you a copy of the project up and running on your 
-local machine for development and testing purposes. See deployment for notes 
-on how to deploy the project on a live system.
+You can now use Visual Studio 2017 to compile and build Raptr.
 
-### Prerequisites - Windows 10
+## Manually Fetching Dependencies
 
-This project is currently being built in the Windows environment using `vcpkg` 
-and `cmake`. A controller (such as an XInput device) must be plugged 
-in to play.
+Raptr Depends on the following:
+
+* bzip2
+* catch2
+* cxxopts
+* fmt
+* freetype
+* libjpeg-turbo
+* liblzma
+* libpng
+* libwebp
+* picojson
+* sdl2
+* sdl2-image
+* sdl2-ttf
+* spdlog
+* tiff
+* tinytoml
+* zlib
+
+Which can be installed with vcpkg.exe with the following caveats:
 
 ### Patch fmt package
 
@@ -62,9 +87,10 @@ $ git checkout 178517052f42d428bb2f304946e635d3c1f318e9 -- ports/fmt
 You will want to first install the dependencies:
 
 ```
-$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image sdl2-ttf picojson cxxopts spdlog tinytoml
+$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image sdl2-ttf picojson cxxopts spdlog tinytoml catch2
 ```
 
+### Resume Building
 Now you can specify the toolchain file and continue on:
 
 ```
@@ -72,18 +98,6 @@ $ git clone https://github.com/justinvh/raptr.git raptr
 $ cd raptr/build
 $ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="%USERPROFILE%/vcpkg/scripts/buildsystems/vcpkg.cmake" -G "Visual Studio 15 2017 Win64" ..
 ```
-
-Alternatively, if you don't want to use vcpkg and are running Windows 10 64-bit, then you can [download a 7zip export of the dependencies](https://drive.google.com/open?id=1XUcirZww859o7s_iTD9b9Xu2DlB8RYMK), extract into the checked out project, and:
-
-```
-$ git clone https://github.com/justinvh/raptr.git raptr
-$ cd raptr
-$ 7z e vcpkg-export.7z
-$ cd build
-$ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="../vcpkg/scripts/buildsystems/vcpkg.cmake" -G "Visual Studio 15 2017 Win64" ..
-```
-
-You can now use Visual Studio 2017 to compile and build Raptr.
 
 ## Building documentation
 
