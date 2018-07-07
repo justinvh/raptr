@@ -106,6 +106,9 @@ class Character : public Entity {
   //! The unique ID assigned
   int32_t _id;
 
+  //! Whether input has been made
+  bool moving;
+
   //! If the think() determines the character is falling down, then this will be set
   bool falling;
 

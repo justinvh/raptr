@@ -154,6 +154,11 @@ void Character::think(std::shared_ptr<Game>& game)
       jump_time_us = 0;
       fast_fall = false;
       vel.y = 0;
+
+      if (!moving) {
+        vel.x = 0;
+      }
+
       if (vel.x > walk_speed) {
         sprite->set_animation("Run");
       } else if (vel.x > 0) {
@@ -174,15 +179,36 @@ void Character::think(std::shared_ptr<Game>& game)
     } else if (vel.x > 0) {
       sprite->flip_x = true;
     }
+
+    // Is there something above us?
+    Rect above_check = this->want_position_y(delta_us)[0];
+    above_check.y -= 1;
+    auto& intersected = game->intersect_world(this, above_check);
+    Character* character = dynamic_cast<Character*>(intersected.get());
+    if (character && !character->moving) {
+      auto& ov = intersected->velocity();
+      ov.x = vel.x;
+    }
     pos.x = want_x.x;
   } else {
     vel.x = 0;
   }
 
-  if (!game->intersect_world(this, want_y)) {
+  auto& intersected = game->intersect_world(this, want_y);
+  if (!intersected) {
     pos.y = want_y.y;
   } else {
-    vel.y = 0;
+    Character* character = dynamic_cast<Character*>(intersected.get());
+    if (character) {
+      auto& ov = intersected->velocity();
+      ov.y = vel.y;
+    } else {
+      vel.y = 0;
+    }
+
+    if (!falling) {
+      jump_count = 0;
+    }
   }
 
   sprite->x = pos.x;
@@ -193,6 +219,7 @@ void Character::think(std::shared_ptr<Game>& game)
 
 void Character::walk(float scale)
 {
+  moving = true;
   auto& vel = this->velocity();
   vel.x = scale * run_speed;
   if (!falling) {
@@ -202,6 +229,7 @@ void Character::walk(float scale)
 
 void Character::run(float scale)
 {
+  moving = true;
   auto& vel = this->velocity();
   vel.x = scale * run_speed;
 
@@ -212,6 +240,7 @@ void Character::run(float scale)
 
 void Character::stop()
 {
+  moving = false;
   auto& vel = this->velocity();
   vel.x = 0.0;
   if (!falling) {
