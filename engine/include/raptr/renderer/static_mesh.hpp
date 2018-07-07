@@ -45,10 +45,15 @@ class StaticMesh : public Entity {
   static std::shared_ptr<StaticMesh> from_toml(const FileInfo& path);
 
   /*!
+  */
+  virtual void render(Renderer* renderer);
+
+  /*!
     The static mesh just needs to render. It is a simple function.
     \param game - An instance of the game to retrieve event states, such as the current renderer
   */
   virtual void think(std::shared_ptr<Game>& game);
+
 
  public:
   //! A unique world id

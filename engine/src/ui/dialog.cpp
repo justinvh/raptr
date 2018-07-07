@@ -413,11 +413,11 @@ bool Dialog::think(std::shared_ptr<Game>& game)
 
   // Render dialog box
   auto& renderer = game->renderer; 
-  dialog_box->render(renderer);
+  dialog_box->render(renderer.get());
 
   // Render speaker
   auto& speaker = active_prompt->speaker;
-  speaker->render(renderer);
+  speaker->render(renderer.get());
 
   // Start rendering frame info
   auto& current_frame = speaker->current_animation->current_frame();

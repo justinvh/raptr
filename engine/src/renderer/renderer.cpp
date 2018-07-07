@@ -1,9 +1,12 @@
 #include <memory>
 #include <algorithm>
+#include <numeric>
 
 #include <raptr/game/entity.hpp>
 #include <raptr/config.hpp>
 #include <raptr/renderer/renderer.hpp>
+#include <raptr/renderer/background.hpp>
+#include <raptr/common/clock.hpp>
 
 constexpr int32_t GAME_WIDTH = 480;
 constexpr int32_t GAME_HEIGHT = 270;
@@ -48,12 +51,19 @@ bool Renderer::init(std::shared_ptr<Config>& config_)
   camera.pos.x = 0;
   camera.pos.y = 0;
   SDL_RenderSetLogicalSize(sdl.renderer, GAME_WIDTH, GAME_HEIGHT);
+  SDL_SetRenderDrawColor(sdl.renderer, 255, 255, 255, 255);
+  SDL_SetRenderDrawBlendMode(sdl.renderer, SDL_BLENDMODE_BLEND);
+  fps = 60;
+  last_render_time_us = clock::ticks();
   return true;
 }
 
-void Renderer::run_frame()
+void Renderer::run_frame(bool force_render)
 {
-  SDL_RenderClear(sdl.renderer);
+  int64_t ms = (clock::ticks() - last_render_time_us) / 1e3;
+  if (!force_render && ms < 16) {
+    return;
+  }
   size_t num_entities = entities_followed.size();
   size_t index = 0;
 
@@ -81,8 +91,9 @@ void Renderer::run_frame()
   int32_t current_entity_index = 0;
   int32_t num_clips = 1;
   int32_t last_left = 0;
+  std::vector<int32_t> y_pos;
   while (current_entity_index < num_entities) {
-    int64_t left, right, top, bottom;
+    int64_t left, right, top, bottom, player_bottom;
     ClipCamera clip_cam;
 
     // Setup the initial camera where we are going to try and merge players together
@@ -94,6 +105,7 @@ void Renderer::run_frame()
       int64_t x = (pos.x + bbox.w / 2.0);
       left = x - min_rect_hw;
       right = x + min_rect_hw;
+      y_pos.push_back(pos.y + bbox.h);
       top = 0;
       bottom = GAME_HEIGHT;
     }
@@ -106,6 +118,7 @@ void Renderer::run_frame()
       int64_t x = (pos.x + bbox.w / 2.0);
       t_right += min_rect_hw;
       if (x <= t_right) {
+        y_pos.push_back(pos.y + bbox.h);
         right += min_rect_w;
         t_right = right;
       } else {
@@ -113,8 +126,9 @@ void Renderer::run_frame()
       }
     }
 
+    int32_t min_player = *std::max_element(y_pos.begin(), y_pos.end());
     clip_cam.clip.x = left;
-    clip_cam.clip.y = top;
+    clip_cam.clip.y = (std::accumulate(y_pos.begin(), y_pos.end(), 0) / y_pos.size() - GAME_HEIGHT) + 32;
     clip_cam.clip.w = (right - left);
     clip_cam.clip.h = GAME_HEIGHT;
 
@@ -129,8 +143,17 @@ void Renderer::run_frame()
     ++num_clips;
   }
 
+  for (auto& e : observing) {
+    e->render(this);
+  }
+
   for (const auto& clip_cam : clippings) {
     SDL_RenderSetViewport(sdl.renderer, &clip_cam.viewport);
+    SDL_RenderClear(sdl.renderer);
+
+    for (auto& background : backgrounds) {
+      background->render(this, clip_cam.clip);
+    }
 
     for (auto w : will_render) {
       auto transformed_dst = w.dst;
@@ -142,13 +165,13 @@ void Renderer::run_frame()
 
       SDL_RenderCopyEx(sdl.renderer, w.texture.get(), &w.src, &transformed_dst,
         w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
-
     }
 
     ++index;
   }
 
   SDL_RenderPresent(sdl.renderer);
+  last_render_time_us = clock::ticks();
   will_render.clear();
   ++frame_count;
 }
@@ -181,6 +204,11 @@ void Renderer::add(std::shared_ptr<SDL_Texture>& texture,
 {
   Renderable renderable = {texture, src, dst, angle, flip_x, flip_y, absolute_positioning};
   will_render.push_back(renderable);
+}
+
+void Renderer::add_background(std::shared_ptr<Background>& background)
+{
+  backgrounds.push_back(background);
 }
 
 } // namespace raptr

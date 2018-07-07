@@ -11,6 +11,7 @@
 #include <raptr/game/character.hpp>
 #include <raptr/game/game.hpp>
 #include <raptr/input/controller.hpp>
+#include <raptr/renderer/background.hpp>
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/renderer/static_mesh.hpp>
@@ -39,6 +40,12 @@ bool Game::run()
       logger->error("Failed to initialize the game");
       return false;
     }
+  }
+
+  // background test
+  auto background = Background::from_toml(game_path.from_root("background/nightsky.toml"));
+  if (background) {
+    renderer->add_background(background);
   }
 
   auto dialog = Dialog::from_toml(game_path.from_root("dialog/demo/dialog.toml"));
@@ -129,13 +136,14 @@ bool Game::run()
       rtree.Insert(b.min, b.max, mesh.get());
     }
 
+    renderer->observing.push_back(mesh);
     entities.push_back(mesh);
     entity_lut[mesh->id()] = mesh;
   }
 
   std::vector<std::shared_ptr<Entity>> characters;
 
-  int64_t x_off = 1000;
+  int64_t x_off = 50;
   for (auto controller : controllers) {
     auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
     if (!character_raptr) {
@@ -159,7 +167,9 @@ bool Game::run()
       rtree.Insert(bounds.min, bounds.max, character_raptr.get());
     }
 
+    renderer->observing.push_back(character_raptr);
     entity_lut[character_raptr->id()] = character_raptr;
+    break;
   }
 
   /*
@@ -199,37 +209,35 @@ bool Game::run()
   renderer->camera.right = 2000;
   renderer->camera.top = -270;
   renderer->camera.bottom = 270;
-
-  int64_t last_render_time_us = 0;
+  renderer->last_render_time_us = 0;
 
   while (true) {
-    auto current_time_us = clock::ticks();
-    frame_delta_us = (current_time_us - frame_last_time);
-
-    if (frame_delta_us == 0) {
-      std::this_thread::sleep_for(std::chrono::microseconds(1));
-      continue;
-    }
 
     if (SDL_PollEvent(&e)) {
       if (e.type == SDL_CONTROLLERAXISMOTION ||
-          e.type == SDL_CONTROLLERBUTTONDOWN ||
-          e.type == SDL_CONTROLLERBUTTONUP)
-      {
+        e.type == SDL_CONTROLLERBUTTONDOWN ||
+        e.type == SDL_CONTROLLERBUTTONUP) {
         int32_t controller_id = e.jdevice.which;
         controllers[controller_id]->process_event(e);
       } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F1) {
         renderer->toggle_fullscreen();
       } else if (e.type == SDL_JOYAXISMOTION ||
         e.type == SDL_JOYBUTTONDOWN ||
-        e.type == SDL_JOYBUTTONUP)
-      {
+        e.type == SDL_JOYBUTTONUP) {
         int32_t controller_id = e.jdevice.which;
         auto& controller = controllers[controller_id];
         if (!controller->is_gamepad()) {
           controller->process_event(e);
         }
       }
+    }
+
+    auto current_time_us = clock::ticks();
+    frame_delta_us = (current_time_us - frame_last_time);
+
+    if (frame_delta_us < 100) {
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
+      continue;
     }
 
     for (auto& entity : entities) {
@@ -258,11 +266,8 @@ bool Game::run()
 
     dialog->think(this->shared_from_this());
 
+    renderer->run_frame();
     frame_last_time = clock::ticks();
-    if ((current_time_us - last_render_time_us) / 1e3 >= 16) {
-      renderer->run_frame();
-      last_render_time_us = frame_last_time;
-    }
   }
 
   return true;

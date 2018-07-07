@@ -115,7 +115,7 @@ class Sprite {
     Render this sprite to a provided renderer
     /param renderer - The Renderer that this sprite should render to
   */
-  void render(std::shared_ptr<Renderer>& renderer);
+  void render(Renderer* renderer);
 
   /*!
     Change the current animation to a different one by name, such as "Idle" or "Walk"

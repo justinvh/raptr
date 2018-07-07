@@ -188,7 +188,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   return sprite;
 }
 
-void Sprite::render(std::shared_ptr<Renderer>& renderer)
+void Sprite::render(Renderer* renderer)
 {
   if (!texture) {
     auto exists = TEXTURE_CACHE.find(surface);

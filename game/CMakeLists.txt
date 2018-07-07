@@ -3,6 +3,9 @@ set(RAPTR_GAME
     aseprite/dialog-simple-sheet.aseprite
     aseprite/raptr.aseprite
 
+    # Backgrounds
+    background/nightsky.toml
+
     # Game modules
     controls/gamecontrollerdb.txt
 
@@ -43,6 +46,15 @@ set(RAPTR_GAME
     textures/raptor.json
     textures/dialog-simple.png
     textures/dialog-simple.json
+
+    # Parallax backgrounds
+    textures/background/nightsky/nightsky_1.png
+    textures/background/nightsky/nightsky_2.png
+    textures/background/nightsky/nightsky_3.png
+    textures/background/nightsky/nightsky_4.png
+    textures/background/nightsky/nightsky_5.png
+    textures/background/nightsky/nightsky_6.png
+    textures/background/nightsky/nightsky_7.png
 )
 
 add_custom_target(game SOURCES ${RAPTR_GAME})

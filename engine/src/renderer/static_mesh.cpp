@@ -109,7 +109,11 @@ void StaticMesh::think(std::shared_ptr<Game>& game)
   auto& pos = position();
   sprite->x = pos.x;
   sprite->y = pos.y;
-  sprite->render(game->renderer);
+}
+
+void StaticMesh::render(Renderer* renderer)
+{
+  sprite->render(renderer);
 }
 
 } // namespace raptr

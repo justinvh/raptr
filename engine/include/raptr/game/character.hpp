@@ -14,6 +14,7 @@ namespace raptr {
 class Game;
 class Sprite;
 class Controller;
+class Renderer;
 class Filesystem;
 struct ControllerState;
 
@@ -76,6 +77,10 @@ class Character : public Entity {
     \param scale - A 0.0-1.0 multiplier that will be used to calculate the final run speed
   */
   virtual void run(float scale);
+
+  /*!
+  */
+  virtual void render(Renderer* renderer);
 
   /*!  
     Trigger the "Walk" animation and set the movement speed to walk speed

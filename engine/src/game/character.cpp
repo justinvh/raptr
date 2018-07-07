@@ -213,8 +213,6 @@ void Character::think(std::shared_ptr<Game>& game)
 
   sprite->x = pos.x;
   sprite->y = pos.y;
-
-  sprite->render(game->renderer);
 }
 
 void Character::walk(float scale)
@@ -327,6 +325,11 @@ bool Character::on_button_down(const ControllerState& state)
     ++jump_count;
   }
   return false;
+}
+
+void Character::render(Renderer* renderer)
+{
+  sprite->render(renderer);
 }
 
 void Character::attach_controller(std::shared_ptr<Controller>& controller_)

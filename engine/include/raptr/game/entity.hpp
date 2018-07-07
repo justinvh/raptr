@@ -14,6 +14,7 @@ namespace raptr {
 
 class Game;
 class Sprite;
+class Renderer;
 struct AnimationFrame;
 
 /*!
@@ -86,6 +87,10 @@ class Entity {
   */
   virtual bool intersect_slow(const Rect& bbox) const;
   virtual bool intersect_slow(const Entity* other, const Rect& bbox) const;
+
+  /*!
+  */
+  virtual void render(Renderer* render) = 0;
 
   /*!
     This method will determine how the entity interacts with the game.

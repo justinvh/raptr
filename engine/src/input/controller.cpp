@@ -107,7 +107,7 @@ ControllerState state_from_joystick_event(SDL_GameController* controller, const 
     const int16_t deadzone = 4000;
     const int16_t value = SDL_GameControllerGetAxis(controller, axis);
     if (value < -deadzone || value > deadzone) {
-      float int16_t_max = static_cast<float>(std::numeric_limits<int16_t>::max());
+      float int16_t_max = 27000; // static_cast<float>(std::numeric_limits<int16_t>::max());
       mag[k] = std::max(-1.0f, std::min(value / int16_t_max, 1.0f));
     }
   }

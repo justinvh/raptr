@@ -28,6 +28,7 @@ namespace raptr {
 
 class Config;
 class Entity;
+class Background;
 
 struct Camera {
   SDL_Point pos;
@@ -111,6 +112,12 @@ class Renderer {
            float angle,  bool flip_x, bool flip_y, bool absolute_positioning = false);
 
   /*!
+    Add a background to be rendered, these are special as the rendering call is dependent on the viewport
+    /param background- The background that will be rendered (first)
+  */
+  void add_background(std::shared_ptr<Background>& background);
+
+  /*!
     Follow an entity so that the camera is centered on it
     /param entity - The entity to follow
   */
@@ -134,7 +141,7 @@ class Renderer {
   /*!
     Clears the screen and renders all added objects to the screen.
   */
-  void run_frame();
+  void run_frame(bool force_render = false);
 
   /*!
     Toggles between a BORDERLESS fullscreen and Window mode
@@ -148,11 +155,12 @@ class Renderer {
 
   //! How many frames have been rendered
   uint64_t frame_count;
+  uint64_t fps;
+  uint64_t last_render_time_us;
 
   //! Camera position
   Camera camera;
 
- private:
   /*!
     An internal object for representing the SDL state of the renderer
   */
@@ -162,8 +170,10 @@ class Renderer {
   } sdl;
 
   //! A list of Renderable objects that will be rendered on the next run_frame()
+  std::vector<std::shared_ptr<Entity>> observing;
   std::vector<Renderable> will_render;
   std::vector<std::shared_ptr<Entity>> entities_followed;
+  std::vector<std::shared_ptr<Background>> backgrounds;
 };
 
 } // namespace raptr
