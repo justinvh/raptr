@@ -16,6 +16,7 @@ set(RAPTR_CPP
     src/input/controller.cpp
 
     # Renderer sources
+    src/renderer/background.cpp
     src/renderer/renderer.cpp
     src/renderer/sprite.cpp
     src/renderer/static_mesh.cpp
@@ -46,6 +47,7 @@ set(RAPTR_HPP
     include/raptr/input/controller.hpp
 
     # Renderer headers
+    include/raptr/renderer/background.hpp
     include/raptr/renderer/renderer.hpp
     include/raptr/renderer/sprite.hpp
     include/raptr/renderer/static_mesh.hpp
