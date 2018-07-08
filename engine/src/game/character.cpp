@@ -390,4 +390,21 @@ std::vector<Rect> Character::bbox() const
   return {box};
 }
 
+std::vector<NetField> Character::serialize()
+{
+  #define	NF(x, bits) {"Character->" #x,(int32_t)&((Character*)0)->x, bits}
+
+  return {
+    NF(_id, 0),
+    NF(moving, 0),
+  };
+
+  #undef NF
+}
+
+bool Character::deserialize(const std::vector<NetField>& fields)
+{
+  return false;
+}
+
 } // namespace raptr

@@ -17,6 +17,7 @@
 #include <raptr/common/rtree.hpp>
 #include <raptr/common/rect.hpp>
 #include <raptr/common/clock.hpp>
+#include <raptr/network/snapshot.hpp>
 
 namespace raptr {
 
@@ -31,10 +32,10 @@ class Sound;
   into one cohesive interaction. It can be thought of the main loop of the application
   with additional utilities and conveniences. 
 */
-class Game : public std::enable_shared_from_this<Game> {
+class Game : public std::enable_shared_from_this<Game>, public Serializable {
  private:
   //! The class should be created using Game::create as it inherits from enable_shared_from_this
-  Game(const fs::path& game_root_)
+   Game(const fs::path& game_root_)
     : is_init(false), game_root(game_root_) { }
 
  public:
@@ -65,12 +66,21 @@ class Game : public std::enable_shared_from_this<Game> {
   */
   bool run();
 
+  /*!
+  */
+  bool run_frame();
+
  private:
   /*!
     Top-level function to call all other init functions
     \return Whether all init functions passed or not
   */
   bool init();
+
+  /*!
+    Init stuff for a demo
+  */
+  bool init_demo();
 
   /*!
     Initialize and find controllers the game can use
@@ -96,6 +106,12 @@ class Game : public std::enable_shared_from_this<Game> {
     \return Whether the sound engine could be initialized
   */
   bool init_sound();
+
+  /*!
+    Serialize and deserialize methods for the game
+  */
+  virtual std::vector<NetField> serialize();
+  virtual bool deserialize(const std::vector<NetField>& fields);
 
  public:
   //! Global configuration loaded from a etc/raptr.ini
@@ -134,6 +150,8 @@ class Game : public std::enable_shared_from_this<Game> {
 
   //! The number of ms since the last frame
   int64_t frame_delta_us;
+
+  int64_t frame_last_time;
 
  public:
   //! If set, then all initialization has happened successfully

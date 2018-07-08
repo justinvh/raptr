@@ -82,12 +82,14 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
 {
   logger->info("Loading Sprite from {}", path.file_relative);
 
+  /*
   auto in_cache = SPRITE_CACHE.find(path.file_relative);
   if (in_cache != SPRITE_CACHE.end()) {
     logger->info("Sprite is in cache!");
     std::shared_ptr<Sprite> cached(new Sprite(*in_cache->second));
     return cached;
   }
+  */
 
   std::shared_ptr<Sprite> sprite(new Sprite);
   auto input = path.open();
@@ -186,10 +188,11 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   sprite->angle = 0.0;
   sprite->absolute_positioning = false;
   sprite->blend_mode = SDL_BLENDMODE_BLEND;
+  sprite->path = path;
   sprite->render_in_foreground = false;
 
-  std::shared_ptr<Sprite> cache(new Sprite(*sprite));
-  SPRITE_CACHE[path.file_relative] = cache;
+  //std::shared_ptr<Sprite> cache(new Sprite(*sprite));
+  //SPRITE_CACHE[path.file_relative] = cache;
 
   return sprite;
 }

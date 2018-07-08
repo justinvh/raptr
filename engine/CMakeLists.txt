@@ -15,6 +15,11 @@ set(RAPTR_CPP
     # Input sources
     src/input/controller.cpp
 
+    # Networking
+    src/network/client.cpp
+    src/network/server.cpp
+    src/network/snapshot.cpp
+
     # Renderer sources
     src/renderer/parallax.cpp
     src/renderer/renderer.cpp
@@ -45,6 +50,11 @@ set(RAPTR_HPP
 
     # Input headers
     include/raptr/input/controller.hpp
+
+    # Networking
+    include/raptr/network/client.hpp
+    include/raptr/network/server.hpp
+    include/raptr/network/snapshot.hpp
 
     # Renderer headers
     include/raptr/renderer/parallax.hpp

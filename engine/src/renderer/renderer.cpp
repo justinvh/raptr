@@ -84,7 +84,13 @@ void Renderer::run_frame(bool force_render)
               return p1.x < p2.x;
             });
 
-  int32_t min_rect_w = (GAME_WIDTH / num_entities);
+  int32_t min_rect_w;
+  if (num_entities == 0) {
+    min_rect_w = GAME_WIDTH;
+  } else {
+    min_rect_w = (GAME_WIDTH / num_entities);
+  }
+
   int32_t min_rect_hw = min_rect_w / 2;
 
   int32_t current_entity_index = 0;
@@ -140,6 +146,20 @@ void Renderer::run_frame(bool force_render)
 
     clippings.push_back(clip_cam);
     ++num_clips;
+  }
+
+  if (clippings.empty()) {
+    ClipCamera clip_cam;
+    clip_cam.clip.x = 0;
+    clip_cam.clip.y = 0; 
+    clip_cam.clip.w = GAME_WIDTH;
+    clip_cam.clip.h = GAME_HEIGHT;
+
+    clip_cam.viewport.x = 0;
+    clip_cam.viewport.y = 0;
+    clip_cam.viewport.w = clip_cam.clip.w - 1;
+    clip_cam.viewport.h = clip_cam.clip.h;
+    clippings.push_back(clip_cam);
   }
 
   for (auto& e : observing) {
@@ -201,7 +221,7 @@ bool Renderer::toggle_fullscreen()
   }
 }
 
-void Renderer::camera_follow(std::vector<std::shared_ptr<Entity>>& entities)
+void Renderer::camera_follow(std::vector<std::shared_ptr<Entity>> entities)
 {
   entities_followed = entities;
 }

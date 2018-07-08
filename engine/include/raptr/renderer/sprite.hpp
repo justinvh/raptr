@@ -171,6 +171,9 @@ class Sprite {
 
   //! If set, then rendering will be in front of everything
   bool render_in_foreground;
+
+  //! Path this sprite is from
+  FileInfo path;
 };
 
 } // namespace raptr

@@ -132,7 +132,7 @@ class Renderer {
     Follow an entity so that the camera is centered on it
     /param entity - The entity to follow
   */
-  void camera_follow(std::vector<std::shared_ptr<Entity>>& entity);
+  void camera_follow(std::vector<std::shared_ptr<Entity>> entity);
 
   /*!
     A utility method to create an SDL_Texture from an SDL_Surface using the current

@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <raptr/game/entity.hpp>
 #include <raptr/common/filesystem.hpp>
+#include <raptr/network/snapshot.hpp>
 
 namespace raptr {
 
@@ -23,7 +24,7 @@ struct ControllerState;
   It has various movement options, a more complicated think function to handle interactions
   with its environment, and most importantly can have a controller attached to it.
  */
-class Character : public Entity {
+class Character : public Entity, public Serializable {
  public:
    Character();
    ~Character() = default;
@@ -33,6 +34,9 @@ class Character : public Entity {
    Character& operator=(Character&&) = default;
 
  public:
+   virtual std::vector<NetField> serialize();
+   virtual bool deserialize(const std::vector<NetField>& fields);
+
   /*! 
     Attaches and registers bindings against a controller. This provides a mechanism for
     propagating events, such as button presses or controller movement, back to this class and 

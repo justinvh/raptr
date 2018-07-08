@@ -3,6 +3,7 @@
 
 #include <raptr/game/game.hpp>
 #include <raptr/common/logging.hpp>
+#include <raptr/network/server.hpp>
 
 namespace { auto logger = raptr::_get_logger(__FILE__); };
 
@@ -27,9 +28,14 @@ int main(int argc, char** argv)
   }
 
   {
+    raptr::Server server("127.0.0.1:7272");
+    server.fps = 20;
+
     std::string game_root = options["game"].as<std::string>();
     auto game = raptr::Game::create(game_root);
-    game->run();
+
+    server.attach(game);
+    server.run();
   }
 
   logger->info("Okay, quitting. Bye Bye.");
