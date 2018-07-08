@@ -22,6 +22,9 @@ set(RAPTR_GAME
     fonts/munro_small.ttf
     fonts/fonts.toml
 
+    # Foregrounds
+    foreground/nightsky.toml
+
     # Maps
     maps/demo/demo.aseprite
     maps/demo/demo.json

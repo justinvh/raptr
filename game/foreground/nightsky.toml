@@ -1,0 +1,13 @@
+[foreground]
+name = "Night Sky"
+
+# In our parallax background/nightsky, z=100 means it is as far as possible
+# and the least sensitive to height changes
+
+[[layer]]
+texture = "textures/background/nightsky/nightsky_4.png"
+z = 20
+
+[[layer]]
+texture = "textures/background/nightsky/nightsky_5.png"
+z = 50

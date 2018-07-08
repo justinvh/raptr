@@ -1,5 +1,5 @@
 /*!
-  \file background.hpp
+  \file parallax.hpp
   This module is responsible for being the skybox or parallax background
 */
 #pragma once
@@ -21,9 +21,9 @@ struct Layer {
 
 class Renderer;
 
-class Background {
+class Parallax {
  public:
-  static std::shared_ptr<Background> from_toml(const FileInfo& path);
+  static std::shared_ptr<Parallax> from_toml(const FileInfo& path);
 
  public:
    /*!
@@ -33,6 +33,7 @@ class Background {
    void render(Renderer* renderer, const SDL_Rect& clip);
 
  public:
+  bool is_foreground;
   std::vector<Layer> layers;
 };
 

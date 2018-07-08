@@ -31,7 +31,7 @@ constexpr int32_t GAME_HEIGHT = 270;
 
 class Config;
 class Entity;
-class Background;
+class Parallax;
 
 struct Camera {
   SDL_Point pos;
@@ -118,7 +118,13 @@ class Renderer {
     Add a background to be rendered, these are special as the rendering call is dependent on the viewport
     /param background- The background that will be rendered (first)
   */
-  void add_background(std::shared_ptr<Background>& background);
+  void add_background(std::shared_ptr<Parallax>& background);
+
+  /*!
+    Add a foreground to be rendered, these are special as the rendering call is dependent on the viewport
+    /param foreground- The foreground that will be rendered (first)
+  */
+  void add_foreground(std::shared_ptr<Parallax>& foreground);
 
   /*!
     Follow an entity so that the camera is centered on it
@@ -176,7 +182,8 @@ class Renderer {
   std::vector<std::shared_ptr<Entity>> observing;
   std::vector<Renderable> will_render;
   std::vector<std::shared_ptr<Entity>> entities_followed;
-  std::vector<std::shared_ptr<Background>> backgrounds;
+  std::vector<std::shared_ptr<Parallax>> backgrounds;
+  std::vector<std::shared_ptr<Parallax>> foregrounds;
 };
 
 } // namespace raptr

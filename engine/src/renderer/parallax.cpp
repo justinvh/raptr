@@ -6,13 +6,13 @@
 
 #include <raptr/common/logging.hpp>
 #include <raptr/renderer/renderer.hpp>
-#include <raptr/renderer/background.hpp>
+#include <raptr/renderer/parallax.hpp>
 
 namespace { auto logger = raptr::_get_logger(__FILE__); }
 
 namespace raptr {
 
-std::shared_ptr<Background> Background::from_toml(const FileInfo& toml_path)
+std::shared_ptr<Parallax> Parallax::from_toml(const FileInfo& toml_path)
 {
   auto toml_relative = toml_path.file_relative;
   auto ifs = toml_path.open();
@@ -30,6 +30,7 @@ std::shared_ptr<Background> Background::from_toml(const FileInfo& toml_path)
   const toml::Value& v = pr.value;
 
   std::string toml_keys[] = {
+    "foreground.name",
     "background.name",
     "layer",
   };
@@ -39,13 +40,17 @@ std::shared_ptr<Background> Background::from_toml(const FileInfo& toml_path)
   for (const auto& key : toml_keys) {
     const toml::Value* value = v.find(key);
     if (!value) {
-      logger->error("{} is missing {}", toml_relative, key);
-      return nullptr;
+      continue;
     }
     dict[key] = value;
   }
 
-  std::shared_ptr<Background> bg(new Background());
+  std::shared_ptr<Parallax> bg(new Parallax());
+
+  bg->is_foreground = false;
+  if (dict.find("foreground.name") != dict.end()) {
+    bg->is_foreground = true;
+  }
 
   const toml::Array& layer_values = v.find("layer")->as<toml::Array>();
   for (const toml::Value& l : layer_values) {
@@ -84,20 +89,24 @@ std::shared_ptr<Background> Background::from_toml(const FileInfo& toml_path)
   return bg;
 }
 
-void Background::render(Renderer* renderer, const SDL_Rect& clip)
+void Parallax::render(Renderer* renderer, const SDL_Rect& clip)
 {
   for (auto& layer : layers) {
     if (!layer.texture) {
       layer.texture.reset(renderer->create_texture(layer.surface), ::SDLDeleter());
     }
 
-    int32_t cx = clip.x + clip.w / 2.0;
-    int32_t cy = clip.y + clip.h / 2.0;
+    int32_t cx = clip.x;
 
     auto transformed_dst = layer.bbox;
-    transformed_dst.x -= cx * (1.0 - (layer.z_index / 100.0));
-    //transformed_dst.y -= cy * (layer.z_index / 100.0);
-    transformed_dst.y = -layer.surface->h + GAME_HEIGHT - (clip.y * (layer.z_index / 100.0));
+    if (is_foreground) {
+      // Things that are closer move faster 
+      transformed_dst.x -= cx * (1.0 + layer.z_index / 100.0);
+      transformed_dst.y = -layer.surface->h + GAME_HEIGHT - (clip.y * (1.0 - layer.z_index / 100.0));
+    } else {
+      transformed_dst.x -= cx * (1.0 - (layer.z_index / 100.0));
+      transformed_dst.y = -layer.surface->h + GAME_HEIGHT - (clip.y * (layer.z_index / 100.0));
+    }
 
     SDL_RenderCopyEx(renderer->sdl.renderer, layer.texture.get(), &layer.bbox, &transformed_dst, 0, nullptr, SDL_FLIP_NONE);
   }

@@ -5,7 +5,7 @@
 #include <raptr/game/entity.hpp>
 #include <raptr/config.hpp>
 #include <raptr/renderer/renderer.hpp>
-#include <raptr/renderer/background.hpp>
+#include <raptr/renderer/parallax.hpp>
 #include <raptr/common/clock.hpp>
 
 void SDLDeleter::operator()(SDL_Texture* p) const
@@ -165,6 +165,10 @@ void Renderer::run_frame(bool force_render)
         w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
     }
 
+    for (auto& foreground : foregrounds) {
+      foreground->render(this, clip_cam.clip);
+    }
+
     ++index;
   }
 
@@ -204,9 +208,14 @@ void Renderer::add(std::shared_ptr<SDL_Texture>& texture,
   will_render.push_back(renderable);
 }
 
-void Renderer::add_background(std::shared_ptr<Background>& background)
+void Renderer::add_background(std::shared_ptr<Parallax>& background)
 {
   backgrounds.push_back(background);
+}
+
+void Renderer::add_foreground(std::shared_ptr<Parallax>& foreground)
+{
+  foregrounds.push_back(foreground);
 }
 
 } // namespace raptr

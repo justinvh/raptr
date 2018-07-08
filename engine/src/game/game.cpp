@@ -11,7 +11,7 @@
 #include <raptr/game/character.hpp>
 #include <raptr/game/game.hpp>
 #include <raptr/input/controller.hpp>
-#include <raptr/renderer/background.hpp>
+#include <raptr/renderer/parallax.hpp>
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/renderer/static_mesh.hpp>
@@ -43,9 +43,14 @@ bool Game::run()
   }
 
   // background test
-  auto background = Background::from_toml(game_path.from_root("background/nightsky.toml"));
+  auto background = Parallax::from_toml(game_path.from_root("background/nightsky.toml"));
   if (background) {
     renderer->add_background(background);
+  }
+
+  auto foreground = Parallax::from_toml(game_path.from_root("foreground/nightsky.toml"));
+  if (foreground) {
+    renderer->add_foreground(foreground);
   }
 
   auto dialog = Dialog::from_toml(game_path.from_root("dialog/demo/dialog.toml"));
