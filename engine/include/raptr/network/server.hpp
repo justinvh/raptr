@@ -12,6 +12,7 @@ class Server {
   Server(const std::string& server_addr);
   virtual ~Server() {}
 
+  bool bind();
   void attach(std::shared_ptr<Game> game);
   void run();
   void update_game_state();
@@ -24,6 +25,9 @@ class Server {
   std::string server_addr;
   int64_t frame_delta_us;
   int64_t frame_last_time;
+
+public:
+  int32_t socket;
 };
 
 }

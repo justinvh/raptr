@@ -1,4 +1,6 @@
 #include <thread>
+#include <winsock2.h>
+
 #include <raptr/game/game.hpp>
 #include <raptr/network/server.hpp>
 #include <raptr/common/clock.hpp>
@@ -13,6 +15,10 @@ Server::Server(const std::string& server_addr_)
 void Server::attach(std::shared_ptr<Game> game_)
 {
   game = game_;
+}
+
+bool Server::bind()
+{
 }
 
 void Server::run()

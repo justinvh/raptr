@@ -16,6 +16,7 @@ option(BUILD_TESTS "Build tests" ON)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image REQUIRED)
 find_package(SDL2_TTF REQUIRED)
+find_package(SDL2_Net REQUIRED)
 find_package(Picojson REQUIRED)
 find_package(cxxopts REQUIRED)
 find_package(spdlog REQUIRED)     
@@ -32,6 +33,7 @@ target_link_libraries(RaptrDependencies INTERFACE
     spdlog::spdlog
     fmt::fmt
     tinytoml::tinytoml
+    sdl2_net::sdl2_net
     ${SDL2_LIBRARIES} 
     ${SDL2_IMAGE_LIBRARIES}
 )
@@ -40,6 +42,7 @@ target_include_directories(RaptrDependencies INTERFACE
     $<TARGET_PROPERTY:cxxopts::cxxopts,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:SDL2::SDL2,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:sdl2_ttf::sdl2_ttf,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:sdl2_net::sdl2_net,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:Picojson::Picojson,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:spdlog::spdlog,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:fmt::fmt,INTERFACE_INCLUDE_DIRECTORIES>
