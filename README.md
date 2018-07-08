@@ -55,6 +55,7 @@ Raptr Depends on the following:
 
 * bzip2
 * catch2
+* crossguid
 * cxxopts
 * fmt
 * freetype
@@ -89,7 +90,7 @@ $ git checkout 178517052f42d428bb2f304946e635d3c1f318e9 -- ports/fmt
 You will want to first install the dependencies:
 
 ```
-$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image sdl2-ttf picojson cxxopts spdlog tinytoml catch2
+$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image sdl2-net sdl2-ttf picojson cxxopts spdlog tinytoml catch2 crossguid
 ```
 
 ### Resume Building
@@ -120,6 +121,7 @@ To be added
 
 * [aseprite](https://www.aseprite.org/) - Animated sprite editor and pixel art tool
 * [cmake](https://cmake.org/) - Cross-platform build system
+* [crossguid](https://github.com/graeme-hill/crossguid) - Lightweight cross platform C++ GUID/UUID library
 * [cxxopts](https://github.com/jarro2783/cxxopts) - Lightweight C++ command line option parser
 * [musescore](https://musescore.com/) - Create, play, and print beautiful sheet music
 * [picojson](https://github.com/kazuho/picojson) - A header-file-only, JSON parser serializer in C++

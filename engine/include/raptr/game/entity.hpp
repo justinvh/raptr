@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <crossguid/guid.hpp>
 #include <raptr/common/rect.hpp>
 
 namespace raptr {
@@ -61,7 +62,7 @@ class Entity {
     Returns the unique id for this entity in the world
     \return a 32-bit signed integer representing a unique entity id
   */
-  virtual int32_t id() const;
+  virtual xg::Guid guid() const;
 
 
   /*!
@@ -138,7 +139,7 @@ class Entity {
    std::string name;
 
   //! The unique ID of the entity
-  int32_t id_;
+  xg::Guid guid_;
 
   //! The current position
   Point pos_;
@@ -160,10 +161,6 @@ class Entity {
 
   //! Specific frame used for collisions
   AnimationFrame* collision_frame;
-
- private:
-  //! A simple ID counter
-  static int32_t global_id;
 };
 
 } // namespace raptr

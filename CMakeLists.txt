@@ -22,6 +22,7 @@ find_package(cxxopts REQUIRED)
 find_package(spdlog REQUIRED)     
 find_package(fmt REQUIRED)     
 find_package(tinytoml REQUIRED)     
+find_package(crossguid CONFIG REQUIRED)
 
 add_library(RaptrDependencies INTERFACE)
 
@@ -34,6 +35,7 @@ target_link_libraries(RaptrDependencies INTERFACE
     fmt::fmt
     tinytoml::tinytoml
     sdl2_net::sdl2_net
+    crossguid
     ${SDL2_LIBRARIES} 
     ${SDL2_IMAGE_LIBRARIES}
 )
@@ -47,6 +49,7 @@ target_include_directories(RaptrDependencies INTERFACE
     $<TARGET_PROPERTY:spdlog::spdlog,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:fmt::fmt,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:tinytoml::tinytoml,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:crossguid,INTERFACE_INCLUDE_DIRECTORIES>
     ${SDL2_INCLUDE_DIRS} 
     ${SDL2_IMAGE_INCLUDE_DIRS}
 )

@@ -7,18 +7,16 @@ namespace { auto logger = raptr::_get_logger(__FILE__); };
 
 namespace raptr {
 
-int32_t Entity::global_id = 0;
-
 Entity::Entity()
 {
-  id_ = ++global_id;
+  guid_ = xg::newGuid();
   fall_time_us = 0;
-  logger->info("Registering entity with id {}", id_);
+  logger->info("Registering entity with id {}", guid_);
 }
 
-int32_t Entity::id() const
+xg::Guid Entity::guid() const
 {
-  return id_;
+  return guid_;
 }
 
 std::vector<Rect> Entity::want_position_x(int64_t delta_us)
@@ -56,7 +54,7 @@ std::vector<Rect> Entity::want_position_y(int64_t delta_us)
 
 bool Entity::intersects(const Entity* other) const
 {
-  if (other->id() == this->id()) {
+  if (other->guid() == this->guid()) {
     return false;
   }
 

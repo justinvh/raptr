@@ -129,7 +129,7 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
   rtree.Search(min_bounds, max_bounds, [](Entity* found, void* context) -> bool {
     ConditionMet* condition = reinterpret_cast<ConditionMet*>(context);
     Entity* self = condition->check;
-    if (self->id() == found->id()) {
+    if (self->guid() == found->guid()) {
       return true;
     }
 
@@ -150,7 +150,7 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
   }, reinterpret_cast<void*>(&condition_met));
 
   if (condition_met.intersected) {
-    return entity_lut[condition_met.found->id()];
+    return entity_lut[condition_met.found->guid()];
   }
 
   return nullptr;
@@ -310,7 +310,7 @@ bool Game::init_demo()
 
     renderer->observing.push_back(mesh);
     entities.push_back(mesh);
-    entity_lut[mesh->id()] = mesh;
+    entity_lut[mesh->guid()] = mesh;
   }
 
   std::vector<std::shared_ptr<Entity>> characters;
@@ -324,7 +324,7 @@ bool Game::init_demo()
     }
     auto& pos = character_raptr->position();
     pos.y = 0;
-    pos.x = x_off;
+    pos.x = static_cast<double>(x_off);
     x_off += 64;
 
     character_raptr->flashlight = true;
@@ -341,7 +341,7 @@ bool Game::init_demo()
     characters.push_back(character_raptr);
     entities.push_back(character_raptr);
     renderer->observing.push_back(character_raptr);
-    entity_lut[character_raptr->id()] = character_raptr;
+    entity_lut[character_raptr->guid()] = character_raptr;
     break;
   }
 
@@ -370,7 +370,7 @@ bool Game::init_demo()
   rtree.Insert(bounds.min, bounds.max, character_raptr.get());
   }
 
-  entity_lut[character_raptr->id()] = character_raptr;
+  entity_lut[character_raptr->guid()] = character_raptr;
   }
   */
   renderer->camera_follow(characters);

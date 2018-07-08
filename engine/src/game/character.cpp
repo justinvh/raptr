@@ -176,7 +176,7 @@ void Character::think(std::shared_ptr<Game>& game)
   Rect want_x = this->want_position_x(delta_us)[0];
   Rect want_y = this->want_position_y(delta_us)[0];
 
-  int32_t steps_x = std::abs(pos.x - want_x.x) / 4 + 1;
+  int32_t steps_x = static_cast<int32_t>(std::abs(pos.x - want_x.x) / 4 + 1);
   double delta_x = (pos.x - want_x.x) / double(steps_x);
   bool intersected = false;
   want_x.x = pos.x;
@@ -209,7 +209,7 @@ void Character::think(std::shared_ptr<Game>& game)
     vel.x = 0;
   }
 
-  int32_t steps_y = (std::abs(pos.y - want_y.y) / 4) + 1;
+  int32_t steps_y = static_cast<int32_t>((std::abs(pos.y - want_y.y) / 4) + 1);
   double delta_y = (pos.y - want_y.y) / double(steps_y);
   want_y.y = pos.y;
   intersected_entity.reset();
@@ -395,8 +395,8 @@ std::vector<NetField> Character::serialize()
   #define	NF(x, bits) {"Character->" #x,(int32_t)&((Character*)0)->x, bits}
 
   return {
-    NF(_id, 0),
-    NF(moving, 0),
+    //NF(_id, 0),
+    //NF(moving, 0),
   };
 
   #undef NF

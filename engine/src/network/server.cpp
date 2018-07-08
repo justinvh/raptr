@@ -74,7 +74,7 @@ bool Server::bind()
 
 void Server::run()
 {
-  int64_t sync_rate = (1.0 / fps) * 1e6;
+  int64_t sync_rate = static_cast<int64_t>((1.0 / fps) * 1e6);
 
   while (true) {
     auto current_time_us = clock::ticks();

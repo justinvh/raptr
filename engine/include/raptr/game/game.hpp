@@ -13,11 +13,20 @@
 #include <vector>
 #include <chrono>
 
+#include <crossguid/guid.hpp>
+
 #include <raptr/common/filesystem.hpp>
 #include <raptr/common/rtree.hpp>
 #include <raptr/common/rect.hpp>
 #include <raptr/common/clock.hpp>
 #include <raptr/network/snapshot.hpp>
+
+struct GuidSorter {
+  bool operator()(const xg::Guid& lhs, const xg::Guid& rhs) const
+  {
+    return lhs.str() < rhs.str();
+  }
+};
 
 namespace raptr {
 
@@ -133,7 +142,7 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   std::vector<std::shared_ptr<Entity>> entities;
 
   //! A mapping of entity IDs to entities
-  std::map<int32_t, std::shared_ptr<Entity>> entity_lut;
+  std::map<xg::Guid, std::shared_ptr<Entity>, GuidSorter> entity_lut;
 
   //! A map to find what the last known location of an entity was
   std::map<std::shared_ptr<Entity>, Point> last_known_entity_pos;
