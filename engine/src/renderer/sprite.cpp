@@ -148,7 +148,11 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
     } else if (direction == "backward") {
       animation.direction = AnimationDirection::backward;
     } else if (direction == "pingpong") {
-      animation.direction = AnimationDirection::ping_pong;
+      if ((from - to) == 0) {
+        animation.direction = AnimationDirection::forward;
+      } else {
+        animation.direction = AnimationDirection::ping_pong;
+      }
     } else {
       std::cerr << direction << " is not a recognized animation direction\n";
       throw std::runtime_error("Unknown animation direction");
@@ -181,6 +185,8 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   sprite->flip_y = false;
   sprite->angle = 0.0;
   sprite->absolute_positioning = false;
+  sprite->blend_mode = SDL_BLENDMODE_BLEND;
+  sprite->render_in_foreground = false;
 
   std::shared_ptr<Sprite> cache(new Sprite(*sprite));
   SPRITE_CACHE[path.file_relative] = cache;
@@ -198,6 +204,7 @@ void Sprite::render(Renderer* renderer)
     } else {
       texture = exists->second;
     }
+    SDL_SetTextureBlendMode(texture.get(), blend_mode);
   }
 
   auto frame = current_animation->frames[current_animation->frame];
@@ -217,7 +224,7 @@ void Sprite::render(Renderer* renderer)
   dst.x = static_cast<int32_t>(x);
   dst.y = static_cast<int32_t>(y);
 
-  renderer->add(texture, src, dst, angle, flip_x, flip_y, absolute_positioning);
+  renderer->add(texture, src, dst, angle, flip_x, flip_y, absolute_positioning, render_in_foreground);
 }
 
 bool Sprite::has_animation(const std::string& name)

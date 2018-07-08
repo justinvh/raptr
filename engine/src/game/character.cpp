@@ -87,6 +87,9 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   sprite_file.file_relative = sprite_path;
   sprite_file.file_dir = sprite_file.file_path.parent_path();
 
+  character->flashlight_sprite = Sprite::from_json(toml_path.from_root("textures/flashlight.json"));
+  character->flashlight_sprite->blend_mode = SDL_BLENDMODE_ADD;
+  character->flashlight_sprite->render_in_foreground = true;
   character->sprite = Sprite::from_json(sprite_file);
   character->sprite->scale = dict["sprite.scale"]->as<double>();
   character->sprite->set_animation("Idle");
@@ -354,6 +357,16 @@ bool Character::on_button_down(const ControllerState& state)
 void Character::render(Renderer* renderer)
 {
   sprite->render(renderer);
+
+  if (flashlight) {
+    auto& s1 = sprite->current_animation->current_frame();
+    auto& s2 = flashlight_sprite->current_animation->current_frame();
+    double cx = sprite->x + s1.w / 2.0 - s2.w / 2.0;
+    double cy = sprite->y + s1.h / 2.0 - s2.h / 2.0;
+    flashlight_sprite->x = cx;
+    flashlight_sprite->y = cy;
+    flashlight_sprite->render(renderer);
+  }
 }
 
 void Character::attach_controller(std::shared_ptr<Controller>& controller_)

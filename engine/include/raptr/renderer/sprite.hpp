@@ -165,6 +165,12 @@ class Sprite {
 
   //! Absolute positioning
   bool absolute_positioning;
+
+  //! Blend mode of the sprite
+  SDL_BlendMode blend_mode;
+
+  //! If set, then rendering will be in front of everything
+  bool render_in_foreground;
 };
 
 } // namespace raptr

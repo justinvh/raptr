@@ -160,6 +160,8 @@ bool Game::run()
     pos.x = x_off;
     x_off += 64;
 
+    character_raptr->flashlight = true;
+
     entities.push_back(character_raptr);
     characters.push_back(character_raptr);
     character_raptr->attach_controller(controller.second);

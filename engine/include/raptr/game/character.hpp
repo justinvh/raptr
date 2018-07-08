@@ -114,6 +114,10 @@ class Character : public Entity {
   //! Whether input has been made
   bool moving;
 
+  //! Turn off/on character flashlight
+  bool flashlight;
+  std::shared_ptr<Sprite> flashlight_sprite;
+
   //! If the think() determines the character is falling down, then this will be set
   bool falling;
 

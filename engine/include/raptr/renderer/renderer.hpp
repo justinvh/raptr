@@ -110,9 +110,11 @@ class Renderer {
     /param flip_x - Flip the texture along the X-axis, after the src has been cropped out
     /param flip_y - Flip the texture along the Y-axis, after the sr has been cropped out
   */
-  void add(std::shared_ptr<SDL_Texture>& texture,
-           SDL_Rect src, SDL_Rect dst,
-           float angle,  bool flip_x, bool flip_y, bool absolute_positioning = false);
+   void add(std::shared_ptr<SDL_Texture>& texture,
+     SDL_Rect src, SDL_Rect dst,
+     float angle, bool flip_x, bool flip_y,
+     bool absolute_positioning = false,
+     bool render_in_foreground = false);
 
   /*!
     Add a background to be rendered, these are special as the rendering call is dependent on the viewport
@@ -180,7 +182,8 @@ class Renderer {
 
   //! A list of Renderable objects that will be rendered on the next run_frame()
   std::vector<std::shared_ptr<Entity>> observing;
-  std::vector<Renderable> will_render;
+  std::vector<Renderable> will_render_middle;
+  std::vector<Renderable> will_render_foreground;
   std::vector<std::shared_ptr<Entity>> entities_followed;
   std::vector<std::shared_ptr<Parallax>> backgrounds;
   std::vector<std::shared_ptr<Parallax>> foregrounds;

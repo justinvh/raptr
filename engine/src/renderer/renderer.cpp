@@ -153,7 +153,7 @@ void Renderer::run_frame(bool force_render)
       background->render(this, clip_cam.clip);
     }
 
-    for (auto w : will_render) {
+    for (auto w : will_render_middle) {
       auto transformed_dst = w.dst;
 
       if (!w.absolute_positioning) {
@@ -169,12 +169,24 @@ void Renderer::run_frame(bool force_render)
       foreground->render(this, clip_cam.clip);
     }
 
+    for (auto w : will_render_foreground) {
+      auto transformed_dst = w.dst;
+
+      if (!w.absolute_positioning) {
+        transformed_dst.x -= clip_cam.clip.x;
+        transformed_dst.y -= clip_cam.clip.y;
+      }
+
+      SDL_RenderCopyEx(sdl.renderer, w.texture.get(), &w.src, &transformed_dst,
+        w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
+    }
     ++index;
   }
 
   SDL_RenderPresent(sdl.renderer);
   last_render_time_us = clock::ticks();
-  will_render.clear();
+  will_render_middle.clear();
+  will_render_foreground.clear();
   ++frame_count;
 }
 
@@ -202,10 +214,15 @@ SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) con
 void Renderer::add(std::shared_ptr<SDL_Texture>& texture,
                    SDL_Rect src, SDL_Rect dst,
                    float angle, bool flip_x, bool flip_y,
-                   bool absolute_positioning)
+                   bool absolute_positioning,
+                   bool render_in_foreground)
 {
   Renderable renderable = {texture, src, dst, angle, flip_x, flip_y, absolute_positioning};
-  will_render.push_back(renderable);
+  if (render_in_foreground) {
+    will_render_foreground.push_back(renderable);
+  } else {
+    will_render_middle.push_back(renderable);
+  }
 }
 
 void Renderer::add_background(std::shared_ptr<Parallax>& background)
