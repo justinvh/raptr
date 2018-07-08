@@ -33,8 +33,13 @@ int main(int argc, char** argv)
 
     std::string game_root = options["game"].as<std::string>();
     auto game = raptr::Game::create(game_root);
-
     server.attach(game);
+
+    if (!server.bind()) {
+      logger->error("Failed to bind server!");
+      return -1;
+    }
+
     server.run();
   }
 
