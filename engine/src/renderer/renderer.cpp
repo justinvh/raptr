@@ -41,6 +41,13 @@ bool Renderer::init(std::shared_ptr<Config>& config_)
 {
   config = config_;
 
+  fps = 60;
+  last_render_time_us = clock::ticks();
+
+  if (is_headless) {
+    return true;
+  }
+
   // Initialize SDL with some basics
   sdl.window = SDL_CreateWindow("RAPTR", 10, 10, 960, 540, 0);
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
@@ -50,14 +57,16 @@ bool Renderer::init(std::shared_ptr<Config>& config_)
   SDL_RenderSetLogicalSize(sdl.renderer, GAME_WIDTH, GAME_HEIGHT);
   SDL_SetRenderDrawColor(sdl.renderer, 255, 255, 255, 255);
   SDL_SetRenderDrawBlendMode(sdl.renderer, SDL_BLENDMODE_BLEND);
-  fps = 60;
-  last_render_time_us = clock::ticks();
   return true;
 }
 
 void Renderer::run_frame(bool force_render)
 {
-  int64_t ms = (clock::ticks() - last_render_time_us) / 1e3;
+  if (is_headless) {
+    return;
+  }
+
+  int64_t ms = static_cast<int64_t>((clock::ticks() - last_render_time_us) / 1e3);
   if (!force_render && ms < 16) {
     return;
   }
@@ -88,7 +97,7 @@ void Renderer::run_frame(bool force_render)
   if (num_entities == 0) {
     min_rect_w = GAME_WIDTH;
   } else {
-    min_rect_w = (GAME_WIDTH / num_entities);
+    min_rect_w = static_cast<int32_t>((GAME_WIDTH / num_entities));
   }
 
   int32_t min_rect_hw = min_rect_w / 2;
@@ -98,7 +107,7 @@ void Renderer::run_frame(bool force_render)
   int32_t last_left = 0;
   std::vector<int32_t> y_pos;
   while (current_entity_index < num_entities) {
-    int64_t left, right, top, bottom, player_bottom;
+    int32_t left, right, top, bottom;
     ClipCamera clip_cam;
 
     // Setup the initial camera where we are going to try and merge players together
@@ -107,10 +116,10 @@ void Renderer::run_frame(bool force_render)
       auto& pos = entity->position();
       auto bbox = entity->bbox()[0];
 
-      int64_t x = (pos.x + bbox.w / 2.0);
+      int32_t x = static_cast<int32_t>((pos.x + bbox.w / 2.0));
       left = x - min_rect_hw;
       right = x + min_rect_hw;
-      y_pos.push_back(pos.y + bbox.h);
+      y_pos.push_back(static_cast<int32_t>(pos.y + bbox.h));
       top = 0;
       bottom = GAME_HEIGHT;
     }
@@ -120,10 +129,10 @@ void Renderer::run_frame(bool force_render)
       const auto& entity = entities_followed[current_entity_index];
       auto& pos = entity->position();
       auto bbox = entity->bbox()[0];
-      int64_t x = (pos.x + bbox.w / 2.0);
+      int32_t x = static_cast<int32_t>(pos.x + bbox.w / 2.0);
       t_right += min_rect_hw;
       if (x <= t_right) {
-        y_pos.push_back(pos.y + bbox.h);
+        y_pos.push_back(static_cast<int32_t>(pos.y + bbox.h));
         right += min_rect_w;
         t_right = right;
       } else {
@@ -212,6 +221,10 @@ void Renderer::run_frame(bool force_render)
 
 bool Renderer::toggle_fullscreen()
 {
+  if (is_headless) {
+    return false;
+  }
+
   if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN_DESKTOP) {
     SDL_SetWindowFullscreen(sdl.window, 0);
     return false;
@@ -228,6 +241,10 @@ void Renderer::camera_follow(std::vector<std::shared_ptr<Entity>> entities)
 
 SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) const
 {
+  if (is_headless) {
+    return nullptr;
+  }
+
   return SDL_CreateTextureFromSurface(sdl.renderer, surface.get());
 }
 
@@ -237,6 +254,10 @@ void Renderer::add(std::shared_ptr<SDL_Texture>& texture,
                    bool absolute_positioning,
                    bool render_in_foreground)
 {
+  if (is_headless) {
+    return;
+  }
+
   Renderable renderable = {texture, src, dst, angle, flip_x, flip_y, absolute_positioning};
   if (render_in_foreground) {
     will_render_foreground.push_back(renderable);

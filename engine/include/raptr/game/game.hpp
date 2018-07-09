@@ -21,13 +21,6 @@
 #include <raptr/common/clock.hpp>
 #include <raptr/network/snapshot.hpp>
 
-struct GuidSorter {
-  bool operator()(const xg::Guid& lhs, const xg::Guid& rhs) const
-  {
-    return lhs.str() < rhs.str();
-  }
-};
-
 namespace raptr {
 
 class Config;
@@ -60,6 +53,11 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   */
   static std::shared_ptr<Game> create(const fs::path& game_root);
 
+  /*!
+    A headless server. One that does not render or use sound, etc.
+  */
+  static std::shared_ptr<Game> create_headless(const fs::path& game_root);
+
  public:
   /*!
     Returns true if a given entity can teleport to a region defined by a bounding box
@@ -79,7 +77,6 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   */
   bool run_frame();
 
- private:
   /*!
     Top-level function to call all other init functions
     \return Whether all init functions passed or not
@@ -116,10 +113,14 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   */
   bool init_sound();
 
+  /*
+  */
+  bool poll_events();
+
   /*!
     Serialize and deserialize methods for the game
   */
-  virtual std::vector<NetField> serialize();
+  virtual void serialize(std::vector<NetField>& list);
   virtual bool deserialize(const std::vector<NetField>& fields);
 
  public:
@@ -142,7 +143,7 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   std::vector<std::shared_ptr<Entity>> entities;
 
   //! A mapping of entity IDs to entities
-  std::map<xg::Guid, std::shared_ptr<Entity>, GuidSorter> entity_lut;
+  std::map<std::array<unsigned char, 16>, std::shared_ptr<Entity>> entity_lut;
 
   //! A map to find what the last known location of an entity was
   std::map<std::shared_ptr<Entity>, Point> last_known_entity_pos;
@@ -165,6 +166,7 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
  public:
   //! If set, then all initialization has happened successfully
   bool is_init;
+  bool is_headless;
 };
 
 } // namespace raptr

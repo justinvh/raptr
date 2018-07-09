@@ -9,12 +9,12 @@ namespace raptr {
 
 Entity::Entity()
 {
-  guid_ = xg::newGuid();
+  auto g = xg::newGuid();
+  guid_ = g.bytes();
   fall_time_us = 0;
-  logger->info("Registering entity with id {}", guid_);
 }
 
-xg::Guid Entity::guid() const
+const std::array<unsigned char, 16>& Entity::guid() const
 {
   return guid_;
 }
@@ -95,8 +95,6 @@ bool Entity::intersects(const Entity* other, const Rect& bbox) const
     return this->intersect_fast(bbox);
   }
 }
-
-
 
 bool Entity::intersect_slow(const Entity* other, const Rect& this_bbox) const
 {

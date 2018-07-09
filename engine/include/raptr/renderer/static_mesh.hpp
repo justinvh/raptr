@@ -54,10 +54,9 @@ class StaticMesh : public Entity {
   */
   virtual void think(std::shared_ptr<Game>& game);
 
+  virtual void serialize(std::vector<NetField>& list);
 
- public:
-  //! A unique world id
-  int32_t _id;
+  virtual bool deserialize(const std::vector<NetField>& fields);
 };
 
 } // namespace raptr

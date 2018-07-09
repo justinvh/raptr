@@ -28,12 +28,9 @@ int main(int argc, char** argv)
   }
 
   {
-    raptr::Server server("127.0.0.1:7272");
-    server.fps = 20;
-
     std::string game_root = options["game"].as<std::string>();
-    auto game = raptr::Game::create(game_root);
-    server.attach(game);
+    raptr::Server server(game_root, "127.0.0.1:7272");
+    server.fps = 20;
 
     if (!server.bind()) {
       logger->error("Failed to bind server!");

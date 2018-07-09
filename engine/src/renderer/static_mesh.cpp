@@ -116,4 +116,32 @@ void StaticMesh::render(Renderer* renderer)
   sprite->render(renderer);
 }
 
+void StaticMesh::serialize(std::vector<NetField>& list)
+{
+  NetFieldType cls = NetFieldType::StaticMesh;
+
+  // Stop looking at me like that.
+  // This macro helps expand our fields into
+  // field type, offset into the class, sizeof object, and data
+  #define SNF(field) NetFieldMacro(StaticMesh, field)
+
+  NetField states[] = {
+    SNF(pos_),
+    SNF(vel_),
+    SNF(acc_),
+  };
+
+  #undef NF
+
+  for (auto state : states) {
+    list.push_back(state);
+  }
+}
+
+
+bool StaticMesh::deserialize(const std::vector<NetField>& fields)
+{
+  return true;
+}
+
 } // namespace raptr

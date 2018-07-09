@@ -5,17 +5,33 @@
 
 #pragma once
 
+#include <iostream>
+
 namespace raptr {
 
 //! A double precision point
 struct Point {
   double x, y;
+  bool operator==(const Point& other) const
+  {
+    return std::fabs(other.x - x) < 1e-5 && std::fabs(other.y - y) < 1e-5;
+  }
 };
 
 //! A double precision rectangle
 struct Rect {
   double x, y, w, h;
+
+  bool operator==(const Rect& other) const
+  {
+    return (std::fabs(other.x - x) < 1e-5 &&
+            std::fabs(other.y - y) < 1e-5 &&
+            std::fabs(other.w - w) < 1e-5 &&
+            std::fabs(other.h - h) < 1e-5);
+  }
 };
+
+
 
 //! A bounds object
 struct Bounds {
@@ -121,5 +137,21 @@ inline bool SDL_HasIntersection(const Rect* A, const Rect* B)
 
   return true;
 }
+
+inline
+std::ostream& operator<<(std::ostream& os, const raptr::Point& point)
+{
+  os << "Point<" << point.x << "," << point.y << ">";
+  return os;
+}
+
+inline
+std::ostream& operator<<(std::ostream& os, const raptr::Rect& point)
+{
+  os << "Rect<" << point.x << "," << point.y << "," << point.w << "," << point.h << ">";
+  return os;
+}
+
+
 
 } // namespace raptr

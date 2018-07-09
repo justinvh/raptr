@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <raptr/game/entity.hpp>
 #include <raptr/common/filesystem.hpp>
-#include <raptr/network/snapshot.hpp>
 
 namespace raptr {
 
@@ -24,7 +23,7 @@ struct ControllerState;
   It has various movement options, a more complicated think function to handle interactions
   with its environment, and most importantly can have a controller attached to it.
  */
-class Character : public Entity, public Serializable {
+class Character : public Entity {
  public:
    Character();
    ~Character() = default;
@@ -34,7 +33,7 @@ class Character : public Entity, public Serializable {
    Character& operator=(Character&&) = default;
 
  public:
-   virtual std::vector<NetField> serialize();
+   virtual void serialize(std::vector<NetField>& list);
    virtual bool deserialize(const std::vector<NetField>& fields);
 
   /*! 
@@ -111,9 +110,6 @@ class Character : public Entity, public Serializable {
 
   //! The controller that is bound to this character
   std::shared_ptr<Controller> controller;
-
-  //! The unique ID assigned
-  int32_t _id;
 
   //! Whether input has been made
   bool moving;

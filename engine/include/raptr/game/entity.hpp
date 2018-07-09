@@ -10,6 +10,7 @@
 #include <vector>
 #include <crossguid/guid.hpp>
 #include <raptr/common/rect.hpp>
+#include <raptr/network/snapshot.hpp>
 
 namespace raptr {
 
@@ -23,7 +24,7 @@ struct AnimationFrame;
   This could be a static mesh, a character, or a simple platform. The idea is that
   an Entity is something you should care about as a player.
 */
-class Entity {
+class Entity : public Serializable {
  public:
   Entity();
   Entity(const Entity&) = default;
@@ -62,7 +63,7 @@ class Entity {
     Returns the unique id for this entity in the world
     \return a 32-bit signed integer representing a unique entity id
   */
-  virtual xg::Guid guid() const;
+  virtual const std::array<unsigned char, 16>& guid() const;
 
 
   /*!
@@ -134,12 +135,16 @@ class Entity {
   virtual Point& acceleration() { return acc_; }
   virtual const Point& acceleration() const { return acc_; }
 
+  virtual void serialize(std::vector<NetField>& list) = 0;
+
+  virtual bool deserialize(const std::vector<NetField>& fields) = 0;
+
  public:
   //! The name of the entity
    std::string name;
 
   //! The unique ID of the entity
-  xg::Guid guid_;
+  std::array<unsigned char, 16> guid_;
 
   //! The current position
   Point pos_;

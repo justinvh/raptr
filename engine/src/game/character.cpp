@@ -17,6 +17,7 @@
 #include <raptr/common/rtree.hpp>
 #include <raptr/common/logging.hpp>
 #include <raptr/game/entity.hpp>
+#include <raptr/network/snapshot.hpp>
 
 namespace { auto logger = raptr::_get_logger(__FILE__); };
 
@@ -390,16 +391,43 @@ std::vector<Rect> Character::bbox() const
   return {box};
 }
 
-std::vector<NetField> Character::serialize()
+void Character::serialize(std::vector<NetField>& list)
 {
-  #define	NF(x, bits) {"Character->" #x,(int32_t)&((Character*)0)->x, bits}
+  NetFieldType cls = NetFieldType::Character;
 
-  return {
-    //NF(_id, 0),
-    //NF(moving, 0),
+  // Stop looking at me like that.
+  #define CNF(field) NetFieldMacro(Character, field)
+
+  NetField states[] = {
+    CNF(pos_.x),
+    CNF(pos_.y),
+    CNF(vel_.x),
+    CNF(vel_.y),
+    CNF(moving),
+    CNF(flashlight),
+    CNF(falling),
+    CNF(fast_fall),
+    CNF(fast_fall_scale),
+    CNF(jump_time_us),
+    CNF(jump_count),
+    CNF(jumps_allowed),
+    CNF(jump_perfect_scale),
+    CNF(walk_speed),
+    CNF(run_speed),
+    CNF(jump_vel),
+    CNF(dashing),
+    CNF(dashing),
+    CNF(dash_scale),
+    CNF(dash_check_timer),
+    CNF(dash_move_check),
+    CNF(bunny_hop_count)
   };
 
   #undef NF
+
+  for (auto state : states) {
+    list.push_back(state);
+  }
 }
 
 bool Character::deserialize(const std::vector<NetField>& fields)

@@ -94,7 +94,8 @@ struct Renderable {
 */
 class Renderer {
  public:
-  Renderer() = default;
+   Renderer(bool is_headless_)
+     : is_headless(is_headless_) { }
   Renderer(const Renderer&) = default;
   Renderer(Renderer&&) = default;
   ~Renderer();
@@ -161,6 +162,8 @@ class Renderer {
   bool toggle_fullscreen();
 
  public:
+  bool is_headless;
+
   //! The configuration that was used to create this Renderer
   std::shared_ptr<Config> config;
 

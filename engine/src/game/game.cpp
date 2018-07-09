@@ -26,6 +26,7 @@ std::shared_ptr<Game> Game::create(const fs::path& game_root)
 {
   fs::path full_path = fs::absolute(game_root);
   auto game = std::shared_ptr<Game>(new Game(full_path));
+  game->is_headless = false;
   if (!game->is_init) {
     if (!game->init()) {
       logger->error("Failed to initialize the game");
@@ -36,32 +37,56 @@ std::shared_ptr<Game> Game::create(const fs::path& game_root)
   return game;
 }
 
+std::shared_ptr<Game> Game::create_headless(const fs::path& game_root)
+{
+  fs::path full_path = fs::absolute(game_root);
+  auto game = std::shared_ptr<Game>(new Game(full_path));
+  game->is_headless = true;
+  if (!game->is_init) {
+    if (!game->init()) {
+      logger->error("Failed to initialize the game");
+      return nullptr;
+    }
+  }
+  logger->info("Running in headless mode");
+  game->frame_last_time = clock::ticks();
+  return game;
+}
+
 Game::~Game()
 {
   SDL_Quit();
 }
 
-bool Game::run_frame()
+bool Game::poll_events()
 {
   SDL_Event e;
+  if (!SDL_PollEvent(&e)) {
+    return false;
+  }
 
-  if (SDL_PollEvent(&e)) {
-    if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP) {
-      int32_t controller_id = e.jdevice.which;
-      controllers[controller_id]->process_event(e);
-    } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F1) {
-      renderer->toggle_fullscreen();
-    } else if (e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
-      int32_t controller_id = e.jdevice.which;
-      auto& controller = controllers[controller_id];
-      if (!controller->is_gamepad()) {
-        controller->process_event(e);
-      }
+  if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP) {
+    int32_t controller_id = e.jdevice.which;
+    controllers[controller_id]->process_event(e);
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F1) {
+    renderer->toggle_fullscreen();
+  } else if (e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
+    int32_t controller_id = e.jdevice.which;
+    auto& controller = controllers[controller_id];
+    if (!controller->is_gamepad()) {
+      controller->process_event(e);
     }
+  }
+  return true;
+}
+
+bool Game::run_frame()
+{
+  if (!is_headless) {
+    this->poll_events();
   }
 
   auto current_time_us = clock::ticks();
-
   if ((current_time_us - frame_last_time) < 100) {
     std::this_thread::sleep_for(std::chrono::microseconds(100));
     return true;
@@ -92,9 +117,10 @@ bool Game::run_frame()
     }
   }
 
-  //dialog->think(this->shared_from_this());
+  if (!is_headless) {
+    renderer->run_frame();
+  }
 
-  renderer->run_frame();
   frame_last_time = clock::ticks();
   return true;
 }
@@ -194,6 +220,10 @@ bool Game::init()
 
 bool Game::init_controllers()
 {
+  if (is_headless) {
+    return true;
+  }
+
   SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
   SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
@@ -288,7 +318,7 @@ bool Game::init_demo()
   }
 
   auto dialog = Dialog::from_toml(game_path.from_root("dialog/demo/dialog.toml"));
-  dialog->attach_controller(controllers.begin()->second);
+  //dialog->attach_controller(controllers.begin()->second);
   //dialog->start();
 
   {
@@ -315,7 +345,7 @@ bool Game::init_demo()
 
   std::vector<std::shared_ptr<Entity>> characters;
 
-  int64_t x_off = 50;
+  int64_t x_off = 800;
   for (auto controller : controllers) {
     auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
     if (!character_raptr) {
@@ -342,7 +372,6 @@ bool Game::init_demo()
     entities.push_back(character_raptr);
     renderer->observing.push_back(character_raptr);
     entity_lut[character_raptr->guid()] = character_raptr;
-    break;
   }
 
   /*
@@ -379,7 +408,7 @@ bool Game::init_demo()
 
 bool Game::init_renderer()
 {
-  renderer.reset(new Renderer());
+  renderer.reset(new Renderer(is_headless));
   renderer->init(config);
   renderer->camera.left = 0;
   renderer->camera.right = 2000;
@@ -407,9 +436,16 @@ bool Game::init_filesystem()
   return true;
 }
 
-std::vector<NetField> Game::serialize()
+void Game::serialize(std::vector<NetField>& list)
 {
-  return {};
+  for (int i = 0; i < entities.size(); ++i) {
+    auto& entity = entities[i];
+    const char* uid = reinterpret_cast<const char*>(&entity->guid()[0]);
+    list.push_back(
+      {"EntityMarker", NetFieldType::EntityMarker, 0, sizeof(unsigned char) * 16, uid}
+    );
+    entity->serialize(list);
+  }
 }
 
 bool Game::deserialize(const std::vector<NetField>& fields)
