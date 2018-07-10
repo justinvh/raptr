@@ -62,6 +62,7 @@ set(RAPTR_GAME
 
 add_custom_target(game SOURCES ${RAPTR_GAME})
 set_property(TARGET game PROPERTY PROJECT_LABEL "Game Resources")
+set_target_properties(game PROPERTIES FOLDER "Application")
 foreach(source IN LISTS RAPTR_GAME)
     get_filename_component(source_path "${source}" PATH)
     string(REPLACE "/" "\\" source_path_msvc "${source}")

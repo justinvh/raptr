@@ -68,6 +68,9 @@ if (MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17 /MP")
 endif(MSVC)
 
+# Enable solution folders
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 add_subdirectory(engine)
 add_subdirectory(application)
 add_subdirectory(game)
@@ -83,3 +86,5 @@ if (BUILD_DOCS)
     add_subdirectory(doc)
 endif(BUILD_DOCS)
 
+
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT raptr-client)
