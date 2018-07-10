@@ -33,6 +33,8 @@ class Character : public Entity {
    Character& operator=(Character&&) = default;
 
  public:
+   typedef CharacterSpawnEvent SpawnEvent;
+
    virtual void serialize(std::vector<NetField>& list);
    virtual bool deserialize(const std::vector<NetField>& fields);
 

@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <array>
 #include <crossguid/guid.hpp>
 #include <raptr/common/rect.hpp>
 #include <raptr/network/snapshot.hpp>
@@ -18,6 +19,8 @@ class Game;
 class Sprite;
 class Renderer;
 struct AnimationFrame;
+
+typedef std::array<unsigned char, 16> GUID;
 
 /*!
   An Entity is any object in the world that can be interacted with by the player.
@@ -34,6 +37,7 @@ class Entity : public Serializable {
   virtual ~Entity() = default;
 
  public:
+
   /*!
     Returns the bounding box for this entity
     \return An rectangle containing the entity

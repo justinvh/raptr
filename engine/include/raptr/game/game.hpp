@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
+#include <type_traits>
 
 #include <crossguid/guid.hpp>
 
@@ -58,6 +59,20 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   */
   static std::shared_ptr<Game> create_headless(const fs::path& game_root);
 
+  template <class T>
+  void add_event(T* event)
+  {
+    engine_events.push_back(EngineEvent::create<T>(event));
+  }
+
+  void dispatch_event(const std::shared_ptr<EngineEvent>& event);
+
+  void handle_character_spawn_event(const CharacterSpawnEvent& event);
+
+  void handle_controller_event(const ControllerEvent& event);
+
+  void handle_static_mesh_spawn_event(const StaticMeshSpawnEvent& event);
+
  public:
   /*!
     Returns true if a given entity can teleport to a region defined by a bounding box
@@ -67,6 +82,36 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   */
   std::shared_ptr<Entity> intersect_world(Entity* entity, const Rect& bbox);
 
+  void spawn_now(std::shared_ptr<Entity> entity);
+  
+  /*!
+    Spawn an entity to the world
+  */
+  void spawn_staticmesh(const std::string& path,
+                        StaticMeshSpawnEvent::Callback callback = [](auto&a) {})
+  {
+    StaticMeshSpawnEvent* event = new StaticMeshSpawnEvent();
+    auto g = xg::newGuid();
+    event->guid = g.bytes();
+    event->path = path;
+    event->callback = callback;
+    this->add_event<StaticMeshSpawnEvent>(event);
+  }
+
+  /*!
+    Spawn an entity to the world
+  */
+  void spawn_character(const std::string& path,
+                       CharacterSpawnEvent::Callback callback = [](auto&a) {})
+  {
+    CharacterSpawnEvent* event = new CharacterSpawnEvent();
+    auto g = xg::newGuid();
+    event->guid = g.bytes();
+    event->path = "characters/" + path + ".toml";
+    event->callback = callback;
+    this->add_event<CharacterSpawnEvent>(event);
+  }
+
   /*!
     Run the game and manage maintaining a healthy FPS
     \return Whether or not the game successfully ran
@@ -75,7 +120,11 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
 
   /*!
   */
-  bool run_frame();
+  bool gather_engine_events();
+
+  /*!
+  */
+  bool process_engine_events();
 
   /*!
     Top-level function to call all other init functions
@@ -141,6 +190,7 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
 
   //! A list of all loaded entities in the game
   std::vector<std::shared_ptr<Entity>> entities;
+  std::vector<std::shared_ptr<Character>> characters;
 
   //! A mapping of entity IDs to entities
   std::map<std::array<unsigned char, 16>, std::shared_ptr<Entity>> entity_lut;
@@ -162,6 +212,8 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   int64_t frame_delta_us;
 
   int64_t frame_last_time;
+
+  std::vector<std::shared_ptr<EngineEvent>> engine_events;
 
  public:
   //! If set, then all initialization has happened successfully

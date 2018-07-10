@@ -78,6 +78,9 @@ bool Server::connect()
     return true;
   }
 
+  xg::Guid guid;
+  client_guid = guid.bytes();
+
   is_client = true;
   if (SDLNet_ResolveHost(&ip, ip_str.c_str(), port) == -1) {
     logger->error("Failed to resolve host: {}", SDLNet_GetError());
@@ -109,6 +112,10 @@ bool Server::bind()
   return true;
 }
 
+void Server::send_engine_events()
+{
+}
+
 void Server::run()
 {
   int64_t sync_rate = static_cast<int64_t>((1.0 / fps) * 1e6);
@@ -116,12 +123,16 @@ void Server::run()
   while (true) {
     auto current_time_us = clock::ticks();
 
-    if (!is_loopback && sock && (current_time_us - frame_last_time) >= sync_rate) {
+    if (!is_client && sock && (current_time_us - frame_last_time) >= sync_rate) {
       this->update_game_state();
       frame_last_time = clock::ticks();
     }
 
-    game->run_frame();
+    game->gather_engine_events();
+    if (is_client) {
+      this->send_engine_events();
+    }
+    game->process_engine_events();
   }
 }
 
@@ -140,22 +151,7 @@ size_t Server::build_packet(size_t out_byte_off,
   memcpy(np.guid, entity_marker.data, entity_marker.size);
   np.num_fields = 0;
 
-  /*
-  std::shared_ptr<Snapshot> next_snapshot(new Snapshot());
-  std::shared_ptr<Snapshot> prev_snapshot;
-  int32_t next_snapshot_idx = 0;
-  auto index = snapshot_index.find(guid);
-  if (index != snapshot_index.end()) {
-    prev_snapshot = snapshots[guid][index->second];
-    if (index->second + 1 >= MAX_SNAPSHOTS) {
-      next_snapshot_idx = 0;
-    } else {
-      next_snapshot_idx = index->second + 1;
-    }
-  }
-  */
-
-  std::array<unsigned char, 16> guid_array;
+  GUID guid_array;
   memcpy(&guid_array[0], np.guid, sizeof(unsigned char) * 16);
   auto& prev_snapshot = prev_snapshots[guid_array];
   std::shared_ptr<Snapshot> next_snapshot(new Snapshot());
@@ -227,6 +223,10 @@ size_t Server::build_packet(size_t out_byte_off,
   return idx;
 }
 
+void Server::unwrap_packet()
+{
+}
+
 void Server::update_game_state()
 {
   if (is_client) {
@@ -256,6 +256,7 @@ void Server::update_game_state()
     SDLNet_UDP_Recv(sock, in.get());
     if (in->data[0] == 0xAA) {
       logger->info("Received a {} sized packet", in->len);
+      this->unwrap_packet();
       in->data[0] = 0xFF;
     }
   }

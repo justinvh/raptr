@@ -18,6 +18,10 @@ class Game;
 enum class ServerEvent {
 };
 
+
+typedef std::map<GUID, std::shared_ptr<Snapshot>> EntityToSnapshot;
+typedef std::map<GUID, EntityToSnapshot> ClientSnapshots;
+
 class Server {
  public:
   Server(const fs::path& game_root,
@@ -36,6 +40,9 @@ class Server {
                       const NetField& entity_marker,
                       const std::vector<NetField>& fields,
                       size_t& field_offset);
+  
+  void unwrap_packet();
+  void send_engine_events();
 
  public:
   //! The number of ms since the last frame
@@ -48,9 +55,11 @@ class Server {
   bool is_client;
   bool is_loopback;
 
-  std::map<std::array<unsigned char, 16>, std::shared_ptr<Snapshot>> prev_snapshots;
+  EntityToSnapshot prev_snapshots;
+  ClientSnapshots client_snapshots;
 
 public:
+  GUID client_guid;
   uint32_t seq_counter;
   UDPsocket sock;
   IPaddress ip;

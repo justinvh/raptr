@@ -65,31 +65,111 @@ bool Game::poll_events()
     return false;
   }
 
-  if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP) {
+  if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP ||
+      e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
     int32_t controller_id = e.jdevice.which;
-    controllers[controller_id]->process_event(e);
+    ControllerEvent* controller_event = new ControllerEvent();
+    controller_event->controller_id = controller_id;
+    controller_event->sdl_event = e;
+    this->add_event(controller_event);
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F1) {
     renderer->toggle_fullscreen();
-  } else if (e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
-    int32_t controller_id = e.jdevice.which;
-    auto& controller = controllers[controller_id];
-    if (!controller->is_gamepad()) {
-      controller->process_event(e);
-    }
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F2) {
+    auto controller = controllers.begin();
+    ++controller;
+    auto x = characters[0]->pos_.x;
+    this->spawn_character("raptr", [&](auto& character)
+    {
+      character->attach_controller(controller->second);
+      character->pos_.x = x;
+      renderer->camera_follow(character);
+    });
   }
   return true;
 }
 
-bool Game::run_frame()
+bool Game::gather_engine_events()
 {
   if (!is_headless) {
     this->poll_events();
   }
 
+  return true;
+}
+
+void Game::handle_controller_event(const ControllerEvent& controller_event)
+{
+  const SDL_Event& e = controller_event.sdl_event;
+  const int32_t& controller_id = controller_event.controller_id;
+
+  if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP) {
+    controllers[controller_id]->process_event(e);
+  } else if (e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
+    auto& controller = controllers[controller_id];
+    if (!controller->is_gamepad()) {
+      controller->process_event(e);
+    }
+  }
+}
+
+void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
+{
+  auto character = Character::from_toml(game_path.from_root(event.path));
+  character->guid_ = event.guid;
+  character->pos_.x = 0;
+  character->pos_.y = 0;
+  characters.push_back(character);
+  this->spawn_now(character);
+  event.callback(character);
+}
+
+void Game::handle_static_mesh_spawn_event(const StaticMeshSpawnEvent& event)
+{
+  auto mesh = StaticMesh::from_toml(game_path.from_root(event.path));
+  mesh->guid_ = event.guid;
+  mesh->pos_.x = 0;
+  mesh->pos_.y = 0;
+  this->spawn_now(mesh);
+  event.callback(mesh);
+}
+
+void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
+{
+  switch (event->type) {
+    case EngineEventType::ControllerEvent:
+    {
+      auto controller_event = reinterpret_cast<ControllerEvent*>(event->data);
+      this->handle_controller_event(*controller_event);
+      delete controller_event;
+      break;
+    }
+    case EngineEventType::SpawnCharacter:
+    {
+      auto character_event = reinterpret_cast<CharacterSpawnEvent*>(event->data);
+      this->handle_character_spawn_event(*character_event);
+      delete character_event;
+      break;
+    }
+    case EngineEventType::SpawnStaticMesh:
+    {
+      auto staticmesh_event = reinterpret_cast<StaticMeshSpawnEvent*>(event->data);
+      this->handle_static_mesh_spawn_event(*staticmesh_event);
+      delete staticmesh_event;
+      break;
+    }
+  };
+}
+
+bool Game::process_engine_events()
+{
   auto current_time_us = clock::ticks();
   if ((current_time_us - frame_last_time) < 100) {
     std::this_thread::sleep_for(std::chrono::microseconds(100));
     return true;
+  }
+
+  for (auto& engine_event : engine_events) {
+    this->dispatch_event(engine_event);
   }
 
   frame_delta_us = (current_time_us - frame_last_time);
@@ -121,6 +201,8 @@ bool Game::run_frame()
     renderer->run_frame();
   }
 
+  engine_events.clear();
+
   frame_last_time = clock::ticks();
   return true;
 }
@@ -128,9 +210,10 @@ bool Game::run_frame()
 bool Game::run()
 {
   while (true) {
-    if (!this->run_frame()) {
+    if (!this->gather_engine_events()) {
       return false;
     }
+    this->process_engine_events();
   }
   return true;
 }
@@ -304,6 +387,25 @@ bool Game::init_controllers()
   return !controllers.empty();
 }
 
+void Game::spawn_now(std::shared_ptr<Entity> entity)
+{
+  auto& pos = entity->position();
+  pos.x = 0;
+  pos.y = 0;
+
+  const auto& bounds = entity->bounds();
+  last_known_entity_pos[entity] = entity->position();
+  last_known_entity_bounds[entity] = bounds;
+
+  for (const auto& b : bounds) {
+    rtree.Insert(b.min, b.max, entity.get());
+  }
+
+  renderer->observing.push_back(entity);
+  entities.push_back(entity);
+  entity_lut[entity->guid()] = entity;
+}
+
 bool Game::init_demo()
 {
   // background test
@@ -317,92 +419,23 @@ bool Game::init_demo()
     renderer->add_foreground(foreground);
   }
 
-  auto dialog = Dialog::from_toml(game_path.from_root("dialog/demo/dialog.toml"));
-  //dialog->attach_controller(controllers.begin()->second);
-  //dialog->start();
+  this->spawn_staticmesh("staticmeshes/demo.toml");
 
-  {
-    auto mesh = StaticMesh::from_toml(game_path.from_root("staticmeshes/demo.toml"));
-    if (!mesh) {
-      logger->error("Failed to load demo static mesh");
-      return false;
-    }
-    auto& pos = mesh->position();
-    pos.x = 0;
-    pos.y = 0;
-
-    const auto& bounds = mesh->bounds();
-    last_known_entity_pos[mesh] = mesh->position();
-
-    for (const auto& b : bounds) {
-      rtree.Insert(b.min, b.max, mesh.get());
-    }
-
-    renderer->observing.push_back(mesh);
-    entities.push_back(mesh);
-    entity_lut[mesh->guid()] = mesh;
-  }
-
-  std::vector<std::shared_ptr<Entity>> characters;
-
-  int64_t x_off = 800;
+  int x = 0;
   for (auto controller : controllers) {
-    auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
-    if (!character_raptr) {
-      logger->error("Failed to load raptr character");
-      return false;
-    }
-    auto& pos = character_raptr->position();
-    pos.y = 0;
-    pos.x = static_cast<double>(x_off);
-    x_off += 64;
+    int32_t controller_id = controller.first;
+    this->spawn_character("raptr", [&, x, controller_id](auto& character)
+    {
+      auto& pos = character->position();
+      pos.x = x;
+      character->flashlight = true;
+      character->attach_controller(controllers[controller_id]);
+      renderer->camera_follow(character);
+    });
 
-    character_raptr->flashlight = true;
-    character_raptr->attach_controller(controller.second);
-
-    auto all_bounds = character_raptr->bounds();
-    last_known_entity_pos[character_raptr] = character_raptr->position();
-    last_known_entity_bounds[character_raptr] = character_raptr->bounds();
-
-    for (const auto& bounds : all_bounds) {
-      rtree.Insert(bounds.min, bounds.max, character_raptr.get());
-    }
-
-    characters.push_back(character_raptr);
-    entities.push_back(character_raptr);
-    renderer->observing.push_back(character_raptr);
-    entity_lut[character_raptr->guid()] = character_raptr;
+    x += 64;
   }
 
-  /*
-  x_off = 135;
-  for (int i = 0; i < 2; ++i) {
-  auto character_raptr = Character::from_toml(game_path.from_root("characters/raptr.toml"));
-  if (!character_raptr) {
-  logger->error("Failed to load raptr character");
-  return false;
-  }
-  auto& pos = character_raptr->position();
-  pos.y = 100;
-  pos.x = x_off;
-  x_off += 60;
-
-  entities.push_back(character_raptr);
-  characters.push_back(character_raptr);
-  //character_raptr->attach_controller(controller.second);
-
-  auto all_bounds = character_raptr->bounds();
-  last_known_entity_pos[character_raptr] = character_raptr->position();
-  last_known_entity_bounds[character_raptr] = character_raptr->bounds();
-
-  for (const auto& bounds : all_bounds) {
-  rtree.Insert(bounds.min, bounds.max, character_raptr.get());
-  }
-
-  entity_lut[character_raptr->guid()] = character_raptr;
-  }
-  */
-  renderer->camera_follow(characters);
   return true;
 }
 
