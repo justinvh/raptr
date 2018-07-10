@@ -11,19 +11,21 @@ Additional developer insight and blog can be found at
 
 ![Our Dinosaur Warrior][raptr-idle]
 
-## Installing and Running v0.1-alpha.3
+## Installing and Running v0.1-alpha.5
 
 It's pretty dang simple under 64-bit Windows right now.
 
-1. [Download the 0.1-alpha.4 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.4/raptr-0.1.0-alpha.4-win64.zip)
+1. [Download the 0.1-alpha.5 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.5/raptr-0.1.0-alpha.5-Release-win64.zip)
 2. Extract that anywhere your heart desires.
 3. Plug in a 360, GameCube, or Steam controller.
-4. Go into the bin/ folder and run raptr.exe
+4. Go into the bin/ folder and run `raptr-client.exe`
 5. Realize how much of an alpha this is :)
 
-## Current State: v0.1-alpha.4
+If you get a complaint about redistributables missing, then try downloading the [Visual C++ Redistributable for Visual Studio 2017 - x64](https://aka.ms/vs/15/release/vc_redist.x64.exe)
 
-![Feature Mash][raptr-0.1-alpha.4]
+## Current State: v0.1-alpha.5
+
+![Feature Mash][raptr-0.1-alpha.5]
 
 ## Features with some Hyperbole
 
@@ -37,12 +39,12 @@ It's pretty dang simple under 64-bit Windows right now.
 
 ## Building and Running Raptr with CMake
 
-1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.4/vcpkg-export-20180707-072728.7z) (or [zip](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.4/vcpkg-export-20180707-072728.zip))
+1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.5/vcpkg-export-20180710-003830.7z)
 
 ```
 $ git clone https://github.com/justinvh/raptr.git raptr
 $ cd raptr
-$ 7z e vcpkg-export-20180707-072728.7z
+$ 7z e vcpkg-export-20180710-003830.7z
 $ cd build
 $ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="../vcpkg/scripts/buildsystems/vcpkg.cmake" -G "Visual Studio 15 2017 Win64" ..
 ```
@@ -133,7 +135,11 @@ To be added
 * [tinytoml](https://github.com/mayah/tinytoml) - A header only C++11 library for parsing TOML
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
 
-## Other Screenshots
+## Other Screenshots ([View the Album](https://imgur.com/a/pnREFi5))
+
+7/8/2018 - Parallax backgrounds and foregrounds, oh my.
+
+![Feature Mash][raptr-0.1-alpha.4]
 
 7/7/2018 - Modeling player friction
 
@@ -167,3 +173,4 @@ To be added
 [raptr-0.1-alpha.2]: https://thumbs.gfycat.com/AfraidFatalGrison-size_restricted.gif
 [raptr-0.1-alpha.3]: https://i.imgur.com/szO854w.gif
 [raptr-0.1-alpha.4]: https://i.imgur.com/DQ5CTNO.gif
+[raptr-0.1-alpha.5]: https://i.imgur.com/p71vkhy.gif
