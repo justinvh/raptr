@@ -134,6 +134,7 @@ class Renderer {
     /param entity - The entity to follow
   */
   void camera_follow(std::vector<std::shared_ptr<Entity>> entity);
+  void camera_follow(std::shared_ptr<Entity> entity);
 
   /*!
     A utility method to create an SDL_Texture from an SDL_Surface using the current

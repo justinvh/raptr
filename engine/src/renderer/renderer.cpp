@@ -77,6 +77,7 @@ void Renderer::run_frame(bool force_render)
 
   struct ClipCamera {
     SDL_Rect clip, viewport;
+    int32_t left_offset;
   };
 
   // Determine the cameras
@@ -105,6 +106,7 @@ void Renderer::run_frame(bool force_render)
   int32_t current_entity_index = 0;
   int32_t num_clips = 1;
   int32_t last_left = 0;
+  int32_t last_center_offset = 0;
   std::vector<int32_t> y_pos;
   while (current_entity_index < num_entities) {
     int32_t left, right, top, bottom;
@@ -142,9 +144,10 @@ void Renderer::run_frame(bool force_render)
 
     int32_t min_player = *std::max_element(y_pos.begin(), y_pos.end());
     clip_cam.clip.x = left;
-    clip_cam.clip.y = (y_pos[0] + 32) - GAME_HEIGHT; // GAME_HEIGHT - std::accumulate(y_pos.begin(), y_pos.end(), 0) / y_pos.size();
+    clip_cam.clip.y = 0;//(y_pos[0] + 32) - GAME_HEIGHT; // GAME_HEIGHT - std::accumulate(y_pos.begin(), y_pos.end(), 0) / y_pos.size();
     clip_cam.clip.w = (right - left);
     clip_cam.clip.h = GAME_HEIGHT;
+    clip_cam.left_offset = last_center_offset;
 
     clip_cam.viewport.x = last_left;
     clip_cam.viewport.y = 0;
@@ -152,6 +155,7 @@ void Renderer::run_frame(bool force_render)
     clip_cam.viewport.h = clip_cam.clip.h;
 
     last_left += clip_cam.clip.w;
+    last_center_offset += clip_cam.viewport.w;
 
     clippings.push_back(clip_cam);
     ++num_clips;
@@ -160,6 +164,7 @@ void Renderer::run_frame(bool force_render)
   if (clippings.empty()) {
     ClipCamera clip_cam;
     clip_cam.clip.x = 0;
+    clip_cam.left_offset = 0;
     clip_cam.clip.y = 0; 
     clip_cam.clip.w = GAME_WIDTH;
     clip_cam.clip.h = GAME_HEIGHT;
@@ -178,8 +183,10 @@ void Renderer::run_frame(bool force_render)
   for (const auto& clip_cam : clippings) {
     SDL_RenderSetViewport(sdl.renderer, &clip_cam.viewport);
 
+    SDL_Rect bg_clip = clip_cam.clip;
+    bg_clip.x -= clip_cam.left_offset;
     for (auto& background : backgrounds) {
-      background->render(this, clip_cam.clip);
+      background->render(this, bg_clip, clip_cam.left_offset);
     }
 
     for (auto w : will_render_middle) {
@@ -194,9 +201,11 @@ void Renderer::run_frame(bool force_render)
         w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
     }
 
+    /*
     for (auto& foreground : foregrounds) {
       foreground->render(this, clip_cam.clip);
     }
+    */
 
     for (auto w : will_render_foreground) {
       auto transformed_dst = w.dst;
@@ -237,6 +246,11 @@ bool Renderer::toggle_fullscreen()
 void Renderer::camera_follow(std::vector<std::shared_ptr<Entity>> entities)
 {
   entities_followed = entities;
+}
+
+void Renderer::camera_follow(std::shared_ptr<Entity> entity)
+{
+  entities_followed.push_back(entity);
 }
 
 SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) const

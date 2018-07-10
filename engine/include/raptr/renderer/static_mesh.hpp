@@ -31,6 +31,8 @@ class StaticMesh : public Entity {
    StaticMesh& operator=(StaticMesh&&) = default;
 
  public:
+   typedef StaticMeshSpawnEvent SpawnEvent;
+
   /*!
     Returns the bounding box for this static mesh based on its sprite
     \return An rectangle containing the static mesh

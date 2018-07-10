@@ -30,7 +30,7 @@ class Parallax {
       Render the background relative to a camera viewport
       \param clip - The clip that is currently being rendered
    */
-   void render(Renderer* renderer, const SDL_Rect& clip);
+   void render(Renderer* renderer, const SDL_Rect& clip, int32_t rx);
 
  public:
   bool is_foreground;

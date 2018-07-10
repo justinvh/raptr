@@ -89,7 +89,7 @@ std::shared_ptr<Parallax> Parallax::from_toml(const FileInfo& toml_path)
   return bg;
 }
 
-void Parallax::render(Renderer* renderer, const SDL_Rect& clip)
+void Parallax::render(Renderer* renderer, const SDL_Rect& clip, int32_t rx)
 {
   for (auto& layer : layers) {
     if (!layer.texture) {
@@ -104,7 +104,7 @@ void Parallax::render(Renderer* renderer, const SDL_Rect& clip)
       transformed_dst.x -= static_cast<int32_t>(cx * (1.0 + layer.z_index / 100.0));
       transformed_dst.y = static_cast<int32_t>(-layer.surface->h + GAME_HEIGHT - (clip.y * (1.0 - layer.z_index / 100.0)));
     } else {
-      transformed_dst.x -= static_cast<int32_t>(cx * (1.0 - (layer.z_index / 100.0)));
+      transformed_dst.x -= static_cast<int32_t>(cx * (1.0 - (layer.z_index / 100.0))) + rx;
       transformed_dst.y = static_cast<int32_t>(-layer.surface->h + GAME_HEIGHT - (clip.y * (layer.z_index / 100.0)));
     }
 
