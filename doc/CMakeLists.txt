@@ -8,3 +8,5 @@ add_custom_target(doxygen ALL
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Generarting API documentation with Doxygen"
     VERBATIM)
+set_property(TARGET doxygen PROPERTY PROJECT_LABEL "Documentation")
+set_target_properties(doxygen PROPERTIES FOLDER "Support")
