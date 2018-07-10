@@ -84,6 +84,10 @@ bool Game::poll_events()
       character->pos_.x = x;
       renderer->camera_follow(character);
     });
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F3) {
+    renderer->scale(renderer->current_ratio + 1.0);
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F4) {
+    renderer->scale(renderer->current_ratio / 2.0);
   }
   return true;
 }
@@ -422,12 +426,14 @@ bool Game::init_demo()
   this->spawn_staticmesh("staticmeshes/demo.toml");
 
   int x = 0;
+  int y = -200;
   for (auto controller : controllers) {
     int32_t controller_id = controller.first;
-    this->spawn_character("raptr", [&, x, controller_id](auto& character)
+    this->spawn_character("raptr", [&, x, y, controller_id](auto& character)
     {
       auto& pos = character->position();
       pos.x = x;
+      pos.y = y;
       character->flashlight = true;
       character->attach_controller(controllers[controller_id]);
       renderer->camera_follow(character);

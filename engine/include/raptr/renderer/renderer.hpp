@@ -26,8 +26,6 @@ struct SDLDeleter {
 
 namespace raptr {
 
-constexpr int32_t GAME_WIDTH = 480;
-constexpr int32_t GAME_HEIGHT = 270;
 
 class Config;
 class Entity;
@@ -156,6 +154,14 @@ class Renderer {
   */
   void run_frame(bool force_render = false);
 
+  void scale(float ratio);
+
+  void scale_to_height(int32_t height);
+  void scale_to_height(float ratio);
+
+  void scale_to_width(int32_t width);
+  void scale_to_width(float ratio);
+
   /*!
     Toggles between a BORDERLESS fullscreen and Window mode
     /return Whether the window is in fullscreen or not
@@ -183,6 +189,12 @@ class Renderer {
     SDL_Window* window;
     SDL_Renderer* renderer;
   } sdl;
+
+  SDL_Rect logical_size;
+  SDL_Rect desired_size;
+  float current_ratio;
+  float desired_ratio;
+  float ratio_per_second;
 
   //! A list of Renderable objects that will be rendered on the next run_frame()
   std::vector<std::shared_ptr<Entity>> observing;

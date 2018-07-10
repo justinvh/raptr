@@ -8,6 +8,9 @@
 #include <raptr/renderer/parallax.hpp>
 #include <raptr/common/clock.hpp>
 
+constexpr int32_t GAME_WIDTH = 480;
+constexpr int32_t GAME_HEIGHT = 270;
+
 void SDLDeleter::operator()(SDL_Texture* p) const
 {
   SDL_DestroyTexture(p);
@@ -37,6 +40,38 @@ Renderer::~Renderer()
   }
 }
 
+void Renderer::scale(float ratio)
+{
+  int32_t w = GAME_WIDTH * ratio;
+  int32_t h = GAME_HEIGHT * ratio;
+  desired_ratio = ratio;
+  desired_size.w = w;
+  desired_size.h = h;
+  ratio_per_second = (desired_ratio - current_ratio) / 1.0;
+}
+
+void Renderer::scale_to_height(int32_t height)
+{
+  float ratio = float(height) / GAME_HEIGHT;
+  int32_t w = GAME_WIDTH * ratio;
+  int32_t h = GAME_HEIGHT * ratio;
+  desired_ratio = ratio;
+  desired_size.w = w;
+  desired_size.h = h;
+  ratio_per_second = (desired_ratio - current_ratio) / 1.0;
+}
+
+void Renderer::scale_to_width(int32_t width)
+{
+  float ratio = float(width) / GAME_WIDTH;
+  int32_t w = GAME_WIDTH * ratio;
+  int32_t h = GAME_HEIGHT * ratio;
+  desired_ratio = ratio;
+  desired_size.w = w;
+  desired_size.h = h;
+  ratio_per_second = (desired_ratio - current_ratio) / 1.0;
+}
+
 bool Renderer::init(std::shared_ptr<Config>& config_)
 {
   config = config_;
@@ -54,8 +89,13 @@ bool Renderer::init(std::shared_ptr<Config>& config_)
   sdl.renderer = SDL_CreateRenderer(sdl.window, -1, SDL_RENDERER_ACCELERATED);
   camera.pos.x = 0;
   camera.pos.y = 0;
-  SDL_RenderSetLogicalSize(sdl.renderer, GAME_WIDTH, GAME_HEIGHT);
-  SDL_SetRenderDrawColor(sdl.renderer, 255, 255, 255, 255);
+  logical_size.w = GAME_WIDTH;
+  logical_size.h = GAME_HEIGHT;
+  desired_size = logical_size;
+  current_ratio = 1.0;
+  desired_ratio = 1.0;
+  SDL_RenderSetLogicalSize(sdl.renderer, logical_size.w, logical_size.h);
+  SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, 255);
   SDL_SetRenderDrawBlendMode(sdl.renderer, SDL_BLENDMODE_BLEND);
   return true;
 }
@@ -71,6 +111,23 @@ void Renderer::run_frame(bool force_render)
     return;
   }
 
+  if (std::fabs(current_ratio - desired_ratio) > 1e-5) {
+    float delta_ratio_ms = ratio_per_second / 1000.0 * ms;
+    current_ratio += delta_ratio_ms;
+    if ((delta_ratio_ms > 0 && current_ratio > desired_ratio) ||
+        (delta_ratio_ms < 0 && current_ratio < desired_ratio))
+    {
+      current_ratio = desired_ratio;
+      logical_size = desired_size;
+    } else {
+      int32_t w = GAME_WIDTH * current_ratio;
+      int32_t h = GAME_HEIGHT * current_ratio;
+      logical_size.w = w;
+      logical_size.h = h;
+    }
+    SDL_RenderSetLogicalSize(sdl.renderer, logical_size.w, logical_size.h);
+  }
+
   SDL_RenderClear(sdl.renderer);
   size_t num_entities = entities_followed.size();
   size_t index = 0;
@@ -78,10 +135,11 @@ void Renderer::run_frame(bool force_render)
   struct ClipCamera {
     SDL_Rect clip, viewport;
     int32_t left_offset;
+    std::vector<std::shared_ptr<Entity>> contains;
   };
 
   // Determine the cameras
-  std::vector<ClipCamera> clippings;
+  std::vector<ClipCamera> hclippings;
 
   // Sort the entities being followed left to right to figure
   // out how we're going to clip them
@@ -94,11 +152,12 @@ void Renderer::run_frame(bool force_render)
               return p1.x < p2.x;
             });
 
-  int32_t min_rect_w;
+  int32_t min_rect_w, min_rect_h;
   if (num_entities == 0) {
-    min_rect_w = GAME_WIDTH;
+    min_rect_w = logical_size.w;
+    min_rect_h = logical_size.h;
   } else {
-    min_rect_w = static_cast<int32_t>((GAME_WIDTH / num_entities));
+    min_rect_w = static_cast<int32_t>((logical_size.w / num_entities));
   }
 
   int32_t min_rect_hw = min_rect_w / 2;
@@ -124,6 +183,7 @@ void Renderer::run_frame(bool force_render)
       y_pos.push_back(static_cast<int32_t>(pos.y + bbox.h));
       top = 0;
       bottom = GAME_HEIGHT;
+      clip_cam.contains.push_back(entity);
     }
 
     int32_t t_right = right;
@@ -134,6 +194,7 @@ void Renderer::run_frame(bool force_render)
       int32_t x = static_cast<int32_t>(pos.x + bbox.w / 2.0);
       t_right += min_rect_hw;
       if (x <= t_right) {
+        clip_cam.contains.push_back(entity);
         y_pos.push_back(static_cast<int32_t>(pos.y + bbox.h));
         right += min_rect_w;
         t_right = right;
@@ -144,9 +205,9 @@ void Renderer::run_frame(bool force_render)
 
     int32_t min_player = *std::max_element(y_pos.begin(), y_pos.end());
     clip_cam.clip.x = left;
-    clip_cam.clip.y = 0;//(y_pos[0] + 32) - GAME_HEIGHT; // GAME_HEIGHT - std::accumulate(y_pos.begin(), y_pos.end(), 0) / y_pos.size();
+    clip_cam.clip.y = GAME_HEIGHT - logical_size.h;//(y_pos[0] + 32) - GAME_HEIGHT; // GAME_HEIGHT - std::accumulate(y_pos.begin(), y_pos.end(), 0) / y_pos.size();
     clip_cam.clip.w = (right - left);
-    clip_cam.clip.h = GAME_HEIGHT;
+    clip_cam.clip.h = logical_size.h;
     clip_cam.left_offset = last_center_offset;
 
     clip_cam.viewport.x = last_left;
@@ -157,17 +218,86 @@ void Renderer::run_frame(bool force_render)
     last_left += clip_cam.clip.w;
     last_center_offset += clip_cam.viewport.w;
 
-    clippings.push_back(clip_cam);
+    hclippings.push_back(clip_cam);
     ++num_clips;
   }
+
+
+
+  std::vector<ClipCamera> clippings = hclippings;
+
+  /*
+  // So, the idea here is to iterate through our current horizontal cuts and find what entities are in it and then
+  // split the horizontal window in a similar way
+  for (auto& hclip_cam : hclippings) {
+    int32_t top, bottom;
+
+    // Now, create vertical clips
+    std::sort(hclip_cam.contains.begin(),
+      hclip_cam.contains.end(),
+      [](const auto& lhs, const auto& rhs)
+    {
+      auto& p1 = lhs->position();
+      auto& p2 = rhs->position();
+      return p1.y > p2.y;
+    });
+
+    int32_t last_top = GAME_HEIGHT;
+    ClipCamera clip_cam = hclip_cam;
+    clip_cam.contains.clear();
+    current_entity_index = 0;
+    min_rect_h = static_cast<int32_t>((GAME_HEIGHT / hclip_cam.contains.size()));
+    int32_t min_rect_hh = min_rect_h / 2;
+
+    while (current_entity_index < hclip_cam.contains.size()) {
+      // Setup the initial camera where we are going to try and merge players together
+      {
+        const auto& entity = hclip_cam.contains[current_entity_index];
+        auto& pos = entity->position();
+        auto bbox = entity->bbox()[0];
+        int32_t y = pos.y + bbox.h / 2.0;
+        top = y - min_rect_hh;
+        bottom = y + min_rect_hh;
+        clip_cam.contains.push_back(entity);
+      }
+
+      int32_t t_top = top;
+      while (++current_entity_index < hclip_cam.contains.size()) {
+        const auto& entity = hclip_cam.contains[current_entity_index];
+        auto& pos = entity->position();
+        auto bbox = entity->bbox()[0];
+        int32_t y = static_cast<int32_t>(pos.y + bbox.h / 2.0);
+        t_top -= min_rect_hh;
+        if (y >= t_top) {
+          clip_cam.contains.push_back(entity);
+          top -= min_rect_h;
+          t_top = top;
+        } else {
+          break;
+        }
+      }
+
+      clip_cam.clip.y = top;
+      clip_cam.clip.h = (bottom - top);
+
+      clip_cam.viewport.y = last_top - clip_cam.clip.h;
+      clip_cam.viewport.h = clip_cam.clip.h - 1;
+
+      last_top -= clip_cam.clip.h;
+
+      clippings.push_back(clip_cam);
+      ++num_clips;
+    }
+  }
+  */
 
   if (clippings.empty()) {
     ClipCamera clip_cam;
     clip_cam.clip.x = 0;
     clip_cam.left_offset = 0;
     clip_cam.clip.y = 0; 
-    clip_cam.clip.w = GAME_WIDTH;
-    clip_cam.clip.h = GAME_HEIGHT;
+    clip_cam.clip.w = logical_size.w;
+    clip_cam.clip.h = logical_size.h;
 
     clip_cam.viewport.x = 0;
     clip_cam.viewport.y = 0;
