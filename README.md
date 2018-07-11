@@ -178,4 +178,4 @@ To be added
 [raptr-0.1-alpha.3]: https://i.imgur.com/szO854w.gif
 [raptr-0.1-alpha.4]: https://i.imgur.com/DQ5CTNO.gif
 [raptr-0.1-alpha.5]: https://i.imgur.com/p71vkhy.gif
-[raptr-0.1-alpha.6]: https://i.imgur.com/VCSDNqM.gif
+[raptr-0.1-alpha.6]: https://i.imgur.com/CBIbHiy.gif
