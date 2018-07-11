@@ -62,7 +62,7 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   template <class T>
   void add_event(T* event)
   {
-    engine_events.push_back(EngineEvent::create<T>(event));
+    engine_events_buffers[engine_event_index].push_back(EngineEvent::create<T>(event));
   }
 
   void dispatch_event(const std::shared_ptr<EngineEvent>& event);
@@ -88,29 +88,19 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
     Spawn an entity to the world
   */
   void spawn_staticmesh(const std::string& path,
-                        StaticMeshSpawnEvent::Callback callback = [](auto&a) {})
-  {
-    StaticMeshSpawnEvent* event = new StaticMeshSpawnEvent();
-    auto g = xg::newGuid();
-    event->guid = g.bytes();
-    event->path = path;
-    event->callback = callback;
-    this->add_event<StaticMeshSpawnEvent>(event);
-  }
+                        StaticMeshSpawnEvent::Callback callback = [](auto&a) {});
+  
 
   /*!
     Spawn an entity to the world
   */
   void spawn_character(const std::string& path,
-                       CharacterSpawnEvent::Callback callback = [](auto&a) {})
-  {
-    CharacterSpawnEvent* event = new CharacterSpawnEvent();
-    auto g = xg::newGuid();
-    event->guid = g.bytes();
-    event->path = "characters/" + path + ".toml";
-    event->callback = callback;
-    this->add_event<CharacterSpawnEvent>(event);
-  }
+                       CharacterSpawnEvent::Callback callback = [](auto&a) {});
+
+  /*
+  */
+  void spawn_player(int32_t controller_id,
+                    CharacterSpawnEvent::Callback callback = [](auto&a) {});
 
   /*!
     Run the game and manage maintaining a healthy FPS
@@ -187,6 +177,7 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
 
   //! A mapping of controller device ID to controller instances
   std::map<int32_t, std::shared_ptr<Controller>> controllers;
+  std::map<int32_t, std::vector<std::shared_ptr<Character>>> controller_to_character;
 
   //! A list of all loaded entities in the game
   std::vector<std::shared_ptr<Entity>> entities;
@@ -213,7 +204,8 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
 
   int64_t frame_last_time;
 
-  std::vector<std::shared_ptr<EngineEvent>> engine_events;
+  int32_t engine_event_index = 0;
+  std::vector<std::shared_ptr<EngineEvent>> engine_events_buffers[2];
 
  public:
   //! If set, then all initialization has happened successfully

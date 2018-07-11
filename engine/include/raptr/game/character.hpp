@@ -8,15 +8,14 @@
 #include <cstdint>
 #include <raptr/game/entity.hpp>
 #include <raptr/common/filesystem.hpp>
+#include <raptr/input/controller.hpp>
 
 namespace raptr {
 
 class Game;
 class Sprite;
-class Controller;
 class Renderer;
 class Filesystem;
-struct ControllerState;
 
 /*! 
   A character is a subclass of an entity that is intended to be controlled.
@@ -132,6 +131,12 @@ class Character : public Entity {
   //! How long the character has been jumping
   int64_t jump_time_us;
 
+  int64_t dash_length_us;
+
+  int64_t dash_time_us;
+
+  int32_t dash_speed;
+
   //! Current jump count
   uint32_t jump_count;
 
@@ -150,17 +155,9 @@ class Character : public Entity {
   //! The initial velocity (v(0)) for computing how high the character will jump
   int32_t jump_vel;
 
-  //! Dashing is a multiplier of 1.25
-  bool dashing;
-
-  //! Dash multiplier
-  double dash_scale;
-
-  int64_t dash_check_timer;
-
-  int32_t dash_move_check;
-
   int32_t bunny_hop_count;
+
+  ControllerState last_controller_state;
 };
 
 } // namespace raptr

@@ -106,6 +106,14 @@ void Game::handle_controller_event(const ControllerEvent& controller_event)
   const SDL_Event& e = controller_event.sdl_event;
   const int32_t& controller_id = controller_event.controller_id;
 
+  // Is this a new character?
+  if (e.type == SDL_CONTROLLERBUTTONDOWN &&
+      controller_to_character.find(controller_id) == controller_to_character.end())
+  {
+    this->spawn_player(controller_id);
+    return;
+  }
+
   if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP) {
     controllers[controller_id]->process_event(e);
   } else if (e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
@@ -172,7 +180,9 @@ bool Game::process_engine_events()
     return true;
   }
 
-  for (auto& engine_event : engine_events) {
+  auto& current_events = this->engine_events_buffers[this->engine_event_index];
+  this->engine_event_index = (this->engine_event_index + 1) % 2;
+  for (auto& engine_event : current_events) {
     this->dispatch_event(engine_event);
   }
 
@@ -205,7 +215,7 @@ bool Game::process_engine_events()
     renderer->run_frame();
   }
 
-  engine_events.clear();
+  current_events.clear();
 
   frame_last_time = clock::ticks();
   return true;
@@ -269,6 +279,45 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
   return nullptr;
 }
 
+void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback callback)
+{
+  this->spawn_character("raptr", [&, controller_id, callback](auto& character)
+  {
+    character->position().y = 1000;
+    character->flashlight = true;
+    character->attach_controller(controllers[controller_id]);
+    renderer->camera_follow(character);
+    controller_to_character[controller_id].push_back(character);
+    callback(character);
+  });
+}
+
+/*!
+Spawn an entity to the world
+*/
+void Game::spawn_staticmesh(const std::string& path, StaticMeshSpawnEvent::Callback callback)
+{
+  StaticMeshSpawnEvent* event = new StaticMeshSpawnEvent();
+  auto g = xg::newGuid();
+  event->guid = g.bytes();
+  event->path = path;
+  event->callback = callback;
+  this->add_event<StaticMeshSpawnEvent>(event);
+}
+
+/*!
+Spawn an entity to the world
+*/
+void Game::spawn_character(const std::string& path, CharacterSpawnEvent::Callback callback)
+{
+  CharacterSpawnEvent* event = new CharacterSpawnEvent();
+  auto g = xg::newGuid();
+  event->guid = g.bytes();
+  event->path = "characters/" + path + ".toml";
+  event->callback = callback;
+  this->add_event<CharacterSpawnEvent>(event);
+}
+
 bool Game::init()
 {
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
@@ -320,6 +369,7 @@ bool Game::init_controllers()
 
   int32_t num_gamepads = 0;
   for (int32_t i = 0; i < SDL_NumJoysticks(); ++i) {
+
     num_gamepads++;
   }
 
@@ -424,24 +474,6 @@ bool Game::init_demo()
   }
 
   this->spawn_staticmesh("staticmeshes/demo.toml");
-
-  int x = 0;
-  int y = -200;
-  for (auto controller : controllers) {
-    int32_t controller_id = controller.first;
-    this->spawn_character("raptr", [&, x, y, controller_id](auto& character)
-    {
-      auto& pos = character->position();
-      pos.x = x;
-      pos.y = y;
-      character->flashlight = true;
-      character->attach_controller(controllers[controller_id]);
-      renderer->camera_follow(character);
-    });
-
-    x += 64;
-  }
-
   return true;
 }
 

@@ -11,11 +11,11 @@ Additional developer insight and blog can be found at
 
 ![Our Dinosaur Warrior][raptr-idle]
 
-## Installing and Running v0.1-alpha.5
+## Installing and Running v0.1-alpha.6
 
 It's pretty dang simple under 64-bit Windows right now.
 
-1. [Download the 0.1-alpha.5 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.5/raptr-0.1.0-alpha.5-Release-win64.zip)
+1. [Download the 0.1-alpha.6 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.6/raptr-0.1.0-alpha.6-Release-win64.zip)
 2. Extract that anywhere your heart desires.
 3. Plug in a 360, GameCube, or Steam controller.
 4. Go into the bin/ folder and run `raptr-client.exe`
@@ -23,9 +23,9 @@ It's pretty dang simple under 64-bit Windows right now.
 
 If you get a complaint about redistributables missing, then try downloading the [Visual C++ Redistributable for Visual Studio 2017 - x64](https://aka.ms/vs/15/release/vc_redist.x64.exe)
 
-## Current State: v0.1-alpha.5
+## Current State: v0.1-alpha.6
 
-![Feature Mash][raptr-0.1-alpha.5]
+![Feature Mash][raptr-0.1-alpha.6]
 
 ## Features with some Hyperbole
 
@@ -39,7 +39,7 @@ If you get a complaint about redistributables missing, then try downloading the 
 
 ## Building and Running Raptr with CMake
 
-1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.5/vcpkg-export-20180710-003830.7z)
+1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.6/vcpkg-export-20180710-003830.7z)
 
 ```
 $ git clone https://github.com/justinvh/raptr.git raptr
@@ -137,7 +137,11 @@ To be added
 
 ## Other Screenshots ([View the Album](https://imgur.com/a/pnREFi5))
 
-7/8/2018 - Parallax backgrounds and foregrounds, oh my.
+7/10/2018 - Multiplayer + parallax
+
+![Feature Mash][raptr-0.1-alpha.5]
+
+7/9/2018 - Parallax backgrounds and foregrounds, oh my.
 
 ![Feature Mash][raptr-0.1-alpha.4]
 
@@ -174,3 +178,4 @@ To be added
 [raptr-0.1-alpha.3]: https://i.imgur.com/szO854w.gif
 [raptr-0.1-alpha.4]: https://i.imgur.com/DQ5CTNO.gif
 [raptr-0.1-alpha.5]: https://i.imgur.com/p71vkhy.gif
+[raptr-0.1-alpha.6]: https://i.imgur.com/VCSDNqM.gif

@@ -130,6 +130,10 @@ ControllerState state_from_joystick_event(SDL_GameController* controller, const 
     state.button = Button::a;
   } else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_B) {
     state.button = Button::b;
+  } else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_X) {
+    state.button = Button::x;
+  } else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_Y) {
+    state.button = Button::y;
   } else {
     state.button = Button::not_set;
   }

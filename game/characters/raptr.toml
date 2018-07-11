@@ -7,6 +7,8 @@ jumps_allowed = 2
 jump_perfect_scale = 1.50
 fast_fall_scale = 2.5
 dash_scale = 1.25
+dash_speed = 650
+dash_length_ms = 250
 
 [sprite]
 path = "textures/raptor.json"
