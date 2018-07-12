@@ -35,10 +35,10 @@ AnimationFrame& Animation::current_frame()
   return frames[frame];
 }
 
-bool Animation::next(int64_t clock)
+bool Animation::next(int64_t clock, float speed_multiplier)
 {
   int64_t curr = clock::ticks();
-  if ((curr - clock) / 1e3 <= frames[frame].duration / speed) {
+  if ((curr - clock) / 1e3 <= frames[frame].duration / (speed * speed_multiplier)) {
     return false;
   }
 
@@ -211,7 +211,7 @@ void Sprite::render(Renderer* renderer)
   }
 
   auto frame = current_animation->frames[current_animation->frame];
-  if (current_animation->next(last_frame_tick)) {
+  if (current_animation->next(last_frame_tick, speed)) {
     last_frame_tick = clock::ticks();
   }
 

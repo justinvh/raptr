@@ -268,6 +268,7 @@ void Character::walk(float scale)
   vel.x = scale * run_speed;
   if (!falling) {
     sprite->set_animation("Walk");
+    sprite->speed = std::fabs(scale * 1.5);
   }
 }
 
@@ -279,6 +280,7 @@ void Character::run(float scale)
 
   if (!falling) {
     sprite->set_animation("Run");
+    sprite->speed = std::fabs(scale * 1.5);
   }
 }
 
@@ -288,6 +290,7 @@ void Character::stop()
   auto& vel = this->velocity();
   vel.x = 0.0;
   dash_time_us = 0;
+  sprite->speed = 1.0;
   if (!falling) {
     sprite->set_animation("Idle");
   }

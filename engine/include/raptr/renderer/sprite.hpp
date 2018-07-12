@@ -87,9 +87,10 @@ class Animation {
     AnimationFrames have a duration. If the time between this clock time and
     first time has exceeded the duration of the frame, then the frame will be advanced.
     /param clock_ms - The clock::ticks() milliseconds
+    /param speed_multiplier - Play animations faster
     /return Whether the frame was advanced
   */
-  bool next(int64_t clock_us);
+  bool next(int64_t clock_us, float speed_multiplier = 1.0);
 };
 
 //! A mapping of Animation names to the Animation themselves
@@ -159,6 +160,9 @@ class Sprite {
 
   //! The width and height scale multipliers
   double scale;
+
+  //! Playback speed
+  float speed;
 
   //! When the Sprite was last rendered
   int64_t last_frame_tick;
