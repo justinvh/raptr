@@ -16,12 +16,14 @@
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/renderer/static_mesh.hpp>
 #include <raptr/sound/sound.hpp>
-#include <raptr/ui/dialog.hpp>
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
-namespace raptr {
-
+namespace raptr
+{
 std::shared_ptr<Game> Game::create(const fs::path& game_root)
 {
   fs::path full_path = fs::absolute(game_root);
@@ -67,8 +69,9 @@ bool Game::poll_events()
 
   if (e.type == SDL_CONTROLLERBUTTONDOWN && e.cbutton.button == SDL_CONTROLLER_BUTTON_START) {
     clock::toggle();
-  } else if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP ||
-      e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
+  } else if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type ==
+    SDL_CONTROLLERBUTTONUP ||
+    e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
     int32_t controller_id = e.jdevice.which;
     ControllerEvent* controller_event = new ControllerEvent();
     controller_event->controller_id = controller_id;
@@ -122,8 +125,7 @@ void Game::handle_controller_event(const ControllerEvent& controller_event)
 
   // Is this a new character?
   if (e.type == SDL_CONTROLLERBUTTONDOWN &&
-      controller_to_character.find(controller_id) == controller_to_character.end())
-  {
+    controller_to_character.find(controller_id) == controller_to_character.end()) {
     this->spawn_player(controller_id);
     return;
   }
@@ -162,35 +164,32 @@ void Game::handle_static_mesh_spawn_event(const StaticMeshSpawnEvent& event)
 void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
 {
   switch (event->type) {
-    case EngineEventType::ControllerEvent:
-    {
+    case EngineEventType::ControllerEvent: {
       auto controller_event = reinterpret_cast<ControllerEvent*>(event->data);
       this->handle_controller_event(*controller_event);
       delete controller_event;
       break;
     }
-    case EngineEventType::SpawnCharacter:
-    {
+    case EngineEventType::SpawnCharacter: {
       auto character_event = reinterpret_cast<CharacterSpawnEvent*>(event->data);
       this->handle_character_spawn_event(*character_event);
       delete character_event;
       break;
     }
-    case EngineEventType::SpawnStaticMesh:
-    {
+    case EngineEventType::SpawnStaticMesh: {
       auto staticmesh_event = reinterpret_cast<StaticMeshSpawnEvent*>(event->data);
       this->handle_static_mesh_spawn_event(*staticmesh_event);
       delete staticmesh_event;
       break;
     }
-  };
+  }
 }
 
 bool Game::process_engine_events()
 {
   auto current_time_us = clock::ticks();
 
-  frame_delta_us = (current_time_us - frame_last_time);
+  frame_delta_us = current_time_us - frame_last_time;
 
   frame_last_time = clock::ticks();
 
@@ -247,7 +246,8 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
   double min_bounds[2] = {bbox.x, bbox.y};
   double max_bounds[2] = {bbox.x + bbox.w, bbox.y + bbox.h};
 
-  struct ConditionMet {
+  struct ConditionMet
+  {
     Entity* check;
     Rect bbox;
     Entity* found;
@@ -259,7 +259,8 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
   condition_met.bbox = bbox;
   condition_met.found = nullptr;
 
-  rtree.Search(min_bounds, max_bounds, [](Entity* found, void* context) -> bool {
+  rtree.Search(min_bounds, max_bounds, [](Entity* found, void* context) -> bool
+  {
     ConditionMet* condition = reinterpret_cast<ConditionMet*>(context);
     Entity* self = condition->check;
     if (self->guid() == found->guid()) {
@@ -427,7 +428,8 @@ bool Game::init_controllers()
           logger->error("In the distance a soft cry is heard. That of our player's controller?");
           break;
         case 40:
-          logger->error("At this point, we fear for the player. Not for his health, but his disorganization.");
+          logger->error(
+            "At this point, we fear for the player. Not for his health, but his disorganization.");
           break;
         case 30:
           logger->error("Maybe it's not the player. Maybe they loaned their controller out. A true friend.");
@@ -562,5 +564,4 @@ bool Game::deserialize(const std::vector<NetField>& fields)
 {
   return true;
 }
-
 } // namespace raptr

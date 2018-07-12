@@ -14,24 +14,27 @@
 #include <raptr/input/controller.hpp>
 #include <raptr/ui/font.hpp>
 
-namespace toml {
+namespace toml
+{
 class Value;
 } // namespace toml
 
-namespace raptr {
-
+namespace raptr
+{
 class Game;
 class Controller;
 class Sprite;
 class Renderer;
 
-struct DialogCharacter {
+struct DialogCharacter
+{
   std::string name;
   std::string font_name;
   int32_t font_size;
 };
 
-struct DialogPrompt {
+struct DialogPrompt
+{
   std::shared_ptr<Sprite> speaker;
   std::string name;
   std::string button;
@@ -45,8 +48,9 @@ struct DialogPrompt {
   std::vector<DialogPrompt> choices;
 
   std::shared_ptr<Text> r_name, r_text, r_button, r_button_hover;
-  
-  struct Has {
+
+  struct Has
+  {
     bool trigger;
     bool key;
     bool value;
@@ -59,8 +63,9 @@ struct DialogPrompt {
   A Dialog is an overlay that is presented over the screen and allows the
   player to interact with the options presented
 */
-class Dialog {
- public:
+class Dialog
+{
+public:
   /*!
     Attaches a controller to the dialog so the player can interact
     /param controller - An instance of a controller to bind
@@ -81,9 +86,9 @@ class Dialog {
   /*!
     Start processing the dialog
   */
-  bool think(std::shared_ptr<Game>& game);
+  bool think(std::shared_ptr<Game>& game) const;
 
- private:
+private:
   /*!
     Method to unwind a dialog file
     /param root - The current toml section to parse
@@ -103,7 +108,7 @@ class Dialog {
   */
   bool on_right_joy(const ControllerState& state);
 
- private:
+private:
   int64_t last_ticks;
   bool parse_error;
   FileInfo toml_path;
@@ -114,5 +119,4 @@ class Dialog {
   std::shared_ptr<TTF_Font> font;
   int32_t selected_choice;
 };
-
 } // namespace raptr

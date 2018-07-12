@@ -9,9 +9,10 @@
 #include <SDL.h>
 #include <raptr/common/filesystem.hpp>
 
-namespace raptr {
-
-struct Layer {
+namespace raptr
+{
+struct Layer
+{
   FileInfo texture_path;
   uint32_t z_index;
   SDL_Rect bbox;
@@ -21,21 +22,20 @@ struct Layer {
 
 class Renderer;
 
-class Parallax {
- public:
+class Parallax
+{
+public:
   static std::shared_ptr<Parallax> from_toml(const FileInfo& path);
 
- public:
-   /*!
-      Render the background relative to a camera viewport
-      \param clip - The clip that is currently being rendered
-   */
-   void render(Renderer* renderer, const SDL_Rect& clip, int32_t rx);
+public:
+  /*!
+     Render the background relative to a camera viewport
+     \param clip - The clip that is currently being rendered
+  */
+  void render(Renderer* renderer, const SDL_Rect& clip, int32_t rx);
 
- public:
+public:
   bool is_foreground;
   std::vector<Layer> layers;
 };
-
-
 }

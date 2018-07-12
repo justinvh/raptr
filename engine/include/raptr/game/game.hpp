@@ -11,8 +11,6 @@
 #include <map>
 #include <memory>
 #include <vector>
-#include <chrono>
-#include <type_traits>
 
 #include <sol.hpp>
 #include <crossguid/guid.hpp>
@@ -20,11 +18,10 @@
 #include <raptr/common/filesystem.hpp>
 #include <raptr/common/rtree.hpp>
 #include <raptr/common/rect.hpp>
-#include <raptr/common/clock.hpp>
 #include <raptr/network/snapshot.hpp>
 
-namespace raptr {
-
+namespace raptr
+{
 class Config;
 class Controller;
 class Entity;
@@ -36,20 +33,24 @@ class Sound;
   into one cohesive interaction. It can be thought of the main loop of the application
   with additional utilities and conveniences. 
 */
-class Game : public std::enable_shared_from_this<Game>, public Serializable {
- private:
+class Game : public std::enable_shared_from_this<Game>, public Serializable
+{
+private:
   //! The class should be created using Game::create as it inherits from enable_shared_from_this
-   Game(const fs::path& game_root_)
-    : is_init(false), game_root(game_root_) { }
+  Game(const fs::path& game_root_)
+    : game_root(game_root_)
+    , is_init(false)
+  {
+  }
 
- public:
+public:
   ~Game();
   Game(const Game&) = delete;
   Game(Game&&) = default;
   Game& operator=(const Game&) = delete;
   Game& operator=(Game&&) = default;
 
- public:
+public:
   /*!
     This should be used when creating a Game. 
   */
@@ -74,7 +75,7 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
 
   void handle_static_mesh_spawn_event(const StaticMeshSpawnEvent& event);
 
- public:
+public:
   /*!
     Returns true if a given entity can teleport to a region defined by a bounding box
     \param entity - The entity that is trying to teleport
@@ -84,24 +85,30 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   std::shared_ptr<Entity> intersect_world(Entity* entity, const Rect& bbox);
 
   void spawn_now(std::shared_ptr<Entity> entity);
-  
+
   /*!
     Spawn an entity to the world
   */
   void spawn_staticmesh(const std::string& path,
-                        StaticMeshSpawnEvent::Callback callback = [](auto&a) {});
-  
+                        StaticMeshSpawnEvent::Callback callback = [](auto& a)
+                        {
+                        });
+
 
   /*!
     Spawn an entity to the world
   */
   void spawn_character(const std::string& path,
-                       CharacterSpawnEvent::Callback callback = [](auto&a) {});
+                       CharacterSpawnEvent::Callback callback = [](auto& a)
+                       {
+                       });
 
   /*
   */
   void spawn_player(int32_t controller_id,
-                    CharacterSpawnEvent::Callback callback = [](auto&a) {});
+                    CharacterSpawnEvent::Callback callback = [](auto& a)
+                    {
+                    });
 
   /*!
     Run the game and manage maintaining a healthy FPS
@@ -155,7 +162,7 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
     Initialize the sound engine on a separate thread
     \return Whether the sound engine could be initialized
   */
-  bool init_sound();
+  static bool init_sound();
 
   /*
   */
@@ -164,10 +171,10 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   /*!
     Serialize and deserialize methods for the game
   */
-  virtual void serialize(std::vector<NetField>& list);
-  virtual bool deserialize(const std::vector<NetField>& fields);
+  void serialize(std::vector<NetField>& list) override;
+  bool deserialize(const std::vector<NetField>& fields) override;
 
- public:
+public:
   //! Global configuration loaded from a etc/raptr.ini
   std::shared_ptr<Config> config;
 
@@ -212,7 +219,7 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   int32_t engine_event_index = 0;
   std::vector<std::shared_ptr<EngineEvent>> engine_events_buffers[2];
 
- public:
+public:
   //! If set, then all initialization has happened successfully
   bool is_init;
   bool is_headless;
@@ -220,6 +227,4 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
 
   sol::state lua;
 };
-
 } // namespace raptr
-

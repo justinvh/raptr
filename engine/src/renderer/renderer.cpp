@@ -1,6 +1,5 @@
 #include <memory>
 #include <algorithm>
-#include <numeric>
 
 #include <raptr/game/entity.hpp>
 #include <raptr/config.hpp>
@@ -12,7 +11,10 @@
 constexpr int32_t GAME_WIDTH = 480;
 constexpr int32_t GAME_HEIGHT = 270;
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
 void SDLDeleter::operator()(SDL_Texture* p) const
 {
@@ -30,8 +32,8 @@ void SDLDeleter::operator()(TTF_Font* p) const
   TTF_CloseFont(p);
 }
 
-namespace raptr {
-
+namespace raptr
+{
 Renderer::~Renderer()
 {
   if (sdl.renderer) {
@@ -120,9 +122,8 @@ void Renderer::run_frame(bool force_render)
   if (std::fabs(current_ratio - desired_ratio) > 1e-5) {
     double delta_ratio_ms = ratio_per_second / 1000.0 * ms;
     current_ratio += delta_ratio_ms;
-    if ((delta_ratio_ms > 0 && current_ratio > desired_ratio) ||
-        (delta_ratio_ms < 0 && current_ratio < desired_ratio))
-    {
+    if (delta_ratio_ms > 0 && current_ratio > desired_ratio ||
+      delta_ratio_ms < 0 && current_ratio < desired_ratio) {
       current_ratio = desired_ratio;
       logical_size = desired_size;
     } else {
@@ -138,7 +139,8 @@ void Renderer::run_frame(bool force_render)
   size_t num_entities = entities_followed.size();
   size_t index = 0;
 
-  struct ClipCamera {
+  struct ClipCamera
+  {
     SDL_Rect clip, viewport;
     int32_t left_offset;
     std::vector<std::shared_ptr<Entity>> contains;
@@ -211,8 +213,9 @@ void Renderer::run_frame(bool force_render)
 
     int32_t min_player = *std::max_element(y_pos.begin(), y_pos.end());
     clip_cam.clip.x = left;
-    clip_cam.clip.y = GAME_HEIGHT - logical_size.h;//(y_pos[0] + 32) - GAME_HEIGHT; // GAME_HEIGHT - std::accumulate(y_pos.begin(), y_pos.end(), 0) / y_pos.size();
-    clip_cam.clip.w = (right - left);
+    clip_cam.clip.y = GAME_HEIGHT - logical_size.h;
+    //(y_pos[0] + 32) - GAME_HEIGHT; // GAME_HEIGHT - std::accumulate(y_pos.begin(), y_pos.end(), 0) / y_pos.size();
+    clip_cam.clip.w = right - left;
     clip_cam.clip.h = logical_size.h;
     clip_cam.left_offset = last_center_offset;
 
@@ -299,7 +302,7 @@ void Renderer::run_frame(bool force_render)
     ClipCamera clip_cam;
     clip_cam.clip.x = 0;
     clip_cam.left_offset = 0;
-    clip_cam.clip.y = 0; 
+    clip_cam.clip.y = 0;
     clip_cam.clip.w = logical_size.w;
     clip_cam.clip.h = logical_size.h;
 
@@ -332,14 +335,12 @@ void Renderer::run_frame(bool force_render)
       }
 
       SDL_RenderCopyEx(sdl.renderer, w.texture.get(), &w.src, &transformed_dst,
-        w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
+                       w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
     }
 
-    /*
     for (auto& foreground : foregrounds) {
-      foreground->render(this, clip_cam.clip);
+      foreground->render(this, bg_clip, clip_cam.left_offset);
     }
-    */
 
     for (auto w : will_render_foreground) {
       auto transformed_dst = w.dst;
@@ -350,7 +351,7 @@ void Renderer::run_frame(bool force_render)
       }
 
       SDL_RenderCopyEx(sdl.renderer, w.texture.get(), &w.src, &transformed_dst,
-        w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
+                       w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
     }
     ++index;
   }
@@ -362,7 +363,7 @@ void Renderer::run_frame(bool force_render)
   ++frame_counter;
   ++total_frames_rendered;
 
-  if ((clock::ticks() - frame_counter_time_start) >= 5e6) {
+  if (clock::ticks() - frame_counter_time_start >= 5e6) {
     logger->debug("FPS = {} ({} frames in 5s)", frame_counter / 5.0, frame_counter);
     frame_counter_time_start = clock::ticks();
     frame_fps = frame_counter / 5.0;
@@ -370,7 +371,7 @@ void Renderer::run_frame(bool force_render)
   }
 }
 
-bool Renderer::toggle_fullscreen()
+bool Renderer::toggle_fullscreen() const
 {
   if (is_headless) {
     return false;
@@ -379,10 +380,9 @@ bool Renderer::toggle_fullscreen()
   if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN_DESKTOP) {
     SDL_SetWindowFullscreen(sdl.window, 0);
     return false;
-  } else {
-    SDL_SetWindowFullscreen(sdl.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-    return true;
   }
+  SDL_SetWindowFullscreen(sdl.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+  return true;
 }
 
 void Renderer::camera_follow(std::vector<std::shared_ptr<Entity>> entities)
@@ -431,6 +431,4 @@ void Renderer::add_foreground(std::shared_ptr<Parallax>& foreground)
 {
   foregrounds.push_back(foreground);
 }
-
 } // namespace raptr
-

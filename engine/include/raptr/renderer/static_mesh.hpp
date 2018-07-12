@@ -5,15 +5,13 @@
 */
 #pragma once
 
-#include <cstdint>
 #include <memory>
-#include <string>
 
 #include <raptr/game/entity.hpp>
 #include <raptr/common/filesystem.hpp>
 
-namespace raptr {
-
+namespace raptr
+{
 class Sprite;
 class Game;
 
@@ -21,23 +19,24 @@ class Game;
   A StaticMesh is a simple collidable Entity in the world. It uses the Sprite
   to define its intersection and bounding box
 */
-class StaticMesh : public Entity {
- public:
-   StaticMesh();
-   ~StaticMesh() = default;
-   StaticMesh(const StaticMesh&) = default;
-   StaticMesh(StaticMesh&&) = default;
-   StaticMesh& operator=(const StaticMesh&) = default;
-   StaticMesh& operator=(StaticMesh&&) = default;
+class StaticMesh : public Entity
+{
+public:
+  StaticMesh();
+  ~StaticMesh() = default;
+  StaticMesh(const StaticMesh&) = default;
+  StaticMesh(StaticMesh&&) = default;
+  StaticMesh& operator=(const StaticMesh&) = default;
+  StaticMesh& operator=(StaticMesh&&) = default;
 
- public:
-   typedef StaticMeshSpawnEvent SpawnEvent;
+public:
+  typedef StaticMeshSpawnEvent SpawnEvent;
 
   /*!
     Returns the bounding box for this static mesh based on its sprite
     \return An rectangle containing the static mesh
   */
-  virtual std::vector<Rect> bbox() const;
+  std::vector<Rect> bbox() const override;
 
   /*!
     Generates a StaticMesh object from a TOML configuration file
@@ -48,18 +47,16 @@ class StaticMesh : public Entity {
 
   /*!
   */
-  virtual void render(Renderer* renderer);
+  void render(Renderer* renderer) override;
 
   /*!
     The static mesh just needs to render. It is a simple function.
     \param game - An instance of the game to retrieve event states, such as the current renderer
   */
-  virtual void think(std::shared_ptr<Game>& game);
+  void think(std::shared_ptr<Game>& game) override;
 
-  virtual void serialize(std::vector<NetField>& list);
+  void serialize(std::vector<NetField>& list) override;
 
-  virtual bool deserialize(const std::vector<NetField>& fields);
+  bool deserialize(const std::vector<NetField>& fields) override;
 };
-
 } // namespace raptr
-

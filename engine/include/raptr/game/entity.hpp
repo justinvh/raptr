@@ -9,12 +9,11 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <crossguid/guid.hpp>
 #include <raptr/common/rect.hpp>
 #include <raptr/network/snapshot.hpp>
 
-namespace raptr {
-
+namespace raptr
+{
 class Game;
 class Sprite;
 class Renderer;
@@ -27,8 +26,9 @@ typedef std::array<unsigned char, 16> GUID;
   This could be a static mesh, a character, or a simple platform. The idea is that
   an Entity is something you should care about as a player.
 */
-class Entity : public Serializable {
- public:
+class Entity : public Serializable
+{
+public:
   Entity();
   Entity(const Entity&) = default;
   Entity(Entity&&) = default;
@@ -36,7 +36,7 @@ class Entity : public Serializable {
   Entity& operator=(Entity&&) = default;
   virtual ~Entity() = default;
 
- public:
+public:
 
   /*!
     Returns the bounding box for this entity
@@ -122,30 +122,51 @@ class Entity : public Serializable {
     Return the current position of the entity
     \return A double-precision point of the Entity position
   */
-  virtual Point& position() { return pos_; }
-  virtual const Point& position() const { return pos_; }
+  virtual Point& position()
+  {
+    return pos_;
+  }
+
+  virtual const Point& position() const
+  {
+    return pos_;
+  }
 
   /*!
     Return the current velocity of the entity
     \return A double-precision point of the Entity velocity
   */
-  virtual Point& velocity() { return vel_; }
-  virtual const Point& velocity() const { return vel_; }
+  virtual Point& velocity()
+  {
+    return vel_;
+  }
+
+  virtual const Point& velocity() const
+  {
+    return vel_;
+  }
 
   /*!
     Return the current acceleration of the entity
     \return A double-precision point of the Entity acceleration
   */
-  virtual Point& acceleration() { return acc_; }
-  virtual const Point& acceleration() const { return acc_; }
+  virtual Point& acceleration()
+  {
+    return acc_;
+  }
 
-  virtual void serialize(std::vector<NetField>& list) = 0;
+  virtual const Point& acceleration() const
+  {
+    return acc_;
+  }
 
-  virtual bool deserialize(const std::vector<NetField>& fields) = 0;
+  void serialize(std::vector<NetField>& list) override = 0;
 
- public:
+  bool deserialize(const std::vector<NetField>& fields) override = 0;
+
+public:
   //! The name of the entity
-   std::string name;
+  std::string name;
 
   //! The unique ID of the entity
   std::array<unsigned char, 16> guid_;
@@ -171,5 +192,4 @@ class Entity : public Serializable {
   //! Specific frame used for collisions
   AnimationFrame* collision_frame;
 };
-
 } // namespace raptr

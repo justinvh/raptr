@@ -2,11 +2,15 @@
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/game/entity.hpp>
 #include <raptr/common/logging.hpp>
+#include <crossguid/guid.hpp>
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
-namespace raptr {
-
+namespace raptr
+{
 Entity::Entity()
 {
   auto g = xg::newGuid();
@@ -82,18 +86,16 @@ bool Entity::intersects(const Rect& bbox) const
 {
   if (this->do_pixel_collision_test) {
     return this->intersect_slow(bbox);
-  } else {
-    return this->intersect_fast(bbox);
   }
+  return this->intersect_fast(bbox);
 }
 
 bool Entity::intersects(const Entity* other, const Rect& bbox) const
 {
   if (this->do_pixel_collision_test) {
     return this->intersect_slow(other, bbox);
-  } else {
-    return this->intersect_fast(bbox);
   }
+  return this->intersect_fast(bbox);
 }
 
 bool Entity::intersect_slow(const Entity* other, const Rect& this_bbox) const
@@ -144,8 +146,9 @@ bool Entity::intersect_slow(const Entity* other, const Rect& this_bbox) const
 
   for (int32_t x = 0; x < w; ++x) {
     for (int32_t y = 0; y < h; ++y) {
-      int32_t this_idx = ((this_frame->y + ty0 + y) * this_surface->pitch) + (tx0 + x  + this_frame->x) * this_bpp;
-      int32_t other_idx = ((other_frame->y + oy0 + y) * other_surface->pitch) + (ox0 + x + other_frame->x) * other_bpp;
+      int32_t this_idx = (this_frame->y + ty0 + y) * this_surface->pitch + (tx0 + x + this_frame->x) * this_bpp;
+      int32_t other_idx = (other_frame->y + oy0 + y) * other_surface->pitch + (ox0 + x + other_frame->x) *
+          other_bpp;
       const uint8_t* this_px = this_pixels + this_idx;
       const uint8_t* other_px = other_pixels + other_idx;
       if (*this_px > 0 && *other_px > 0) {
@@ -169,16 +172,16 @@ bool Entity::intersect_slow(const Rect& other_box) const
   // x0 position
   int32_t x0_min = static_cast<int32_t>(std::max(other_box.x, pos.x));
   int32_t x0_max = static_cast<int32_t>(std::min(other_box.x + other_box.w,
-    pos.x + frame->w - 1));
+                                                 pos.x + frame->w - 1));
 
   // y0 position
   int32_t y0_min = static_cast<int32_t>(std::max(other_box.y, pos.y));
   int32_t y0_max = static_cast<int32_t>(std::min(other_box.y + other_box.h,
-    pos.y + frame->h - 1));
+                                                 pos.y + frame->h - 1));
 
   for (int32_t x0 = x0_min; x0 <= x0_max; ++x0) {
     for (int32_t y0 = y0_min; y0 <= y0_max; ++y0) {
-      int32_t idx = ((frame->y + y0) * surface->pitch) + (x0 + frame->x) * bpp;
+      int32_t idx = (frame->y + y0) * surface->pitch + (x0 + frame->x) * bpp;
       const uint8_t* px = pixels + idx;
       if (*px > 0) {
         return true;
@@ -201,6 +204,4 @@ bool Entity::intersect_fast(const Rect& other_box) const
 
   return false;
 }
-
-
 } // namespace raptr

@@ -11,21 +11,21 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <iostream>
 
 #include <SDL.h>
 #include <SDL_surface.h>
 
 #include <raptr/common/filesystem.hpp>
 
-namespace raptr {
-
+namespace raptr
+{
 class Renderer;
 
 /*!
   A simple object for describing a frame in animation
 */
-struct AnimationFrame {
+struct AnimationFrame
+{
   //! The name of the animation as described in the Aseprite JSON
   std::string name;
 
@@ -34,7 +34,7 @@ struct AnimationFrame {
 
   //! How long the frame should hold before continuing to the next
   uint32_t duration;
-  
+
   //! The teeter pixel is the most down and left pixel occuped by the sprite
   int32_t teeter_px;
 };
@@ -42,7 +42,8 @@ struct AnimationFrame {
 /*!
   These enumerations match what Asesprite can animate
 */
-enum class AnimationDirection {
+enum class AnimationDirection
+{
   forward,
   backward,
   ping_pong
@@ -53,8 +54,9 @@ enum class AnimationDirection {
   frame, the animation direction, and what speed it should play the animation at
   (as a multiplier to the duration of the frames themselves)
 */
-class Animation {
- public:
+class Animation
+{
+public:
   //! The animation name as described by the "Tag" of the spritesheet
   std::string name;
 
@@ -76,7 +78,7 @@ class Animation {
   //! A speed multiplier against the duration of the frames (1.0 == same speed)
   float speed;
 
- public:
+public:
   /*!
     Retrieve the current AnimationFrame based on what "frame" is at
     /return The current AnimationFrame
@@ -103,8 +105,9 @@ using AnimationTable = std::map<std::string, Animation>;
   /see StaticMesh
   /see Character
 */
-class Sprite {
- public:
+class Sprite
+{
+public:
   /*!
     Create a new Sprite object from a Asesprite JSON file
     /param path - An absolute path to a Aseprite JSON file
@@ -133,7 +136,7 @@ class Sprite {
   */
   bool has_animation(const std::string& name);
 
- public:
+public:
   //! A mapping of animation names to the animation itself
   AnimationTable animations;
 
@@ -179,5 +182,4 @@ class Sprite {
   //! Path this sprite is from
   FileInfo path;
 };
-
 } // namespace raptr

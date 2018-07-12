@@ -7,10 +7,13 @@
 
 #include <raptr/common/logging.hpp>
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
-namespace raptr {
-
+namespace raptr
+{
 Server::Server(const fs::path& game_root,
                const std::string& server_addr_)
 {
@@ -118,12 +121,12 @@ void Server::send_engine_events()
 
 void Server::run()
 {
-  int64_t sync_rate = static_cast<int64_t>((1.0 / fps) * 1e6);
+  int64_t sync_rate = static_cast<int64_t>(1.0 / fps * 1e6);
 
   while (!game->shutdown) {
     auto current_time_us = clock::ticks();
 
-    if (!is_client && sock && (current_time_us - frame_last_time) >= sync_rate) {
+    if (!is_client && sock && current_time_us - frame_last_time >= sync_rate) {
       this->update_game_state();
       frame_last_time = clock::ticks();
     }
@@ -162,7 +165,7 @@ size_t Server::build_packet(size_t out_byte_off,
   next_snapshot->what_changed.clear();
 
   // Start ahead and we'll come back to populate the rest later
-  idx += sizeof(np);
+  idx += sizeof np;
 
   // Copy over field data until a marker is met
   for (; field_offset < fields.size(); ++field_offset) {
@@ -172,7 +175,7 @@ size_t Server::build_packet(size_t out_byte_off,
       break;
     }
 
-    if ((field.offset + field.size) >= MAX_SNAPSHOT_BUFFER_SIZE) {
+    if (field.offset + field.size >= MAX_SNAPSHOT_BUFFER_SIZE) {
       throw "Class is too large for a snapshot. Why...";
     }
 
@@ -211,7 +214,7 @@ size_t Server::build_packet(size_t out_byte_off,
   prev_snapshot.swap(next_snapshot);
 
   // Copy over the packet header
-  memcpy(p, &np, sizeof(np));
+  memcpy(p, &np, sizeof np);
 
   // Add the snapshot to the snapshot index
   /*
@@ -261,5 +264,4 @@ void Server::update_game_state()
     }
   }
 }
-
 }

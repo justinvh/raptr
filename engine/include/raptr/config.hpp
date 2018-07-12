@@ -1,9 +1,10 @@
 #pragma once
 
-namespace raptr {
-
-class Config {
- public:
+namespace raptr
+{
+class Config
+{
+public:
   Config() = default;
   ~Config() = default;
   Config(const Config&) = default;
@@ -11,5 +12,4 @@ class Config {
   Config& operator=(const Config&) = default;
   Config& operator=(Config&&) = default;
 };
-
 } // namespace raptr

@@ -19,14 +19,26 @@
 #include <SDL_joystick.h>
 #include <SDL_gamecontroller.h>
 
-namespace raptr {
-
+namespace raptr
+{
 /*!
   These buttons are modelled after a Xbox Controller
 */
-enum class Button {
-  x, y, a, b, bump_left, bump_right, joy_left, joy_right,
-  dpad_left, dpad_right, dpad_down, dpad_up, not_set
+enum class Button
+{
+  x,
+  y,
+  a,
+  b,
+  bump_left,
+  bump_right,
+  joy_left,
+  joy_right,
+  dpad_left,
+  dpad_right,
+  dpad_down,
+  dpad_up,
+  not_set
 };
 
 /*!
@@ -34,7 +46,8 @@ enum class Button {
   then any callback will be provided with this ControllerState object which
   will be completely filled out
 */
-struct ControllerState {
+struct ControllerState
+{
   int32_t joystick;
   float angle;
   float magnitude;
@@ -59,8 +72,9 @@ inline bool operator<(const ControllerCallbackSortable& a, const ControllerCallb
   for registering callbacks on certain events, like Button or Joystick actions, as
   well as a way for an SDL Event loop to push events to it
 */
-class Controller : public std::enable_shared_from_this<Controller> {
- public:
+class Controller : public std::enable_shared_from_this<Controller>
+{
+public:
   /*!
     Add a callback when a button is pressed down
     /param callback - The function to call when a button down event occurs
@@ -104,15 +118,18 @@ class Controller : public std::enable_shared_from_this<Controller> {
     Returns true if the controller is an SDL gamepad
     /return Whether the controller is a gamepad
   */
-  bool is_gamepad();
+  bool is_gamepad() const;
 
   /*!
     The controller id that this class is responsible for
     /return The controller id
   */
-  int32_t id() { return sdl.controller_id;  }
+  int32_t id() const
+  {
+    return sdl.controller_id;
+  }
 
- public:
+public:
   //! List of callbacks that are called when a button down event occurs
   std::vector<ControllerCallbackSortable> button_down_callbacks;
 
@@ -125,16 +142,16 @@ class Controller : public std::enable_shared_from_this<Controller> {
   //! List of callbacks that are called when a right joystick event occurs
   std::vector<ControllerCallbackSortable> right_joy_callbacks;
 
- private:
+private:
   /*!
     An internal class for managing the SDL states of the controller
   */
-  struct SDLInternal {
+  struct SDLInternal
+  {
     ~SDLInternal();
     int32_t controller_id;
     SDL_GameController* controller;
     SDL_Joystick* joystick;
   } sdl;
 };
-
 } // namespace raptr

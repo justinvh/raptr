@@ -5,13 +5,13 @@
 
 #pragma once
 
-#include <iostream>
-
-namespace raptr {
-
+namespace raptr
+{
 //! A double precision point
-struct Point {
+struct Point
+{
   double x, y;
+
   bool operator==(const Point& other) const
   {
     return std::fabs(other.x - x) < 1e-5 && std::fabs(other.y - y) < 1e-5;
@@ -19,22 +19,23 @@ struct Point {
 };
 
 //! A double precision rectangle
-struct Rect {
+struct Rect
+{
   double x, y, w, h;
 
   bool operator==(const Rect& other) const
   {
-    return (std::fabs(other.x - x) < 1e-5 &&
-            std::fabs(other.y - y) < 1e-5 &&
-            std::fabs(other.w - w) < 1e-5 &&
-            std::fabs(other.h - h) < 1e-5);
+    return std::fabs(other.x - x) < 1e-5 &&
+        std::fabs(other.y - y) < 1e-5 &&
+        std::fabs(other.w - w) < 1e-5 &&
+        std::fabs(other.h - h) < 1e-5;
   }
 };
 
 
-
 //! A bounds object
-struct Bounds {
+struct Bounds
+{
   double min[2];
   double max[2];
 };
@@ -45,9 +46,9 @@ struct Bounds {
   \param EPS - The epsilon to use when checking if a value is 0
   \return Whether or not the rectangle has 0-width or 0-height
 */
-inline bool SDL_RectEmpty(const Rect *r, double EPS = 1e-5)
+inline bool SDL_RectEmpty(const Rect* r, double EPS = 1e-5)
 {
-  return ((!r) || (r->w <= EPS) || (r->h <= EPS)) ? true : false;
+  return !r || r->w <= EPS || r->h <= EPS ? true : false;
 }
 
 /*! Checks for equality between two double-precision rectangles
@@ -57,10 +58,12 @@ inline bool SDL_RectEmpty(const Rect *r, double EPS = 1e-5)
   \param EPS - The epsilon to use when checking if a value is 0
   \return Whether or not the rectangles are equal
 */
-inline bool SDL_RectEquals(const Rect *a, const Rect *b, double EPS = 1e-5)
+inline bool SDL_RectEquals(const Rect* a, const Rect* b, double EPS = 1e-5)
 {
-  return (a && b && (a->x - b->x) < EPS && (a->y - b->y) < EPS &&
-    (a->w - b->w) < EPS && (a->h - b->h) < EPS) ? true : false;
+  return a && b && a->x - b->x < EPS && a->y - b->y < EPS &&
+         a->w - b->w < EPS && a->h - b->h < EPS
+           ? true
+           : false;
 }
 
 /*! Horizontally and vertically intersect two rectangles and store the result
@@ -151,7 +154,4 @@ std::ostream& operator<<(std::ostream& os, const raptr::Rect& point)
   os << "Rect<" << point.x << "," << point.y << "," << point.w << "," << point.h << ">";
   return os;
 }
-
-
-
 } // namespace raptr

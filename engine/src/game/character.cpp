@@ -10,7 +10,6 @@
 #include <raptr/game/game.hpp>
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/game/character.hpp>
-#include <raptr/config.hpp>
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/sound/sound.hpp>
 #include <raptr/input/controller.hpp>
@@ -19,10 +18,13 @@
 #include <raptr/game/entity.hpp>
 #include <raptr/network/snapshot.hpp>
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
-namespace raptr {
-
+namespace raptr
+{
 Character::Character()
   : Entity()
 {
@@ -118,9 +120,12 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   auto& pos = character->position();
   auto& vel = character->velocity();
   auto& acc = character->acceleration();
-  pos.x = 0; pos.y = 0;
-  vel.x = 0; vel.y = 0;
-  acc.x = 0; acc.y = 0;
+  pos.x = 0;
+  pos.y = 0;
+  vel.x = 0;
+  vel.y = 0;
+  acc.x = 0;
+  acc.y = 0;
   character->vel_exp.x = 0;
 
   return character;
@@ -159,7 +164,7 @@ void Character::think(std::shared_ptr<Game>& game)
     friction /= 2;
   }
 
-  if (std::fabs(vel_exp.x) <  std::fabs(vel.x)) {
+  if (std::fabs(vel_exp.x) < std::fabs(vel.x)) {
     if (vel.x > 0) {
       vel.x -= friction * delta_us / 1e6;
       if (vel.x < 0) {
@@ -261,7 +266,7 @@ void Character::think(std::shared_ptr<Game>& game)
     sprite->set_animation("Idle");
   }
 
-  int32_t steps_y = static_cast<int32_t>((std::abs(pos.y - want_y.y) / 4) + 1);
+  int32_t steps_y = static_cast<int32_t>(std::abs(pos.y - want_y.y) / 4 + 1);
   double delta_y = (pos.y - want_y.y) / double(steps_y);
   want_y.y = pos.y;
   intersected_entity.reset();
@@ -300,7 +305,7 @@ void Character::walk(float scale)
   auto& vel = this->velocity();
   if (std::fabs(scale * run_speed) > std::fabs(vel.x)) {
     vel.x = scale * run_speed;
-  } 
+  }
   vel_exp.x = scale * run_speed;
   if (!falling) {
     sprite->set_animation("Walk");
@@ -320,7 +325,7 @@ void Character::run(float scale)
 
   if (std::fabs(scale * run_speed) > std::fabs(vel.x)) {
     vel.x = scale * run_speed;
-  } 
+  }
   vel_exp.x = scale * run_speed;
 
   if (!falling) {
@@ -396,7 +401,7 @@ bool Character::on_button_down(const ControllerState& state)
       vel.x += dash_speed;
     } else {
       vel.x -= dash_speed;
-    } 
+    }
 
     vel.y = 0;
     jump_count++;
@@ -436,8 +441,8 @@ std::vector<Rect> Character::bbox() const
   auto& current_frame = sprite->current_animation->current_frame();
   box.x = pos.x;
   box.y = pos.y;
-  box.w = (current_frame.w * sprite->scale);
-  box.h = (current_frame.h * sprite->scale);
+  box.w = current_frame.w * sprite->scale;
+  box.h = current_frame.h * sprite->scale;
   return {box};
 }
 
@@ -479,5 +484,4 @@ bool Character::deserialize(const std::vector<NetField>& fields)
 {
   return false;
 }
-
 } // namespace raptr

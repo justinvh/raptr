@@ -12,10 +12,13 @@
 #include <raptr/renderer/static_mesh.hpp>
 #include <raptr/common/logging.hpp>
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
-namespace raptr {
-
+namespace raptr
+{
 StaticMesh::StaticMesh()
   : Entity()
 {
@@ -82,9 +85,12 @@ std::shared_ptr<StaticMesh> StaticMesh::from_toml(const FileInfo& toml_path)
   auto& pos = staticmesh->position();
   auto& vel = staticmesh->velocity();
   auto& acc = staticmesh->acceleration();
-  pos.x = 0; pos.y = 0;
-  vel.x = 0; vel.y = 0;
-  acc.x = 0; acc.y = 0;
+  pos.x = 0;
+  pos.y = 0;
+  vel.x = 0;
+  vel.y = 0;
+  acc.x = 0;
+  acc.y = 0;
 
   return staticmesh;
 }
@@ -143,5 +149,4 @@ bool StaticMesh::deserialize(const std::vector<NetField>& fields)
 {
   return true;
 }
-
 } // namespace raptr

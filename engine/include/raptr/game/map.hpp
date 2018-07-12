@@ -8,11 +8,11 @@
 #include <memory>
 #include <raptr/common/filesystem.hpp>
 
-namespace raptr {
-
-class Map {
- public:
+namespace raptr
+{
+class Map
+{
+public:
   std::shared_ptr<Map> load(const FileInfo& folder);
 };
-
 } // namespace raptr

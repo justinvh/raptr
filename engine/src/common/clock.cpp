@@ -2,12 +2,17 @@
 #include <raptr/common/clock.hpp>
 #include <raptr/common/logging.hpp>
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
-namespace raptr {
-namespace clock {
-
-namespace {
+namespace raptr
+{
+namespace clock
+{
+namespace
+{
 auto clock_last = Time::now();
 auto paused_time = Time::now();
 int64_t offset_us = 0;
@@ -26,7 +31,6 @@ int64_t ticks()
 
 void start()
 {
-
   if (paused) {
     toggle();
   }
@@ -52,6 +56,5 @@ bool toggle()
 
   return paused;
 }
-
 }
 }

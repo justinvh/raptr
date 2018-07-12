@@ -1,4 +1,3 @@
-#include <fstream>
 #include <iostream>
 #include <string>
 #include <memory>
@@ -12,10 +11,13 @@
 #include <raptr/common/logging.hpp>
 #include <raptr/common/clock.hpp>
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
-namespace raptr {
-
+namespace raptr
+{
 std::map<fs::path, std::shared_ptr<SDL_Surface>> SURFACE_CACHE;
 std::map<std::shared_ptr<SDL_Surface>, std::shared_ptr<SDL_Texture>> TEXTURE_CACHE;
 std::map<fs::path, std::shared_ptr<Sprite>> SPRITE_CACHE;
@@ -99,7 +101,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   }
 
   picojson::value doc;
-  (*input) >> doc;
+  *input >> doc;
 
   auto frames = doc.get("frames").get<picojson::array>();
   auto meta = doc.get("meta");
@@ -111,7 +113,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   sprite->speed = 1.0;
 
   fs::path relative_image_path(p_string(meta, "image"));
-  fs::path image_path = path.file_dir / (relative_image_path.filename());
+  fs::path image_path = path.file_dir / relative_image_path.filename();
   std::string image_cpath(image_path.string());
 
   logger->debug("Sprite texture is located at {}", image_path);
@@ -122,7 +124,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   } else {
     SDL_Surface* surface = IMG_Load(image_cpath.c_str());
     if (!surface) {
-      logger->error("Sprite texture failed to load from {}: {}", 
+      logger->error("Sprite texture failed to load from {}: {}",
                     image_path);
       return nullptr;
     }
@@ -151,7 +153,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
     } else if (direction == "backward") {
       animation.direction = AnimationDirection::backward;
     } else if (direction == "pingpong") {
-      if ((from - to) == 0) {
+      if (from - to == 0) {
         animation.direction = AnimationDirection::forward;
       } else {
         animation.direction = AnimationDirection::ping_pong;
@@ -251,5 +253,4 @@ bool Sprite::set_animation(const std::string& name, bool hold_last_frame)
   current_animation->hold_last_frame = hold_last_frame;
   return true;
 }
-
 } // namespace raptr

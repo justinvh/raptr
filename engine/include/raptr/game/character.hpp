@@ -10,8 +10,8 @@
 #include <raptr/common/filesystem.hpp>
 #include <raptr/input/controller.hpp>
 
-namespace raptr {
-
+namespace raptr
+{
 class Game;
 class Sprite;
 class Renderer;
@@ -22,20 +22,21 @@ class Filesystem;
   It has various movement options, a more complicated think function to handle interactions
   with its environment, and most importantly can have a controller attached to it.
  */
-class Character : public Entity {
- public:
-   Character();
-   ~Character() = default;
-   Character(const Character&) = default;
-   Character(Character&&) = default;
-   Character& operator=(const Character&) = default;
-   Character& operator=(Character&&) = default;
+class Character : public Entity
+{
+public:
+  Character();
+  ~Character() = default;
+  Character(const Character&) = default;
+  Character(Character&&) = default;
+  Character& operator=(const Character&) = default;
+  Character& operator=(Character&&) = default;
 
- public:
-   typedef CharacterSpawnEvent SpawnEvent;
+public:
+  typedef CharacterSpawnEvent SpawnEvent;
 
-   virtual void serialize(std::vector<NetField>& list);
-   virtual bool deserialize(const std::vector<NetField>& fields);
+  void serialize(std::vector<NetField>& list) override;
+  bool deserialize(const std::vector<NetField>& fields) override;
 
   /*! 
     Attaches and registers bindings against a controller. This provides a mechanism for
@@ -49,7 +50,7 @@ class Character : public Entity {
     Returns the bounding box for this character
     \return An rectangle containing the character
   */
-  virtual std::vector<Rect> bbox() const;
+  std::vector<Rect> bbox() const override;
 
   /*! 
     Triggers the "crouch" animation of the character. This will influence
@@ -74,7 +75,7 @@ class Character : public Entity {
     interact with the character; rendering the sprite;
     \param game - An instance of the game to retrieve event states, such as the current renderer
   */
-  virtual void think(std::shared_ptr<Game>& game);
+  void think(std::shared_ptr<Game>& game) override;
 
   /*!
     Trigger the "Run" animation and set the movement speed to run speed 
@@ -84,7 +85,7 @@ class Character : public Entity {
 
   /*!
   */
-  virtual void render(Renderer* renderer);
+  void render(Renderer* renderer) override;
 
   /*!  
     Trigger the "Walk" animation and set the movement speed to walk speed
@@ -92,7 +93,7 @@ class Character : public Entity {
   */
   virtual void walk(float scale);
 
- private:
+private:
   /*! 
     When a controller is attached to this character, any button presses will be dispatched to this
     function which will handle how best to deal with a button press
@@ -114,7 +115,7 @@ class Character : public Entity {
   */
   virtual bool on_left_joy(const ControllerState& state);
 
- public:
+public:
 
   //! The controller that is bound to this character
   std::shared_ptr<Controller> controller;
@@ -168,5 +169,4 @@ class Character : public Entity {
 
   Point vel_exp;
 };
-
 } // namespace raptr

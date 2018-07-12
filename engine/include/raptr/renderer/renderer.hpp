@@ -7,10 +7,7 @@
 #pragma once
 
 #include <SDL.h>
-#include <SDL_image.h>
 #include <SDL_ttf.h>
-
-#include <raptr/common/rect.hpp>
 
 #include <vector>
 #include <memory>
@@ -18,20 +15,21 @@
 /*!
 Deleters for SDL objects that are allocated via std::shared_ptr
 */
-struct SDLDeleter {
+struct SDLDeleter
+{
   void operator()(SDL_Texture* p) const;
   void operator()(SDL_Surface* p) const;
   void operator()(TTF_Font* p) const;
 };
 
-namespace raptr {
-
-
+namespace raptr
+{
 class Config;
 class Entity;
 class Parallax;
 
-struct Camera {
+struct Camera
+{
   SDL_Point pos;
   int32_t left, right, top, bottom;
 };
@@ -42,7 +40,8 @@ struct Camera {
   of where it will be blitted on the screen. Additionally, if the texture should
   be flipped or rotated.
 */
-struct Renderable {
+struct Renderable
+{
   //! The SDL texture that was generated, for examples see the Sprite class
   std::shared_ptr<SDL_Texture> texture;
 
@@ -68,7 +67,7 @@ struct Renderable {
     Convenience method to translate the flip booleans into SDL masks
     /returns SDL mask defining how the texture should be flipped
   */
-  int flip_mask()
+  int flip_mask() const
   {
     int out;
     if (flip_x && flip_y) {
@@ -90,15 +89,19 @@ struct Renderable {
   a renderable object to the screen, and methods for interacting with the window
   itself, such as toggling fullscreen.
 */
-class Renderer {
- public:
-   Renderer(bool is_headless_)
-     : is_headless(is_headless_) { }
+class Renderer
+{
+public:
+  Renderer(bool is_headless_)
+    : is_headless(is_headless_)
+  {
+  }
+
   Renderer(const Renderer&) = default;
   Renderer(Renderer&&) = default;
   ~Renderer();
 
- public:
+public:
   /*!
     Add an object to the renderer to be drawn on the screen.
     /see Renderable
@@ -109,11 +112,11 @@ class Renderer {
     /param flip_x - Flip the texture along the X-axis, after the src has been cropped out
     /param flip_y - Flip the texture along the Y-axis, after the sr has been cropped out
   */
-   void add(std::shared_ptr<SDL_Texture>& texture,
-     SDL_Rect src, SDL_Rect dst,
-     float angle, bool flip_x, bool flip_y,
-     bool absolute_positioning = false,
-     bool render_in_foreground = false);
+  void add(std::shared_ptr<SDL_Texture>& texture,
+           SDL_Rect src, SDL_Rect dst,
+           float angle, bool flip_x, bool flip_y,
+           bool absolute_positioning = false,
+           bool render_in_foreground = false);
 
   /*!
     Add a background to be rendered, these are special as the rendering call is dependent on the viewport
@@ -166,9 +169,9 @@ class Renderer {
     Toggles between a BORDERLESS fullscreen and Window mode
     /return Whether the window is in fullscreen or not
   */
-  bool toggle_fullscreen();
+  bool toggle_fullscreen() const;
 
- public:
+public:
   bool is_headless;
 
   //! The configuration that was used to create this Renderer
@@ -185,7 +188,8 @@ class Renderer {
   /*!
     An internal object for representing the SDL state of the renderer
   */
-  struct SDLInternal {
+  struct SDLInternal
+  {
     SDL_Window* window;
     SDL_Renderer* renderer;
   } sdl;
@@ -208,5 +212,4 @@ class Renderer {
   int32_t frame_counter;
   float frame_fps;
 };
-
 } // namespace raptr

@@ -8,17 +8,19 @@
 #include <toml/toml.h>
 #pragma warning(default : 4996)
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
-namespace raptr {
-
-namespace {
-
+namespace raptr
+{
+namespace
+{
 bool FONTS_REGISTERED = false;
 typedef std::pair<std::string, int32_t> FontAndSize;
 typedef std::map<FontAndSize, std::shared_ptr<TTF_Font>> FontToTTF;
 FontToTTF FONT_REGISTRY;
-
 }
 
 bool load_registry(const FileInfo& game_root)
@@ -94,7 +96,7 @@ bool Text::allocate(std::shared_ptr<Renderer>& renderer)
     return false;
   }
 
-  SDL_QueryTexture(texture.get(), NULL, NULL, &bbox.w, &bbox.h);
+  SDL_QueryTexture(texture.get(), nullptr, nullptr, &bbox.w, &bbox.h);
   bbox.x = 0;
   bbox.y = 0;
   bbox.w = surface->w;
@@ -132,10 +134,9 @@ std::shared_ptr<Text> Text::create(const FileInfo& game_root,
   text_obj->surface.reset(renderable);
   if (!text_obj->surface) {
     logger->error("Failed to render surface {} with font size {}", font, size);
-    return false;
+    return nullptr;
   }
 
   return text_obj;
 }
-
 }

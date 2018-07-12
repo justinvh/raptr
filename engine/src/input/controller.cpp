@@ -1,7 +1,5 @@
 #include <iostream>
 #include <memory>
-#include <string>
-#include <limits>
 #include <algorithm>
 
 #define _USE_MATH_DEFINES
@@ -10,11 +8,13 @@
 #include <raptr/common/logging.hpp>
 #include <raptr/input/controller.hpp>
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
-namespace raptr {
-
-
+namespace raptr
+{
 void Controller::on_button_down(const ControllerCallback& callback, int32_t priority)
 {
   button_down_callbacks.push_back(std::make_pair(priority, callback));
@@ -59,7 +59,7 @@ ControllerState state_from_joystick_event(SDL_Joystick* controller, const SDL_Ev
   float x = mag[0];
   float y = mag[1];
   float magnitude = sqrt(x * x + y * y);
-  angle = static_cast<float>(atan2(y, x)  * 180.0f / M_PI);
+  angle = static_cast<float>(atan2(y, x) * 180.0f / M_PI);
   if (angle < 0) {
     angle += 360.0f;
   }
@@ -80,6 +80,7 @@ ControllerState state_from_joystick_event(SDL_Joystick* controller, const SDL_Ev
 
   return state;
 }
+
 ControllerState state_from_joystick_event(SDL_GameController* controller, const SDL_Event& e)
 {
   float mag[2] = {0.0f, 0.0f};
@@ -115,7 +116,7 @@ ControllerState state_from_joystick_event(SDL_GameController* controller, const 
   float x = mag[0];
   float y = mag[1];
   float magnitude = sqrt(x * x + y * y);
-  angle = static_cast<float>(atan2(y, x)  * 180.0f / M_PI);
+  angle = static_cast<float>(atan2(y, x) * 180.0f / M_PI);
   if (angle < 0) {
     angle += 360.0f;
   }
@@ -217,7 +218,7 @@ void Controller::process_event(const SDL_Event& e)
   }
 }
 
-bool Controller::is_gamepad()
+bool Controller::is_gamepad() const
 {
   return sdl.controller != nullptr;
 }
@@ -232,40 +233,38 @@ std::shared_ptr<Controller> Controller::open(const FileInfo& game_root, int cont
       logger->error("There are no controller mappings available for {}", SDL_GameControllerName(sdl_controller));
       SDL_GameControllerClose(sdl_controller);
       throw std::runtime_error("No available controller mappings");
-    } else {
-      SDL_free(mapping);
     }
+    SDL_free(mapping);
 
     std::shared_ptr<Controller> controller(new Controller());
     controller->sdl.controller = sdl_controller;
     controller->sdl.joystick = SDL_GameControllerGetJoystick(sdl_controller);
     controller->sdl.controller_id = SDL_JoystickGetDeviceInstanceID(controller_id);
     logger->info("Registered {} as a controller with device id {}",
-      SDL_GameControllerName(sdl_controller),
-      controller->sdl.controller_id);
+                 SDL_GameControllerName(sdl_controller),
+                 controller->sdl.controller_id);
 
     SDL_GameControllerEventState(SDL_ENABLE);
 
     return controller;
-  } else {
-    std::shared_ptr<Controller> controller(new Controller());
-    controller->sdl.controller = nullptr;
-    controller->sdl.joystick = SDL_JoystickOpen(controller_id);
-    controller->sdl.controller_id = SDL_JoystickGetDeviceInstanceID(controller_id);
-    SDL_JoystickEventState(SDL_ENABLE);
-    logger->info("Registered {} as a joystick with device id {}",
-      SDL_JoystickName(controller->sdl.joystick),
-      controller->sdl.controller_id);
-    return controller;
   }
+  std::shared_ptr<Controller> controller(new Controller());
+  controller->sdl.controller = nullptr;
+  controller->sdl.joystick = SDL_JoystickOpen(controller_id);
+  controller->sdl.controller_id = SDL_JoystickGetDeviceInstanceID(controller_id);
+  SDL_JoystickEventState(SDL_ENABLE);
+  logger->info("Registered {} as a joystick with device id {}",
+               SDL_JoystickName(controller->sdl.joystick),
+               controller->sdl.controller_id);
+  return controller;
 }
 
-Controller::SDLInternal::~SDLInternal() {
+Controller::SDLInternal::~SDLInternal()
+{
   if (controller) {
     SDL_GameControllerClose(controller);
   } else if (joystick) {
     SDL_JoystickClose(joystick);
   }
 }
-
 } // namespace raptr

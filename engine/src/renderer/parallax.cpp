@@ -8,10 +8,13 @@
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/renderer/parallax.hpp>
 
-namespace { auto logger = raptr::_get_logger(__FILE__); }
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+}
 
-namespace raptr {
-
+namespace raptr
+{
 std::shared_ptr<Parallax> Parallax::from_toml(const FileInfo& toml_path)
 {
   auto toml_relative = toml_path.file_relative;
@@ -102,14 +105,15 @@ void Parallax::render(Renderer* renderer, const SDL_Rect& clip, int32_t rx)
     if (is_foreground) {
       // Things that are closer move faster 
       transformed_dst.x -= static_cast<int32_t>(cx * (1.0 + layer.z_index / 100.0));
-      transformed_dst.y = static_cast<int32_t>(-layer.surface->h + renderer->logical_size.h - (clip.y * (1.0 - layer.z_index / 100.0)));
+      transformed_dst.y = static_cast<int32_t>(renderer->logical_size.h - layer.surface->h);
     } else {
-      transformed_dst.x -= static_cast<int32_t>(cx * (1.0 - (layer.z_index / 100.0))) + rx;
-      transformed_dst.y = static_cast<int32_t>(renderer->logical_size.h - layer.surface->h + (clip.y * (layer.z_index / 100.0)));
+      transformed_dst.x -= static_cast<int32_t>(cx * (1.0 - layer.z_index / 100.0)) + rx;
+      transformed_dst.y = static_cast<int32_t>(renderer->logical_size.h - layer.surface->h + clip.y * (layer.
+        z_index / 100.0));
     }
 
-    SDL_RenderCopyEx(renderer->sdl.renderer, layer.texture.get(), &layer.bbox, &transformed_dst, 0, nullptr, SDL_FLIP_NONE);
+    SDL_RenderCopyEx(renderer->sdl.renderer, layer.texture.get(), &layer.bbox, &transformed_dst, 0, nullptr,
+                     SDL_FLIP_NONE);
   }
 }
-
 } // raptr

@@ -5,8 +5,6 @@
 #include <map>
 #include <functional>
 
-#include <SDL_image.h>
-
 #include <raptr/game/game.hpp>
 #include <raptr/input/controller.hpp>
 #include <raptr/renderer/sprite.hpp>
@@ -14,19 +12,21 @@
 #include <raptr/common/logging.hpp>
 #include <raptr/ui/dialog.hpp>
 
-namespace { auto logger = raptr::_get_logger(__FILE__); };
+namespace
+{
+auto logger = raptr::_get_logger(__FILE__);
+};
 
 #pragma warning(disable : 4996)
 #include <toml/toml.h>
 #pragma warning(default : 4996)
 
-namespace raptr {
-
-namespace {
-
+namespace raptr
+{
+namespace
+{
 std::map<std::string, DialogCharacter> CHARACTER_DIALOG_CACHE;
 bool dialog_cache_loaded = false;
-
 }
 
 bool load_dialog_cache(const FileInfo& game_root)
@@ -181,8 +181,8 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
 
   if (!prompt->speaker) {
     parse_error = true;
-    logger->error("{}: Failed to load speaker: {} (tried {})", 
-      section_name, speaker_id, sprite_path.file_path);
+    logger->error("{}: Failed to load speaker: {} (tried {})",
+                  section_name, speaker_id, sprite_path.file_path);
     return false;
   }
 
@@ -196,8 +196,8 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
   std::string animation_name = dict["expression"]->as<std::string>();
   if (!prompt->speaker->set_animation(animation_name)) {
     parse_error = true;
-    logger->error("{}: Failed to find animation for expression {} in {}", 
-      section_name, animation_name, speaker_id);
+    logger->error("{}: Failed to find animation for expression {} in {}",
+                  section_name, animation_name, speaker_id);
     return false;
   }
 
@@ -216,7 +216,7 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     prompt->wholesome_requirement = dict["wholesome_requirement"]->as<int32_t>();
     prompt->has.wholesome_requirement = true;
   }
-  
+
   prompt->button = "";
   if (dict.find("button") != dict.end()) {
     std::string prefix;
@@ -248,7 +248,7 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     prompt->has.value = true;
   }
 
-  auto char_map  = CHARACTER_DIALOG_CACHE.find(speaker_id);
+  auto char_map = CHARACTER_DIALOG_CACHE.find(speaker_id);
   bool has_defaults = char_map != CHARACTER_DIALOG_CACHE.end();
   DialogCharacter char_defaults;
   if (has_defaults) {
@@ -257,7 +257,7 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     char_defaults.font_name = "default";
     char_defaults.font_size = 15;
   }
-    
+
   int32_t font_size = char_defaults.font_size;
   if (dict.find("font_size") != dict.end()) {
     font_size = dict["font_size"]->as<int32_t>();
@@ -275,8 +275,8 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
 
   auto game_root = toml_path.from_root("");
   prompt->r_text = Text::create(game_root, font_name,
-    prompt->text, font_size, text_color,
-    max_width);
+                                prompt->text, font_size, text_color,
+                                max_width);
 
   if (!prompt->r_text) {
     logger->error("{}: Failed to create TTF for text '{}'", section_name, prompt->text);
@@ -284,9 +284,9 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     return false;
   }
 
-  prompt->r_name = Text::create(game_root, font_name, 
-    prompt->name, font_size, text_color,
-    max_width);
+  prompt->r_name = Text::create(game_root, font_name,
+                                prompt->name, font_size, text_color,
+                                max_width);
 
   if (!prompt->r_name) {
     logger->error("{}: Failed to create TTF for text '{}'", section_name, prompt->name);
@@ -315,7 +315,7 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
         for (auto& choice : prompt->choices) {
           if (choice.button.empty()) {
             parse_error = true;
-            logger->error("{}: Missing a 'button' tag. It is part of a group of responses.", 
+            logger->error("{}: Missing a 'button' tag. It is part of a group of responses.",
                           choice.section);
             return false;
           }
@@ -372,10 +372,10 @@ bool Dialog::on_right_joy(const ControllerState& state)
     return true;
   }
 
-  if (((clock::ticks() - last_ticks) / 1e3) < 250) {
+  if ((clock::ticks() - last_ticks) / 1e3 < 250) {
     return false;
   }
-  
+
   if (state.y < -0.5) {
     ++selected_choice;
     if (selected_choice >= active_prompt->choices.size()) {
@@ -405,14 +405,14 @@ bool Dialog::start()
   return true;
 }
 
-bool Dialog::think(std::shared_ptr<Game>& game)
+bool Dialog::think(std::shared_ptr<Game>& game) const
 {
   if (!active_prompt) {
     return false;
   }
 
   // Render dialog box
-  auto& renderer = game->renderer; 
+  auto& renderer = game->renderer;
   dialog_box->render(renderer.get());
 
   // Render speaker
@@ -457,7 +457,7 @@ bool Dialog::think(std::shared_ptr<Game>& game)
     for (int32_t i = 0; i < active_prompt->choices.size(); ++i) {
       auto& choice = active_prompt->choices[i];
       SDL_Rect dst;
-      auto& text = (i == selected_choice) ? choice.r_button_hover : choice.r_button;
+      auto& text = i == selected_choice ? choice.r_button_hover : choice.r_button;
       text->allocate(renderer);
       auto& texture = text->texture;
       auto& bbox = text->bbox;
@@ -472,5 +472,4 @@ bool Dialog::think(std::shared_ptr<Game>& game)
 
   return true;
 }
-
 } // namespace raptr
