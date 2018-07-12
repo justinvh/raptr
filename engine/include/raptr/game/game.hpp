@@ -14,6 +14,7 @@
 #include <chrono>
 #include <type_traits>
 
+#include <sol.hpp>
 #include <crossguid/guid.hpp>
 
 #include <raptr/common/filesystem.hpp>
@@ -141,6 +142,10 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   bool init_filesystem();
 
   /*!
+  */
+  bool init_lua();
+
+  /*!
     Initialize the renderer and setup the screen for game-time
     \return Whether the renderer could be initialized
   */
@@ -211,6 +216,8 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   //! If set, then all initialization has happened successfully
   bool is_init;
   bool is_headless;
+
+  sol::state lua;
 };
 
 } // namespace raptr

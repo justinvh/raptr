@@ -9,6 +9,8 @@
 #include <string>
 #include <functional>
 
+#include <raptr/common/clock.hpp>
+
 #include <SDL_events.h>
 
 namespace raptr {
@@ -57,6 +59,7 @@ struct StaticMeshSpawnEvent {
 
 struct EngineEvent {
   EngineEventType type;
+  int64_t time;
   void* data;
 
   template <class T>
@@ -65,6 +68,7 @@ struct EngineEvent {
     std::shared_ptr<EngineEvent> event(new EngineEvent());
     event->data = (void*)(data_);
     event->type = T::event_type;
+    event->time = clock::ticks();
     return event;
   }
 };

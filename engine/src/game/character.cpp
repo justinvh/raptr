@@ -345,12 +345,12 @@ bool Character::on_button_down(const ControllerState& state)
   if (state.button == Button::x && dash_time_us == 0 && jump_count < jumps_allowed) {
     sprite->set_animation("Dash");
     dash_time_us = 1;
+    dash_controller_state = last_controller_state;
     if (sprite->flip_x) {
       vel.x += dash_speed;
     } else {
       vel.x -= dash_speed;
     } 
-
 
     vel.y = 0;
   }

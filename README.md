@@ -39,12 +39,12 @@ If you get a complaint about redistributables missing, then try downloading the 
 
 ## Building and Running Raptr with CMake
 
-1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.6/vcpkg-export-20180710-003830.7z)
+1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.7/vcpkg-export-20180711-180948.7z)
 
 ```
 $ git clone https://github.com/justinvh/raptr.git raptr
 $ cd raptr
-$ 7z e vcpkg-export-20180710-003830.7z
+$ 7z e vcpkg-export-20180711-180948.7z
 $ cd build
 $ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="../vcpkg/scripts/buildsystems/vcpkg.cmake" -G "Visual Studio 15 2017 Win64" ..
 ```
@@ -55,25 +55,29 @@ You can now use Visual Studio 2017 to compile and build Raptr.
 
 Raptr Depends on the following:
 
-* bzip2
-* catch2
-* crossguid
-* cxxopts
-* fmt
-* freetype
-* libjpeg-turbo
-* liblzma
-* libpng
-* libwebp
-* picojson
-* sdl2
-* sdl2-image
-* sdl2-net
-* sdl2-ttf
-* spdlog
-* tiff
-* tinytoml
-* zlib
+```
+bzip2
+catch2
+crossguid
+cxxopts
+fmt
+freetype
+libjpeg-turbo
+liblzma
+libpng
+libwebp
+lua
+picojson
+sdl2
+sdl2-image
+sdl2-net
+sdl2-ttf
+sol2
+spdlog
+tiff
+tinytoml
+zlib
+```
 
 Which can be installed with vcpkg.exe with the following caveats:
 

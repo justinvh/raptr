@@ -23,6 +23,8 @@ find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)     
 find_package(tinytoml REQUIRED)     
 find_package(crossguid CONFIG REQUIRED)
+find_package(Lua REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
 
 add_library(RaptrDependencies INTERFACE)
 
@@ -36,6 +38,8 @@ target_link_libraries(RaptrDependencies INTERFACE
     tinytoml::tinytoml
     sdl2_net::sdl2_net
     crossguid
+    sol2
+    ${LUA_LIBRARIES}
     ${SDL2_LIBRARIES} 
     ${SDL2_IMAGE_LIBRARIES}
 )
@@ -50,6 +54,8 @@ target_include_directories(RaptrDependencies INTERFACE
     $<TARGET_PROPERTY:fmt::fmt,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:tinytoml::tinytoml,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:crossguid,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:sol2,INTERFACE_INCLUDE_DIRECTORIES>
+    ${LUA_INCLUDE_DIR}
     ${SDL2_INCLUDE_DIRS} 
     ${SDL2_IMAGE_INCLUDE_DIRS}
 )

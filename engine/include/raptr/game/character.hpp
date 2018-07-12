@@ -157,7 +157,7 @@ class Character : public Entity {
 
   int32_t bunny_hop_count;
 
-  ControllerState last_controller_state;
+  ControllerState last_controller_state, dash_controller_state;
 };
 
 } // namespace raptr

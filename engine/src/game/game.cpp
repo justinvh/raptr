@@ -346,6 +346,11 @@ bool Game::init()
     return false;
   }
 
+  if (!this->init_lua()) {
+    logger->error("Failed to initialize lua");
+    return false;
+  }
+
   if (!this->init_demo()) {
     logger->error("Failed to initialize the demo");
     return false;
@@ -430,10 +435,6 @@ bool Game::init_controllers()
   }
 
   for (int32_t i = 0; i < SDL_NumJoysticks(); ++i) {
-    logger->debug("Is {} a game controller? {}",
-                  SDL_JoystickNameForIndex(i),
-                  SDL_IsGameController(i) ? "Yes" : "No");
-
     auto controller = Controller::open(game_path, i);
     controllers[controller->id()] = controller;
   }
@@ -505,6 +506,26 @@ bool Game::init_filesystem()
 
   game_path.game_root = game_root;
   return true;
+}
+
+bool Game::init_lua()
+{
+  logger->info("Initializing Lua. Lua, what does a fox say?");
+  lua.open_libraries(sol::lib::base, sol::lib::coroutine, sol::lib::string, sol::lib::io);
+  auto handler = [](lua_State*, sol::protected_function_result result)
+  {
+    return result;
+  };
+
+  auto result = lua.script("print('Ring-ding-ding-ding-dingeringeding!')", handler);
+  if (result.valid()) {
+    logger->info("Good job, Lua!");
+    return true;
+  }
+
+  sol::error err = result;
+  logger->error("Lua failed to initialize: {}", err.what());
+  return false;
 }
 
 void Game::serialize(std::vector<NetField>& list)
