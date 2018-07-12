@@ -51,33 +51,33 @@ $ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="../vcpkg/scripts/buildsystems/vcpkg.cmake" 
 
 You can now use Visual Studio 2017 to compile and build Raptr.
 
-## Manually Fetching Dependencies
+## Manually Fetching Dependencies for Building
 
 Raptr Depends on the following:
 
-```
-bzip2
-catch2
-crossguid
-cxxopts
-fmt
-freetype
-libjpeg-turbo
-liblzma
-libpng
-libwebp
-lua
-picojson
-sdl2
-sdl2-image
-sdl2-net
-sdl2-ttf
-sol2
-spdlog
-tiff
-tinytoml
-zlib
-```
+| Dependency     | Why it is a dependency |                                
+| -------------- | ------------ |                                
+| bzip2          | File archives and compression |               
+| catch2         | Unit testing |                                
+| crossguid      | GUID for entities in the game |               
+| cxxopts        | Command-line parsing |                        
+| fmt            | Used with spdlog for .format() like strings|  
+| freetype       | Font support in the UI |
+| libjpeg-turbo  | Texture support |
+| liblzma        | Texture support |
+| libpng         | Texture support |
+| libwebp        | Texture support |
+| lua            | Game component scripting |
+| picojson       | JSON parsing (for aseprite) |
+| sdl2           | Window and event abstractions |
+| sdl2-image     | Image loading abstractions |
+| sdl2-net       | Cross-platform UDP setup |
+| sol2           | C++-Lua helpers |
+| spdlog         | Beautifully simple logging |
+| tiff           | Texture support |
+| tinytoml       | Dead simple TOML config parsing |
+| zlib           | It's pretty much standard everywhere |
+                                                   
 
 Which can be installed with vcpkg.exe with the following caveats:
 
