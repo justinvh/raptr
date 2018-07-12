@@ -216,6 +216,7 @@ class Game : public std::enable_shared_from_this<Game>, public Serializable {
   //! If set, then all initialization has happened successfully
   bool is_init;
   bool is_headless;
+  bool shutdown;
 
   sol::state lua;
 };

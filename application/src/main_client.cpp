@@ -10,6 +10,7 @@ namespace { auto logger = raptr::_get_logger(__FILE__); };
 int main(int argc, char** argv)
 {
   spdlog::set_level(spdlog::level::debug);
+  uint32_t time_start_ms = SDL_GetTicks();
 
   logger->info("Hello from raptr!");
 
@@ -43,7 +44,11 @@ int main(int argc, char** argv)
     server.run();
   }
 
-  logger->info("Okay, quitting. Bye Bye.");
+  uint32_t time_end_ms = SDL_GetTicks();
+
+  uint32_t time_played = (time_end_ms - time_start_ms) / 1000.0;
+
+  logger->info("Okay, quitting. You played for {}s. Bye Bye. Press enter to exit.", time_played);
   std::cin.get();
 
   return 0;

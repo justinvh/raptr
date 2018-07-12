@@ -245,9 +245,7 @@ std::shared_ptr<Controller> Controller::open(const FileInfo& game_root, int cont
 Controller::SDLInternal::~SDLInternal() {
   if (controller) {
     SDL_GameControllerClose(controller);
-  }
-
-  if (joystick) {
+  } else if (joystick) {
     SDL_JoystickClose(joystick);
   }
 }

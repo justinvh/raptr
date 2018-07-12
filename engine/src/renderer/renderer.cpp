@@ -13,7 +13,6 @@ constexpr int32_t GAME_HEIGHT = 270;
 
 void SDLDeleter::operator()(SDL_Texture* p) const
 {
-  SDL_DestroyTexture(p);
 }
 
 void SDLDeleter::operator()(SDL_Surface* p) const

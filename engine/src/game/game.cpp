@@ -55,7 +55,7 @@ std::shared_ptr<Game> Game::create_headless(const fs::path& game_root)
 
 Game::~Game()
 {
-  SDL_Quit();
+  //SDL_Quit();
 }
 
 bool Game::poll_events()
@@ -88,6 +88,10 @@ bool Game::poll_events()
     renderer->scale(renderer->current_ratio + 1.0);
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F4) {
     renderer->scale(renderer->current_ratio / 2.0);
+  } else if (e.type == SDL_WINDOWEVENT) {
+    if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
+      this->shutdown = true;
+    }
   }
   return true;
 }
@@ -223,7 +227,7 @@ bool Game::process_engine_events()
 
 bool Game::run()
 {
-  while (true) {
+  while (!shutdown) {
     if (!this->gather_engine_events()) {
       return false;
     }
@@ -320,11 +324,14 @@ void Game::spawn_character(const std::string& path, CharacterSpawnEvent::Callbac
 
 bool Game::init()
 {
+  shutdown = false;
+
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
   if (!this->init_filesystem()) {
     logger->error("Failed to initialize filesystem. "
                   "Are you sure {} is the game path?", game_root);
+    shutdown = true;
     return false;
   }
 
@@ -333,26 +340,31 @@ bool Game::init()
 
   if (!this->init_controllers()) {
     logger->error("Failed to initialize controllers");
+    shutdown = true;
     return false;
   }
 
   if (!this->init_sound()) {
     logger->error("Failed to initialize sound");
+    shutdown = true;
     return false;
   }
 
   if (!this->init_renderer()) {
     logger->error("Failed to initialize renderer");
+    shutdown = true;
     return false;
   }
 
   if (!this->init_lua()) {
     logger->error("Failed to initialize lua");
+    shutdown = true;
     return false;
   }
 
   if (!this->init_demo()) {
     logger->error("Failed to initialize the demo");
+    shutdown = true;
     return false;
   }
 

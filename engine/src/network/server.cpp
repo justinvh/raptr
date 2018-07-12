@@ -120,7 +120,7 @@ void Server::run()
 {
   int64_t sync_rate = static_cast<int64_t>((1.0 / fps) * 1e6);
 
-  while (true) {
+  while (!game->shutdown) {
     auto current_time_us = clock::ticks();
 
     if (!is_client && sock && (current_time_us - frame_last_time) >= sync_rate) {
