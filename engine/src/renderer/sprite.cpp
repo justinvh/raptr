@@ -108,6 +108,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
 
   sprite->width = p_int(size, "w");
   sprite->height = p_int(size, "h");
+  sprite->speed = 1.0;
 
   fs::path relative_image_path(p_string(meta, "image"));
   fs::path image_path = path.file_dir / (relative_image_path.filename());

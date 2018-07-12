@@ -11,6 +11,9 @@ typedef decltype(Time::now) TimePoint;
 namespace clock {
 
 int64_t ticks();
+bool toggle();
+void start();
+void stop();
 
 } // namespace clock
 } // namespace raptr

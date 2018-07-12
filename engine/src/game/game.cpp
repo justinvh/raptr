@@ -65,7 +65,9 @@ bool Game::poll_events()
     return false;
   }
 
-  if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP ||
+  if (e.type == SDL_CONTROLLERBUTTONDOWN && e.cbutton.button == SDL_CONTROLLER_BUTTON_START) {
+    clock::toggle();
+  } else if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP ||
       e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
     int32_t controller_id = e.jdevice.which;
     ControllerEvent* controller_event = new ControllerEvent();
@@ -88,6 +90,14 @@ bool Game::poll_events()
     renderer->scale(renderer->current_ratio + 1.0);
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F4) {
     renderer->scale(renderer->current_ratio / 2.0);
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F5) {
+    clock::toggle();
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F6) {
+    int64_t us = 1.0 / renderer->fps * 1e6;
+    logger->debug("Stepping by {}ms", us / 1e3);
+    clock::start();
+    std::this_thread::sleep_for(std::chrono::microseconds(us));
+    clock::stop();
   } else if (e.type == SDL_WINDOWEVENT) {
     if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
       this->shutdown = true;
