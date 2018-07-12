@@ -98,6 +98,7 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   character->walk_speed = dict["character.walk_speed"]->as<int32_t>();
   character->run_speed = dict["character.run_speed"]->as<int32_t>();
   character->jump_vel = dict["character.jump_vel"]->as<int32_t>();
+
   character->jumps_allowed = dict["character.jumps_allowed"]->as<int32_t>();
   character->jump_perfect_scale = dict["character.jump_perfect_scale"]->as<double>();
   character->fast_fall_scale = dict["character.fast_fall_scale"]->as<double>();
@@ -120,6 +121,7 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   pos.x = 0; pos.y = 0;
   vel.x = 0; vel.y = 0;
   acc.x = 0; acc.y = 0;
+  character->vel_exp.x = 0;
 
   return character;
 }
@@ -152,7 +154,40 @@ void Character::think(std::shared_ptr<Game>& game)
     this->on_left_joy(this->last_controller_state);
   }
 
+  float friction = 3000;
+  if (in_dash) {
+    friction /= 2;
+  }
+
+  if (std::fabs(vel_exp.x) <  std::fabs(vel.x)) {
+    if (vel.x > 0) {
+      vel.x -= friction * delta_us / 1e6;
+      if (vel.x < 0) {
+        vel.x = 0;
+      }
+    } else if (vel.x < 0) {
+      vel.x += friction * delta_us / 1e6;
+      if (vel.x > 0) {
+        vel.x = 0;
+      }
+    }
+  }
+
+  float mag_x = std::fabs(vel.x);
+  if (in_dash) {
+    sprite->set_animation("Dash");
+  } else if (mag_x > walk_speed) {
+    sprite->set_animation("Run");
+  } else if (mag_x > 0) {
+    sprite->set_animation("Walk");
+  } else {
+    sprite->set_animation("Idle");
+  }
+
   acc.y = game->gravity;
+  if (in_dash) {
+    acc.y = 0;
+  }
 
   // External forces, like gravity
   Rect fall_check = this->want_position_y(delta_us)[0];
@@ -165,6 +200,7 @@ void Character::think(std::shared_ptr<Game>& game)
     } else {
       vel.y += game->gravity * delta_us / 1e6;
     }
+    fall_time_us += delta_us;
     falling = true;
   } else if (!in_dash) {
     if (falling) {
@@ -173,21 +209,19 @@ void Character::think(std::shared_ptr<Game>& game)
       fast_fall = false;
       vel.y = 0;
 
-      if (!moving) {
-        vel.x = 0;
-      }
-
+      float mag_x = std::fabs(vel.x);
       if (in_dash) {
         sprite->set_animation("Dash");
-      } else if (vel.x > walk_speed) {
+      } else if (mag_x > walk_speed) {
         sprite->set_animation("Run");
-      } else if (vel.x > 0) {
+      } else if (mag_x > 0) {
         sprite->set_animation("Walk");
       } else {
         sprite->set_animation("Idle");
       }
     }
     falling = false;
+    fall_time_us = 0;
   }
 
   Rect want_x = this->want_position_x(delta_us)[0];
@@ -223,7 +257,6 @@ void Character::think(std::shared_ptr<Game>& game)
     }
     pos.x = want_x.x;
   } else {
-    vel.x = 0;
     dash_time_us = 0;
     sprite->set_animation("Idle");
   }
@@ -265,7 +298,10 @@ void Character::walk(float scale)
 {
   moving = true;
   auto& vel = this->velocity();
-  vel.x = scale * run_speed;
+  if (std::fabs(scale * run_speed) > std::fabs(vel.x)) {
+    vel.x = scale * run_speed;
+  } 
+  vel_exp.x = scale * run_speed;
   if (!falling) {
     sprite->set_animation("Walk");
     sprite->speed = std::fabs(scale * 1.5);
@@ -276,7 +312,16 @@ void Character::run(float scale)
 {
   moving = true;
   auto& vel = this->velocity();
-  vel.x = scale * run_speed;
+
+  if (vel.x > 0 && scale < 0 || vel.x < 0 && scale > 0) {
+    dash_time_us = 0;
+    vel.x = scale * run_speed;
+  }
+
+  if (std::fabs(scale * run_speed) > std::fabs(vel.x)) {
+    vel.x = scale * run_speed;
+  } 
+  vel_exp.x = scale * run_speed;
 
   if (!falling) {
     sprite->set_animation("Run");
@@ -288,29 +333,23 @@ void Character::stop()
 {
   moving = false;
   auto& vel = this->velocity();
-  vel.x = 0.0;
   dash_time_us = 0;
+  vel_exp.x = 0;
   sprite->speed = 1.0;
   if (!falling) {
     sprite->set_animation("Idle");
+  }
+
+  if (falling) {
+    vel.x = 0;
   }
 }
 
 bool Character::on_left_joy(const ControllerState& state)
 {
-  this->last_controller_state = state;
   auto& vel = this->velocity();
   float mag_x = std::fabs(state.x);
 
-  if (dash_time_us > 0) {
-    if (mag_x < 0.01f && !falling) {
-      this->stop();
-    
-    }
-    return false;
-  }
-
-  // Turn around boosted dash
   if (mag_x < 0.01f) {
     this->stop();
   } else if (mag_x < 0.75f) {
@@ -323,7 +362,19 @@ bool Character::on_left_joy(const ControllerState& state)
     fast_fall = true;
   }
 
+  this->last_controller_state = state;
   return false;
+}
+
+bool Character::on_button_up(const ControllerState& state)
+{
+  auto& vel = this->velocity();
+  if (state.button == Button::a) {
+    if (vel.y > 0) {
+      vel.y = 0;
+    }
+  }
+  return true;
 }
 
 bool Character::on_button_down(const ControllerState& state)
@@ -331,24 +382,16 @@ bool Character::on_button_down(const ControllerState& state)
   auto& vel = this->velocity();
   auto& acc = this->acceleration();
   if (state.button == Button::a && jump_count < jumps_allowed) {
-    int64_t peak_time_us = static_cast<int64_t>(std::fabs(jump_vel / acc.y * 1e6));
-    int64_t in_air_us = clock::ticks() - jump_time_us;
-
-    if (peak_time_us - in_air_us < 64 * 1e6 && falling) {
-      vel.y -= -jump_vel * jump_perfect_scale;
-    } else {
-      vel.y -= -jump_vel;
-    }
-
+    vel.y = jump_vel;
     jump_time_us = clock::ticks();
     sprite->set_animation("Jump");
     ++jump_count;
-  }
-
-  if (state.button == Button::x && dash_time_us == 0 && jump_count < jumps_allowed) {
+    dash_time_us = 0;
+  } else if (state.button == Button::y) {
+    sprite->flip_x = !sprite->flip_x;
+  } else if (state.button == Button::x && dash_time_us == 0 && jump_count <= jumps_allowed) {
     sprite->set_animation("Dash");
     dash_time_us = 1;
-    dash_controller_state = last_controller_state;
     if (sprite->flip_x) {
       vel.x += dash_speed;
     } else {
@@ -356,6 +399,7 @@ bool Character::on_button_down(const ControllerState& state)
     } 
 
     vel.y = 0;
+    jump_count++;
   }
   return false;
 }
@@ -382,6 +426,7 @@ void Character::attach_controller(std::shared_ptr<Controller>& controller_)
   controller = controller_;
   controller->on_left_joy(std::bind(&Character::on_left_joy, this, _1));
   controller->on_button_down(std::bind(&Character::on_button_down, this, _1));
+  controller->on_button_up(std::bind(&Character::on_button_up, this, _1));
 }
 
 std::vector<Rect> Character::bbox() const

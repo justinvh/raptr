@@ -11,11 +11,11 @@ Additional developer insight and blog can be found at
 
 ![Our Dinosaur Warrior][raptr-idle]
 
-## Installing and Running v0.1-alpha.6
+## Installing and Running v0.1-alpha.7
 
 It's pretty dang simple under 64-bit Windows right now.
 
-1. [Download the 0.1-alpha.6 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.6/raptr-0.1.0-alpha.6-Release-win64.zip)
+1. [Download the 0.1-alpha.7 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.7/raptr-0.1.0-alpha.7-Release-win64.zip)
 2. Extract that anywhere your heart desires.
 3. Plug in a 360, GameCube, or Steam controller.
 4. Go into the bin/ folder and run `raptr-client.exe`
@@ -23,9 +23,9 @@ It's pretty dang simple under 64-bit Windows right now.
 
 If you get a complaint about redistributables missing, then try downloading the [Visual C++ Redistributable for Visual Studio 2017 - x64](https://aka.ms/vs/15/release/vc_redist.x64.exe)
 
-## Current State: v0.1-alpha.6
+## Current State: v0.1-alpha.7
 
-![Feature Mash][raptr-0.1-alpha.6]
+![Feature Mash][raptr-0.1-alpha.7]
 
 ## Features with some Hyperbole
 
@@ -129,17 +129,24 @@ To be added
 * [cmake](https://cmake.org/) - Cross-platform build system
 * [crossguid](https://github.com/graeme-hill/crossguid) - Lightweight cross platform C++ GUID/UUID library
 * [cxxopts](https://github.com/jarro2783/cxxopts) - Lightweight C++ command line option parser
+* [Lua](https://www.lua.org/) - It's got what game scripting craves
 * [musescore](https://musescore.com/) - Create, play, and print beautiful sheet music
 * [picojson](https://github.com/kazuho/picojson) - A header-file-only, JSON parser serializer in C++
+* [SDL2](https://www.libsdl.org/index.php) - Simple DirectMedia Layer software development library
 * [SDL2](https://www.libsdl.org/index.php) - Simple DirectMedia Layer software development library
 * [SDL2_image](https://www.libsdl.org/projects/SDL_image/) - Image file loading library extensions to SDL2
 * [SDL2_TTF](https://www.libsdl.org/projects/SDL_ttf/docs/SDL_ttf.html) - TTF Support in SDL
 * [SDL2_net](https://www.libsdl.org/projects/SDL_net) - SDL Networking
+* [sol2](https://github.com/ThePhD/sol2) - C++ <-> Lua API wrapper with advanced features and top notch performance
 * [spdlog](https://github.com/gabime/spdlog) - Fast C++ logging library
 * [tinytoml](https://github.com/mayah/tinytoml) - A header only C++11 library for parsing TOML
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
 
 ## Other Screenshots ([View the Album](https://imgur.com/a/pnREFi5))
+
+7/11/2018 - Initial dashing
+
+![Feature Mash][raptr-0.1-alpha.6]
 
 7/10/2018 - Multiplayer + parallax
 
@@ -183,3 +190,4 @@ To be added
 [raptr-0.1-alpha.4]: https://i.imgur.com/DQ5CTNO.gif
 [raptr-0.1-alpha.5]: https://i.imgur.com/p71vkhy.gif
 [raptr-0.1-alpha.6]: https://i.imgur.com/CBIbHiy.gif
+[raptr-0.1-alpha.7]: https://i.imgur.com/pNqNhiF.gif

@@ -163,6 +163,24 @@ void Controller::process_event(const SDL_Event& e)
         }
       }
       break;
+    case SDL_JOYBUTTONUP:
+      state = state_from_joystick_event(sdl.joystick, e);
+      for (auto& callback : button_up_callbacks) {
+        // If a callback returns false it means do not bubble
+        if (!callback.second(state)) {
+          break;
+        }
+      }
+      break;
+    case SDL_CONTROLLERBUTTONUP:
+      state = state_from_joystick_event(sdl.controller, e);
+      for (auto& callback : button_up_callbacks) {
+        // If a callback returns false it means do not bubble
+        if (!callback.second(state)) {
+          break;
+        }
+      }
+      break;
     case SDL_JOYAXISMOTION:
       state = state_from_joystick_event(sdl.joystick, e);
       // If a callback returns false it means do not bubble

@@ -175,7 +175,7 @@ class Renderer {
   std::shared_ptr<Config> config;
 
   //! How many frames have been rendered
-  uint64_t frame_count;
+  uint64_t total_frames_rendered;
   uint64_t fps;
   uint64_t last_render_time_us;
 
@@ -192,9 +192,9 @@ class Renderer {
 
   SDL_Rect logical_size;
   SDL_Rect desired_size;
-  float current_ratio;
-  float desired_ratio;
-  float ratio_per_second;
+  double current_ratio;
+  double desired_ratio;
+  double ratio_per_second;
 
   //! A list of Renderable objects that will be rendered on the next run_frame()
   std::vector<std::shared_ptr<Entity>> observing;
@@ -203,6 +203,10 @@ class Renderer {
   std::vector<std::shared_ptr<Entity>> entities_followed;
   std::vector<std::shared_ptr<Parallax>> backgrounds;
   std::vector<std::shared_ptr<Parallax>> foregrounds;
+
+  int64_t frame_counter_time_start;
+  int32_t frame_counter;
+  float frame_fps;
 };
 
 } // namespace raptr

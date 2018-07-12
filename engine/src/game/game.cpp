@@ -87,9 +87,9 @@ bool Game::poll_events()
       renderer->camera_follow(character);
     });
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F3) {
-    renderer->scale(renderer->current_ratio + 1.0);
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F4) {
     renderer->scale(renderer->current_ratio / 2.0);
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F4) {
+    renderer->scale(1.0);
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F5) {
     clock::toggle();
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F6) {
@@ -189,18 +189,16 @@ void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
 bool Game::process_engine_events()
 {
   auto current_time_us = clock::ticks();
-  if ((current_time_us - frame_last_time) < 100) {
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
-    return true;
-  }
+
+  frame_delta_us = (current_time_us - frame_last_time);
+
+  frame_last_time = clock::ticks();
 
   auto& current_events = this->engine_events_buffers[this->engine_event_index];
   this->engine_event_index = (this->engine_event_index + 1) % 2;
   for (auto& engine_event : current_events) {
     this->dispatch_event(engine_event);
   }
-
-  frame_delta_us = (current_time_us - frame_last_time);
 
   for (auto& entity : entities) {
     entity->think(this->shared_from_this());
@@ -230,8 +228,6 @@ bool Game::process_engine_events()
   }
 
   current_events.clear();
-
-  frame_last_time = clock::ticks();
   return true;
 }
 

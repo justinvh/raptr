@@ -7,9 +7,12 @@
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/renderer/parallax.hpp>
 #include <raptr/common/clock.hpp>
+#include <raptr/common/logging.hpp>
 
 constexpr int32_t GAME_WIDTH = 480;
 constexpr int32_t GAME_HEIGHT = 270;
+
+namespace { auto logger = raptr::_get_logger(__FILE__); };
 
 void SDLDeleter::operator()(SDL_Texture* p) const
 {
@@ -75,7 +78,7 @@ bool Renderer::init(std::shared_ptr<Config>& config_)
 {
   config = config_;
 
-  fps = 60;
+  fps = 120;
   last_render_time_us = clock::ticks();
 
   if (is_headless) {
@@ -88,11 +91,18 @@ bool Renderer::init(std::shared_ptr<Config>& config_)
   sdl.renderer = SDL_CreateRenderer(sdl.window, -1, SDL_RENDERER_ACCELERATED);
   camera.pos.x = 0;
   camera.pos.y = 0;
+
+  logical_size.x = 0;
+  logical_size.y = 0;
   logical_size.w = GAME_WIDTH;
   logical_size.h = GAME_HEIGHT;
   desired_size = logical_size;
   current_ratio = 1.0;
   desired_ratio = 1.0;
+  frame_counter_time_start = clock::ticks();
+  frame_counter = 0;
+  frame_fps = 0;
+  total_frames_rendered = 0;
   SDL_RenderSetLogicalSize(sdl.renderer, logical_size.w, logical_size.h);
   SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, 255);
   SDL_SetRenderDrawBlendMode(sdl.renderer, SDL_BLENDMODE_BLEND);
@@ -105,13 +115,10 @@ void Renderer::run_frame(bool force_render)
     return;
   }
 
-  int64_t ms = static_cast<int64_t>((clock::ticks() - last_render_time_us) / 1e3);
-  if (!force_render && ms < 16) {
-    return;
-  }
-
+  double ms = (clock::ticks() - last_render_time_us) / 1e3;
+  last_render_time_us = clock::ticks();
   if (std::fabs(current_ratio - desired_ratio) > 1e-5) {
-    float delta_ratio_ms = ratio_per_second / 1000.0 * ms;
+    double delta_ratio_ms = ratio_per_second / 1000.0 * ms;
     current_ratio += delta_ratio_ms;
     if ((delta_ratio_ms > 0 && current_ratio > desired_ratio) ||
         (delta_ratio_ms < 0 && current_ratio < desired_ratio))
@@ -220,8 +227,6 @@ void Renderer::run_frame(bool force_render)
     hclippings.push_back(clip_cam);
     ++num_clips;
   }
-
-
 
   std::vector<ClipCamera> clippings = hclippings;
 
@@ -351,10 +356,18 @@ void Renderer::run_frame(bool force_render)
   }
 
   SDL_RenderPresent(sdl.renderer);
-  last_render_time_us = clock::ticks();
   will_render_middle.clear();
   will_render_foreground.clear();
-  ++frame_count;
+
+  ++frame_counter;
+  ++total_frames_rendered;
+
+  if ((clock::ticks() - frame_counter_time_start) >= 5e6) {
+    logger->debug("FPS = {} ({} frames in 5s)", frame_counter / 5.0, frame_counter);
+    frame_counter_time_start = clock::ticks();
+    frame_fps = frame_counter / 5.0;
+    frame_counter = 0;
+  }
 }
 
 bool Renderer::toggle_fullscreen()

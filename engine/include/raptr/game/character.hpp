@@ -101,6 +101,13 @@ class Character : public Entity {
   virtual bool on_button_down(const ControllerState& state);
 
   /*!
+    When a controller is attached to this character, any button presses will be dispatched to this
+    function which will handle how best to deal with a button press
+    \param state - What the controller was doing exactly when a button was pressed down
+  */
+  virtual bool on_button_up(const ControllerState& state);
+
+  /*!
     When a controller is attached to this character, any right joystick motion will be dispatched to this
     function which will handle how best to deal with the motion angle and amplitude.
     \param state - What the controller was doing exactly when a button was pressed down
@@ -158,6 +165,8 @@ class Character : public Entity {
   int32_t bunny_hop_count;
 
   ControllerState last_controller_state, dash_controller_state;
+
+  Point vel_exp;
 };
 
 } // namespace raptr
