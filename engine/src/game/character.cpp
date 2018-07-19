@@ -25,6 +25,7 @@ auto logger = raptr::_get_logger(__FILE__);
 
 namespace raptr
 {
+
 Character::Character()
   : Entity()
 {
@@ -35,6 +36,38 @@ Character::Character()
   jump_vel_ps = 100;
   fast_fall = false;
   falling = false;
+}
+
+void Character::attach_controller(std::shared_ptr<Controller>& controller_)
+{
+  using std::placeholders::_1;
+
+  controller = controller_;
+  controller->on_left_joy(std::bind(&Character::on_left_joy, this, _1));
+  controller->on_button_down(std::bind(&Character::on_button_down, this, _1));
+  controller->on_button_up(std::bind(&Character::on_button_up, this, _1));
+}
+
+std::vector<Rect> Character::bbox() const
+{
+  Rect box;
+  auto& pos = this->position();
+  auto& current_frame = sprite->current_animation->current_frame();
+  box.x = pos.x;
+  box.y = pos.y;
+  box.w = current_frame.w * sprite->scale;
+  box.h = current_frame.h * sprite->scale;
+  return {box};
+}
+
+void Character::crouch()
+{
+  sprite->set_animation("Crouch", true);
+}
+
+bool Character::deserialize(const std::vector<NetField>& fields)
+{
+  return false;
 }
 
 std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
@@ -133,9 +166,151 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   return character;
 }
 
-void Character::crouch()
+bool Character::on_button_down(const ControllerState& state)
 {
-  sprite->set_animation("Crouch", true);
+  auto& vel = this->velocity();
+  auto& acc = this->acceleration();
+  if (state.button == Button::a && jump_count < jumps_allowed) {
+    vel.y = jump_vel_ps;
+    jump_time_us = clock::ticks();
+    sprite->set_animation("Jump");
+    ++jump_count;
+    dash_time_usec = 0;
+  } else if (state.button == Button::y) {
+    sprite->flip_x = !sprite->flip_x;
+  } else if (state.button == Button::x && dash_time_usec == 0 && jump_count <= jumps_allowed) {
+    sprite->set_animation("Dash");
+    dash_time_usec = 1;
+    if (sprite->flip_x) {
+      vel.x += dash_speed_ps;
+    } else {
+      vel.x -= dash_speed_ps;
+    }
+
+    vel.y = 0;
+    jump_count++;
+  }
+  return false;
+}
+
+bool Character::on_button_up(const ControllerState& state)
+{
+  auto& vel = this->velocity();
+  if (state.button == Button::a) {
+    if (vel.y > 0) {
+      vel.y = 0;
+    }
+  }
+  return true;
+}
+
+bool Character::on_left_joy(const ControllerState& state)
+{
+  auto& vel = this->velocity();
+  float mag_x = std::fabs(state.x);
+
+  if (mag_x < 0.01f) {
+    this->stop();
+  } else if (mag_x < 0.75f) {
+    this->walk(state.x);
+  } else if (mag_x >= 0.75f) {
+    this->run(state.x);
+  }
+
+  if (falling && state.y > 0.5) {
+    fast_fall = true;
+  }
+
+  this->last_controller_state = state;
+  return false;
+}
+
+void Character::render(Renderer* renderer)
+{
+  sprite->render(renderer);
+
+  if (flashlight) {
+    const auto& s1 = sprite->current_animation->current_frame();
+    const auto& s2 = flashlight_sprite->current_animation->current_frame();
+    const double cx = sprite->x + s1.w / 2.0 - s2.w / 2.0;
+    const double cy = renderer->window_size.h - sprite->y - s1.h / 2.0 - s2.h / 2.0;
+    flashlight_sprite->x = cx;
+    flashlight_sprite->y = cy;
+    flashlight_sprite->render(renderer);
+  }
+}
+
+void Character::run(float scale)
+{
+  moving = true;
+  auto& vel = this->velocity();
+
+  if (vel.x > 0 && scale < 0 || vel.x < 0 && scale > 0) {
+    dash_time_usec = 0;
+    vel.x = scale * run_speed_ps;
+  }
+
+  if (std::fabs(scale * run_speed_ps) > std::fabs(vel.x)) {
+    vel.x = scale * run_speed_ps;
+  }
+  vel_exp.x = scale * run_speed_ps;
+
+  //logger->debug("Run speed is {}m/s.", vel.x * pixels_to_meters);
+
+  if (!falling) {
+    sprite->set_animation("Run");
+    sprite->speed = std::fabs(scale * 2.0);
+  }
+}
+
+void Character::serialize(std::vector<NetField>& list)
+{
+  NetFieldType cls = NetFieldType::Character;
+
+  // Stop looking at me like that.
+  #define CNF(field) NetFieldMacro(Character, field)
+
+  NetField states[] = {
+    CNF(pos_.x),
+    CNF(pos_.y),
+    CNF(vel_.x),
+    CNF(vel_.y),
+    CNF(moving),
+    CNF(flashlight),
+    CNF(falling),
+    CNF(fast_fall),
+    CNF(fast_fall_scale),
+    CNF(jump_time_us),
+    CNF(jump_count),
+    CNF(jumps_allowed),
+    CNF(jump_perfect_scale),
+    CNF(walk_speed_ps),
+    CNF(run_speed_ps),
+    CNF(jump_vel_ps),
+    CNF(bunny_hop_count)
+  };
+
+  #undef NF
+
+  for (auto state : states) {
+    list.push_back(state);
+  }
+}
+
+void Character::stop()
+{
+  moving = false;
+  auto& vel = this->velocity();
+  dash_time_usec = 0;
+  vel_exp.x = 0;
+  sprite->speed = 1.0;
+  if (!falling) {
+    sprite->set_animation("Idle");
+  }
+
+  if (falling) {
+    vel.x = 0;
+  }
 }
 
 void Character::think(std::shared_ptr<Game>& game)
@@ -330,177 +505,4 @@ void Character::walk(float scale)
   }
 }
 
-void Character::run(float scale)
-{
-  moving = true;
-  auto& vel = this->velocity();
-
-  if (vel.x > 0 && scale < 0 || vel.x < 0 && scale > 0) {
-    dash_time_usec = 0;
-    vel.x = scale * run_speed_ps;
-  }
-
-  if (std::fabs(scale * run_speed_ps) > std::fabs(vel.x)) {
-    vel.x = scale * run_speed_ps;
-  }
-  vel_exp.x = scale * run_speed_ps;
-
-  //logger->debug("Run speed is {}m/s.", vel.x * pixels_to_meters);
-
-  if (!falling) {
-    sprite->set_animation("Run");
-    sprite->speed = std::fabs(scale * 2.0);
-  }
-}
-
-void Character::stop()
-{
-  moving = false;
-  auto& vel = this->velocity();
-  dash_time_usec = 0;
-  vel_exp.x = 0;
-  sprite->speed = 1.0;
-  if (!falling) {
-    sprite->set_animation("Idle");
-  }
-
-  if (falling) {
-    vel.x = 0;
-  }
-}
-
-bool Character::on_left_joy(const ControllerState& state)
-{
-  auto& vel = this->velocity();
-  float mag_x = std::fabs(state.x);
-
-  if (mag_x < 0.01f) {
-    this->stop();
-  } else if (mag_x < 0.75f) {
-    this->walk(state.x);
-  } else if (mag_x >= 0.75f) {
-    this->run(state.x);
-  }
-
-  if (falling && state.y > 0.5) {
-    fast_fall = true;
-  }
-
-  this->last_controller_state = state;
-  return false;
-}
-
-bool Character::on_button_up(const ControllerState& state)
-{
-  auto& vel = this->velocity();
-  if (state.button == Button::a) {
-    if (vel.y > 0) {
-      vel.y = 0;
-    }
-  }
-  return true;
-}
-
-bool Character::on_button_down(const ControllerState& state)
-{
-  auto& vel = this->velocity();
-  auto& acc = this->acceleration();
-  if (state.button == Button::a && jump_count < jumps_allowed) {
-    vel.y = jump_vel_ps;
-    jump_time_us = clock::ticks();
-    sprite->set_animation("Jump");
-    ++jump_count;
-    dash_time_usec = 0;
-  } else if (state.button == Button::y) {
-    sprite->flip_x = !sprite->flip_x;
-  } else if (state.button == Button::x && dash_time_usec == 0 && jump_count <= jumps_allowed) {
-    sprite->set_animation("Dash");
-    dash_time_usec = 1;
-    if (sprite->flip_x) {
-      vel.x += dash_speed_ps;
-    } else {
-      vel.x -= dash_speed_ps;
-    }
-
-    vel.y = 0;
-    jump_count++;
-  }
-  return false;
-}
-
-void Character::render(Renderer* renderer)
-{
-  sprite->render(renderer);
-
-  if (flashlight) {
-    const auto& s1 = sprite->current_animation->current_frame();
-    const auto& s2 = flashlight_sprite->current_animation->current_frame();
-    const double cx = sprite->x + s1.w / 2.0 - s2.w / 2.0;
-    const double cy = renderer->window_size.h - sprite->y - s1.h / 2.0 - s2.h / 2.0;
-    flashlight_sprite->x = cx;
-    flashlight_sprite->y = cy;
-    flashlight_sprite->render(renderer);
-  }
-}
-
-void Character::attach_controller(std::shared_ptr<Controller>& controller_)
-{
-  using std::placeholders::_1;
-
-  controller = controller_;
-  controller->on_left_joy(std::bind(&Character::on_left_joy, this, _1));
-  controller->on_button_down(std::bind(&Character::on_button_down, this, _1));
-  controller->on_button_up(std::bind(&Character::on_button_up, this, _1));
-}
-
-std::vector<Rect> Character::bbox() const
-{
-  Rect box;
-  auto& pos = this->position();
-  auto& current_frame = sprite->current_animation->current_frame();
-  box.x = pos.x;
-  box.y = pos.y;
-  box.w = current_frame.w * sprite->scale;
-  box.h = current_frame.h * sprite->scale;
-  return {box};
-}
-
-void Character::serialize(std::vector<NetField>& list)
-{
-  NetFieldType cls = NetFieldType::Character;
-
-  // Stop looking at me like that.
-  #define CNF(field) NetFieldMacro(Character, field)
-
-  NetField states[] = {
-    CNF(pos_.x),
-    CNF(pos_.y),
-    CNF(vel_.x),
-    CNF(vel_.y),
-    CNF(moving),
-    CNF(flashlight),
-    CNF(falling),
-    CNF(fast_fall),
-    CNF(fast_fall_scale),
-    CNF(jump_time_us),
-    CNF(jump_count),
-    CNF(jumps_allowed),
-    CNF(jump_perfect_scale),
-    CNF(walk_speed_ps),
-    CNF(run_speed_ps),
-    CNF(jump_vel_ps),
-    CNF(bunny_hop_count)
-  };
-
-  #undef NF
-
-  for (auto state : states) {
-    list.push_back(state);
-  }
-}
-
-bool Character::deserialize(const std::vector<NetField>& fields)
-{
-  return false;
-}
 } // namespace raptr

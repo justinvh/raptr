@@ -36,6 +36,7 @@ public:
   typedef CharacterSpawnEvent SpawnEvent;
 
   void serialize(std::vector<NetField>& list) override;
+
   bool deserialize(const std::vector<NetField>& fields) override;
 
   /*! 
