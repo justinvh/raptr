@@ -69,7 +69,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
-    "duration": 500
+    "duration": 200
    },
    {
     "filename": "raptr 8.aseprite",

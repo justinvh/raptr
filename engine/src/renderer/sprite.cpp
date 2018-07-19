@@ -203,7 +203,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
 void Sprite::render(Renderer* renderer)
 {
   if (!texture) {
-    auto exists = TEXTURE_CACHE.find(surface);
+    const auto exists = TEXTURE_CACHE.find(surface);
     if (exists == TEXTURE_CACHE.end()) {
       TEXTURE_CACHE[surface].reset(renderer->create_texture(surface), SDLDeleter());
       texture = TEXTURE_CACHE[surface];
@@ -213,7 +213,7 @@ void Sprite::render(Renderer* renderer)
     SDL_SetTextureBlendMode(texture.get(), blend_mode);
   }
 
-  auto frame = current_animation->frames[current_animation->frame];
+  const auto frame = current_animation->frames[current_animation->frame];
   if (current_animation->next(last_frame_tick, speed)) {
     last_frame_tick = clock::ticks();
   }
@@ -225,10 +225,12 @@ void Sprite::render(Renderer* renderer)
   src.x = frame.x;
   src.y = frame.y;
 
+  uint32_t H = renderer->window_size.h;
+
   dst.w = static_cast<int32_t>(frame.w * scale);
   dst.h = static_cast<int32_t>(frame.h * scale);
   dst.x = static_cast<int32_t>(x);
-  dst.y = static_cast<int32_t>(y);
+  dst.y = static_cast<int32_t>(y); // H - (y + dst.h));
 
   renderer->add_texture(texture, src, dst, angle, flip_x, flip_y, absolute_positioning, render_in_foreground);
 }

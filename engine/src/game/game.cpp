@@ -187,7 +187,7 @@ void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
 
 bool Game::process_engine_events()
 {
-  auto current_time_us = clock::ticks();
+  const auto current_time_us = clock::ticks();
 
   frame_delta_us = current_time_us - frame_last_time;
 
@@ -217,8 +217,8 @@ bool Game::process_engine_events()
       last_known_entity_pos[entity] = entity->position();
     }
 
-    if (new_point.y > 1000) {
-      new_point.y = -500;
+    if (new_point.y < -100) {
+      new_point.y = 500;
     }
   }
 
@@ -261,7 +261,7 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
 
   rtree.Search(min_bounds, max_bounds, [](Entity* found, void* context) -> bool
   {
-    ConditionMet* condition = reinterpret_cast<ConditionMet*>(context);
+    const auto condition = reinterpret_cast<ConditionMet*>(context);
     Entity* self = condition->check;
     if (self->guid() == found->guid()) {
       return true;
@@ -294,7 +294,7 @@ void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback cal
 {
   this->spawn_character("raptr", [&, controller_id, callback](auto& character)
   {
-    character->position().y = 0;
+    character->position().y = 500;
     character->flashlight = true;
     character->attach_controller(controllers[controller_id]);
     renderer->camera_follow(character);
@@ -308,7 +308,7 @@ Spawn an entity to the world
 */
 void Game::spawn_staticmesh(const std::string& path, StaticMeshSpawnEvent::Callback callback)
 {
-  StaticMeshSpawnEvent* event = new StaticMeshSpawnEvent();
+  auto event = new StaticMeshSpawnEvent();
   auto g = xg::newGuid();
   event->guid = g.bytes();
   event->path = path;
@@ -321,7 +321,7 @@ Spawn an entity to the world
 */
 void Game::spawn_character(const std::string& path, CharacterSpawnEvent::Callback callback)
 {
-  CharacterSpawnEvent* event = new CharacterSpawnEvent();
+  auto event = new CharacterSpawnEvent();
   auto g = xg::newGuid();
   event->guid = g.bytes();
   event->path = "characters/" + path + ".toml";
@@ -343,7 +343,8 @@ bool Game::init()
   }
 
   config.reset(new Config());
-  gravity_ps2 = -9.82 * meters_to_pixels;
+  gravity_ps2 = -9.8 * meters_to_pixels;
+
 
   if (!this->init_controllers()) {
     logger->error("Failed to initialize controllers");
@@ -494,7 +495,11 @@ bool Game::init_demo()
     renderer->add_foreground(foreground);
   }
 
-  this->spawn_staticmesh("staticmeshes/demo.toml");
+  this->spawn_staticmesh("staticmeshes/demo.toml", [](auto& mesh)
+  {
+    mesh->position().y = 0;
+  });
+
   return true;
 }
 

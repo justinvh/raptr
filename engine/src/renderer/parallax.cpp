@@ -108,8 +108,7 @@ void Parallax::render(Renderer* renderer, const SDL_Rect& clip, int32_t rx)
       transformed_dst.y = static_cast<int32_t>(renderer->logical_size.h - layer.surface->h);
     } else {
       transformed_dst.x -= static_cast<int32_t>(cx * (1.0 - layer.z_index / 100.0)) + rx;
-      transformed_dst.y = static_cast<int32_t>(renderer->logical_size.h - layer.surface->h + clip.y * (layer.
-        z_index / 100.0));
+      transformed_dst.y = static_cast<int32_t>(renderer->logical_size.h - (layer.surface->h + clip.y * (layer.  z_index / 100.0)));
     }
 
     SDL_RenderCopyEx(renderer->sdl.renderer, layer.texture.get(), &layer.bbox, &transformed_dst, 0, nullptr,

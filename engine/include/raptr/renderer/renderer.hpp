@@ -194,6 +194,7 @@ public:
   } sdl;
 
   SDL_Point zero_offset;
+  SDL_Rect window_size;
   SDL_Rect logical_size;
   SDL_Rect desired_size;
   double current_ratio;

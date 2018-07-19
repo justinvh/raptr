@@ -162,7 +162,7 @@ public:
     Initialize the sound engine on a separate thread
     \return Whether the sound engine could be initialized
   */
-  static bool init_sound();
+  bool init_sound();
 
   /*
   */

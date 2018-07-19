@@ -47,7 +47,7 @@ std::vector<Rect> Entity::want_position_y(int64_t delta_us)
   const auto& vel = this->velocity();
   const auto& acc = this->acceleration();
   const auto delta_vel = delta_sec * acc.y;
-  pos.y += -(vel.y + delta_vel / 2.0) * delta_sec;
+  pos.y += vel.y * delta_sec + delta_vel / 2.0 * delta_sec;
 
   std::vector<Rect> rects = this->bbox();
   for (auto& r : rects) {
@@ -142,13 +142,16 @@ bool Entity::intersect_slow(const Entity* other, const Rect& this_bbox) const
   int32_t ox0 = static_cast<int32_t>(cx0 - bx0);
   int32_t oy0 = static_cast<int32_t>(cy0 - by0);
 
+  int32_t th = this_bbox.h - 1;
+  int32_t oh = other_frame->h - 1;
+
   int32_t w = static_cast<int32_t>(cx1 - cx0);
   int32_t h = static_cast<int32_t>(cy1 - cy0);
 
   for (int32_t x = 0; x < w; ++x) {
     for (int32_t y = 0; y < h; ++y) {
-      int32_t this_idx = (this_frame->y + ty0 + y) * this_surface->pitch + (tx0 + x + this_frame->x) * this_bpp;
-      int32_t other_idx = (other_frame->y + oy0 + y) * other_surface->pitch + (ox0 + x + other_frame->x) *
+      int32_t this_idx = (this_frame->y + th - (ty0 + y)) * this_surface->pitch + (tx0 + x + this_frame->x) * this_bpp;
+      int32_t other_idx = (other_frame->y + oh - (oy0 + y)) * other_surface->pitch + (ox0 + x + other_frame->x) *
           other_bpp;
       const uint8_t* this_px = this_pixels + this_idx;
       const uint8_t* other_px = other_pixels + other_idx;

@@ -162,8 +162,57 @@ void Character::think(std::shared_ptr<Game>& game)
     this->on_left_joy(this->last_controller_state);
   }
 
-  float friction = 3000;
+
+
+
+  acc.y = game->gravity_ps2;
   if (in_dash) {
+    acc.y = 0;
+  }
+
+  // External forces, like gravity
+  Rect fall_check = this->want_position_y(delta_us)[0];
+  fall_check.y -= 0.05;
+
+  auto intersected_entity = game->intersect_world(this, fall_check);
+  if (!intersected_entity && !in_dash) {
+    if (fast_fall) {
+      vel.y += fast_fall_scale * game->gravity_ps2 * delta_us / 1e6;
+    } else {
+      vel.y += game->gravity_ps2 * delta_us / 1e6;
+    }
+    fall_time_us += delta_us;
+    falling = true;
+  } else if (!in_dash) {
+    if (falling) {
+      jump_count = 0;
+      jump_time_us = 0;
+      fast_fall = false;
+      //logger->debug("Fell for {}s. Final velocity was {}m/s", fall_time_us / 1e6, vel.y * pixels_to_meters);
+      vel.y = 0;
+
+      float mag_x = std::fabs(vel.x);
+      if (in_dash) {
+        sprite->set_animation("Dash");
+      } else if (mag_x > walk_speed_ps) {
+        sprite->set_animation("Run");
+      } else if (mag_x > 0) {
+        sprite->set_animation("Walk");
+      } else {
+        sprite->set_animation("Idle");
+      }
+    }
+    falling = false;
+    fall_time_us = 0;
+  }
+
+  float friction = 3000;
+
+  if (in_dash) {
+    friction /= 2;
+  }
+
+  if (falling) {
     friction /= 2;
   }
 
@@ -182,56 +231,6 @@ void Character::think(std::shared_ptr<Game>& game)
   }
 
   const auto mag_x = std::fabs(vel.x);
-  if (in_dash) {
-    sprite->set_animation("Dash");
-  } else if (mag_x > walk_speed_ps) {
-    sprite->set_animation("Run");
-  } else if (mag_x > 0) {
-    sprite->set_animation("Walk");
-  } else {
-    sprite->set_animation("Idle");
-  }
-
-  acc.y = game->gravity_ps2;
-  if (in_dash) {
-    acc.y = 0;
-  }
-
-  // External forces, like gravity
-  Rect fall_check = this->want_position_y(delta_us)[0];
-  fall_check.y += 0.05;
-
-  auto intersected_entity = game->intersect_world(this, fall_check);
-  if (!intersected_entity && !in_dash) {
-    if (fast_fall) {
-      vel.y += fast_fall_scale * game->gravity_ps2 * delta_us / 1e6;
-    } else {
-      vel.y += game->gravity_ps2 * delta_us / 1e6;
-    }
-    fall_time_us += delta_us;
-    falling = true;
-  } else if (!in_dash) {
-    if (falling) {
-      jump_count = 0;
-      jump_time_us = 0;
-      fast_fall = false;
-      logger->debug("Fell for {}s. Final velocity was {}m/s", fall_time_us / 1e6, vel.y * pixels_to_meters);
-      vel.y = 0;
-
-      float mag_x = std::fabs(vel.x);
-      if (in_dash) {
-        sprite->set_animation("Dash");
-      } else if (mag_x > walk_speed_ps) {
-        sprite->set_animation("Run");
-      } else if (mag_x > 0) {
-        sprite->set_animation("Walk");
-      } else {
-        sprite->set_animation("Idle");
-      }
-    }
-    falling = false;
-    fall_time_us = 0;
-  }
 
   Rect want_x = this->want_position_x(delta_us)[0];
   Rect want_y = this->want_position_y(delta_us)[0];
@@ -281,7 +280,6 @@ void Character::think(std::shared_ptr<Game>& game)
     intersected_entity = game->intersect_world(this, want_y);
     if (intersected_entity) {
       break;
-  logger->debug("Run speed is {}m/s.", vel.x * meters_to_pixels);
     }
   }
 
@@ -301,6 +299,18 @@ void Character::think(std::shared_ptr<Game>& game)
     }
   }
 
+  if (in_dash) {
+    sprite->set_animation("Dash");
+  } else if (falling) {
+    sprite->set_animation("Jump");
+  } else if (mag_x > walk_speed_ps) {
+    sprite->set_animation("Run");
+  } else if (mag_x > 0) {
+    sprite->set_animation("Walk");
+  } else {
+    sprite->set_animation("Idle");
+  }
+
   sprite->x = pos.x;
   sprite->y = pos.y;
 }
@@ -314,10 +324,9 @@ void Character::walk(float scale)
   }
   vel_exp.x = scale * run_speed_ps;
 
-  logger->debug("Walk speed is {}m/s.", vel.x * pixels_to_meters);
   if (!falling) {
     sprite->set_animation("Walk");
-    sprite->speed = std::fabs(scale * 1.5);
+    sprite->speed = std::fabs(scale * 2.0);
   }
 }
 
@@ -336,11 +345,11 @@ void Character::run(float scale)
   }
   vel_exp.x = scale * run_speed_ps;
 
-  logger->debug("Run speed is {}m/s.", vel.x * pixels_to_meters);
+  //logger->debug("Run speed is {}m/s.", vel.x * pixels_to_meters);
 
   if (!falling) {
     sprite->set_animation("Run");
-    sprite->speed = std::fabs(scale * 1.5);
+    sprite->speed = std::fabs(scale * 2.0);
   }
 }
 
@@ -424,10 +433,10 @@ void Character::render(Renderer* renderer)
   sprite->render(renderer);
 
   if (flashlight) {
-    auto& s1 = sprite->current_animation->current_frame();
-    auto& s2 = flashlight_sprite->current_animation->current_frame();
-    double cx = sprite->x + s1.w / 2.0 - s2.w / 2.0;
-    double cy = sprite->y + s1.h / 2.0 - s2.h / 2.0;
+    const auto& s1 = sprite->current_animation->current_frame();
+    const auto& s2 = flashlight_sprite->current_animation->current_frame();
+    const double cx = sprite->x + s1.w / 2.0 - s2.w / 2.0;
+    const double cy = renderer->window_size.h - sprite->y - s1.h / 2.0 - s2.h / 2.0;
     flashlight_sprite->x = cx;
     flashlight_sprite->y = cy;
     flashlight_sprite->render(renderer);

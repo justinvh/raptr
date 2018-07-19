@@ -9,8 +9,8 @@
 #include <raptr/common/clock.hpp>
 #include <raptr/common/logging.hpp>
 
-constexpr int32_t GAME_WIDTH = 480 * 2;
-constexpr int32_t GAME_HEIGHT = 270 * 2;
+constexpr int32_t GAME_WIDTH = 480 * 1.5;
+constexpr int32_t GAME_HEIGHT = 270 * 1.5;
 
 namespace
 {
@@ -103,6 +103,7 @@ bool Renderer::init(std::shared_ptr<Config>& config)
   logical_size.w = GAME_WIDTH;
   logical_size.h = GAME_HEIGHT;
   desired_size = logical_size;
+  window_size = logical_size;
   current_ratio = 1.0;
   desired_ratio = 1.0;
   frame_counter_time_start = clock::ticks();
@@ -218,7 +219,7 @@ void Renderer::run_frame(bool force_render)
     int32_t min_player = *std::max_element(y_pos.begin(), y_pos.end());
     clip_cam.clip.x = left;
     clip_cam.clip.y = 0;
-    clip_cam.clip.y = y_pos[0] - GAME_HEIGHT + 64;
+    clip_cam.clip.y = 0;
     clip_cam.clip.w = right - left;
     clip_cam.clip.h = logical_size.h;
     clip_cam.left_offset = last_center_offset;
@@ -332,6 +333,9 @@ void Renderer::run_frame(bool force_render)
 
     for (auto w : will_render_middle) {
       auto transformed_dst = w.dst;
+
+      // Invert the coordinate system so up is positive and down is negative
+      transformed_dst.y = GAME_HEIGHT - (transformed_dst.y + transformed_dst.h);
 
       if (!w.absolute_positioning) {
         transformed_dst.x -= clip_cam.clip.x;
