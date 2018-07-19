@@ -14,6 +14,16 @@
 
 namespace raptr
 {
+
+constexpr double magic_feel_good_number = 3;
+constexpr double pixels_to_meters = 0.05 / magic_feel_good_number;
+constexpr double meters_to_pixels = 1.0 / pixels_to_meters;
+constexpr double pixels_to_kilometers = pixels_to_meters / 1e3;
+constexpr double kilometers_to_pixels = 1.0 / pixels_to_kilometers;
+constexpr double pixels_to_feet = pixels_to_meters * 3.28084;
+constexpr double kmh_to_ps = kilometers_to_pixels / 3600.0;
+constexpr double ms_to_ps = meters_to_pixels;
+
 class Game;
 class Sprite;
 class Renderer;

@@ -433,7 +433,7 @@ bool Dialog::think(std::shared_ptr<Game>& game) const
     dst.h = bbox.h;
     dst.x = static_cast<int32_t>(speaker->x + current_frame.w + 16);
     dst.y = 32;
-    renderer->add(texture, bbox, dst, 0.0, false, false, true);
+    renderer->add_texture(texture, bbox, dst, 0.0, false, false, true);
   }
 
   // Name of the Character
@@ -447,7 +447,7 @@ bool Dialog::think(std::shared_ptr<Game>& game) const
     dst.h = bbox.h;
     dst.x = 32;
     dst.y = 8;
-    renderer->add(texture, bbox, dst, 0.0, false, false, true);
+    renderer->add_texture(texture, bbox, dst, 0.0, false, false, true);
   }
 
   // Available choices
@@ -465,7 +465,7 @@ bool Dialog::think(std::shared_ptr<Game>& game) const
       dst.h = bbox.h;
       dst.x = choice_x;
       dst.y = choice_y;
-      renderer->add(texture, bbox, dst, 0.0, false, false, true);
+      renderer->add_texture(texture, bbox, dst, 0.0, false, false, true);
       choice_y += 24;
     }
   }

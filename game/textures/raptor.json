@@ -69,7 +69,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
-    "duration": 200
+    "duration": 500
    },
    {
     "filename": "raptr 8.aseprite",
@@ -265,13 +265,12 @@
   ],
   "layers": [
    { "name": "Layer 4", "opacity": 255, "blendMode": "normal" },
-   { "name": "Layer 3", "opacity": 195, "blendMode": "normal" },
+   { "name": "Layer 3", "opacity": 255, "blendMode": "normal" },
    { "name": "Rear Leg", "opacity": 255, "blendMode": "normal" },
    { "name": "Body", "opacity": 255, "blendMode": "normal" },
    { "name": "Front Leg", "opacity": 255, "blendMode": "normal" },
    { "name": "Tail", "opacity": 255, "blendMode": "normal" },
    { "name": "Head + Neck", "opacity": 255, "blendMode": "normal" },
-   { "name": "Layer 2", "opacity": 255, "blendMode": "normal" },
    { "name": "Arms", "opacity": 255, "blendMode": "normal" },
    { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
   ],

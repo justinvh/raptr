@@ -230,7 +230,7 @@ void Sprite::render(Renderer* renderer)
   dst.x = static_cast<int32_t>(x);
   dst.y = static_cast<int32_t>(y);
 
-  renderer->add(texture, src, dst, angle, flip_x, flip_y, absolute_positioning, render_in_foreground);
+  renderer->add_texture(texture, src, dst, angle, flip_x, flip_y, absolute_positioning, render_in_foreground);
 }
 
 bool Sprite::has_animation(const std::string& name)

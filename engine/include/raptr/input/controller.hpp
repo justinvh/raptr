@@ -130,6 +130,8 @@ public:
   }
 
 public:
+  ControllerState state;
+
   //! List of callbacks that are called when a button down event occurs
   std::vector<ControllerCallbackSortable> button_down_callbacks;
 

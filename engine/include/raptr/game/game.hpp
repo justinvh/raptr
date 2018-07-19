@@ -209,7 +209,7 @@ public:
   fs::path game_root;
 
   //! The gravity of the world
-  double gravity;
+  double gravity_ps2;
 
   //! The number of ms since the last frame
   int64_t frame_delta_us;

@@ -1,5 +1,6 @@
 #include <memory>
 #include <algorithm>
+#include <numeric>
 
 #include <raptr/game/entity.hpp>
 #include <raptr/config.hpp>
@@ -8,8 +9,8 @@
 #include <raptr/common/clock.hpp>
 #include <raptr/common/logging.hpp>
 
-constexpr int32_t GAME_WIDTH = 480;
-constexpr int32_t GAME_HEIGHT = 270;
+constexpr int32_t GAME_WIDTH = 480 * 2;
+constexpr int32_t GAME_HEIGHT = 270 * 2;
 
 namespace
 {
@@ -44,41 +45,41 @@ Renderer::~Renderer()
   }
 }
 
-void Renderer::scale(float ratio)
+void Renderer::scale(const float ratio)
 {
-  int32_t w = GAME_WIDTH * ratio;
-  int32_t h = GAME_HEIGHT * ratio;
+  const int32_t w = GAME_WIDTH * ratio;
+  const int32_t h = GAME_HEIGHT * ratio;
   desired_ratio = ratio;
   desired_size.w = w;
   desired_size.h = h;
   ratio_per_second = (desired_ratio - current_ratio) / 1.0;
 }
 
-void Renderer::scale_to_height(int32_t height)
+void Renderer::scale_to_height(const int32_t height)
 {
-  float ratio = float(height) / GAME_HEIGHT;
-  int32_t w = GAME_WIDTH * ratio;
-  int32_t h = GAME_HEIGHT * ratio;
+  const auto ratio = float(height) / GAME_HEIGHT;
+  const int32_t w = GAME_WIDTH * ratio;
+  const int32_t h = GAME_HEIGHT * ratio;
   desired_ratio = ratio;
   desired_size.w = w;
   desired_size.h = h;
   ratio_per_second = (desired_ratio - current_ratio) / 1.0;
 }
 
-void Renderer::scale_to_width(int32_t width)
+void Renderer::scale_to_width(const int32_t width)
 {
-  float ratio = float(width) / GAME_WIDTH;
-  int32_t w = GAME_WIDTH * ratio;
-  int32_t h = GAME_HEIGHT * ratio;
+  const auto ratio = float(width) / GAME_WIDTH;
+  const int32_t w = GAME_WIDTH * ratio;
+  const int32_t h = GAME_HEIGHT * ratio;
   desired_ratio = ratio;
   desired_size.w = w;
   desired_size.h = h;
   ratio_per_second = (desired_ratio - current_ratio) / 1.0;
 }
 
-bool Renderer::init(std::shared_ptr<Config>& config_)
+bool Renderer::init(std::shared_ptr<Config>& config)
 {
-  config = config_;
+  this->config = config;
 
   fps = 120;
   last_render_time_us = clock::ticks();
@@ -86,6 +87,9 @@ bool Renderer::init(std::shared_ptr<Config>& config_)
   if (is_headless) {
     return true;
   }
+
+  zero_offset.x = 0;
+  zero_offset.y = -GAME_HEIGHT;
 
   // Initialize SDL with some basics
   sdl.window = SDL_CreateWindow("RAPTR", 10, 10, 960, 540, 0);
@@ -117,18 +121,18 @@ void Renderer::run_frame(bool force_render)
     return;
   }
 
-  double ms = (clock::ticks() - last_render_time_us) / 1e3;
+  const auto ms = (clock::ticks() - last_render_time_us) / 1e3;
   last_render_time_us = clock::ticks();
   if (std::fabs(current_ratio - desired_ratio) > 1e-5) {
-    double delta_ratio_ms = ratio_per_second / 1000.0 * ms;
+    const auto delta_ratio_ms = ratio_per_second / 1000.0 * ms;
     current_ratio += delta_ratio_ms;
     if (delta_ratio_ms > 0 && current_ratio > desired_ratio ||
       delta_ratio_ms < 0 && current_ratio < desired_ratio) {
       current_ratio = desired_ratio;
       logical_size = desired_size;
     } else {
-      int32_t w = GAME_WIDTH * current_ratio;
-      int32_t h = GAME_HEIGHT * current_ratio;
+      const int32_t w = GAME_WIDTH * current_ratio;
+      const int32_t h = GAME_HEIGHT * current_ratio;
       logical_size.w = w;
       logical_size.h = h;
     }
@@ -136,7 +140,7 @@ void Renderer::run_frame(bool force_render)
   }
 
   SDL_RenderClear(sdl.renderer);
-  size_t num_entities = entities_followed.size();
+  const auto num_entities = entities_followed.size();
   size_t index = 0;
 
   struct ClipCamera
@@ -213,8 +217,8 @@ void Renderer::run_frame(bool force_render)
 
     int32_t min_player = *std::max_element(y_pos.begin(), y_pos.end());
     clip_cam.clip.x = left;
-    clip_cam.clip.y = GAME_HEIGHT - logical_size.h;
-    //(y_pos[0] + 32) - GAME_HEIGHT; // GAME_HEIGHT - std::accumulate(y_pos.begin(), y_pos.end(), 0) / y_pos.size();
+    clip_cam.clip.y = 0;
+    clip_cam.clip.y = y_pos[0] - GAME_HEIGHT + 64;
     clip_cam.clip.w = right - left;
     clip_cam.clip.h = logical_size.h;
     clip_cam.left_offset = last_center_offset;
@@ -309,7 +313,7 @@ void Renderer::run_frame(bool force_render)
     clip_cam.viewport.x = 0;
     clip_cam.viewport.y = 0;
     clip_cam.viewport.w = clip_cam.clip.w - 1;
-    clip_cam.viewport.h = clip_cam.clip.h;
+    clip_cam.viewport.h = GAME_HEIGHT;
     clippings.push_back(clip_cam);
   }
 
@@ -404,7 +408,7 @@ SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) con
   return SDL_CreateTextureFromSurface(sdl.renderer, surface.get());
 }
 
-void Renderer::add(std::shared_ptr<SDL_Texture>& texture,
+void Renderer::add_texture(std::shared_ptr<SDL_Texture>& texture,
                    SDL_Rect src, SDL_Rect dst,
                    float angle, bool flip_x, bool flip_y,
                    bool absolute_positioning,

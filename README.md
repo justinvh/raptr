@@ -1,8 +1,8 @@
 # Raptr - A Dinosaur Platformer
 
-You're a dinosaur without feathers struggling to understand your place in 
-the world. The humans see you as a threat and a form of entertainment. Maybe 
-it's time you escape. Maybe it's time you find a way out of this all.
+You're a dinosaur. The humans say you are a featherless cousin of the Deinonychus genus, but what do they know. Your buddies just call you Raptr.
+Times are tough. You suspect that the humans only see you as a form of entertainment, yet your friends all seem to be comfortable with their place in the world.
+Maybe it's time that you escape and start fresh. That'll help, right? Maybe it's time you find a way out of this all.
 
 This project is maintained at [GitHub](https://github.com/justinvh/raptr). 
 Additional developer insight and blog can be found at 

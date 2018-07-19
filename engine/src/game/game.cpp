@@ -120,8 +120,8 @@ bool Game::gather_engine_events()
 
 void Game::handle_controller_event(const ControllerEvent& controller_event)
 {
-  const SDL_Event& e = controller_event.sdl_event;
-  const int32_t& controller_id = controller_event.controller_id;
+  const auto& e = controller_event.sdl_event;
+  const auto controller_id = controller_event.controller_id;
 
   // Is this a new character?
   if (e.type == SDL_CONTROLLERBUTTONDOWN &&
@@ -165,19 +165,19 @@ void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
 {
   switch (event->type) {
     case EngineEventType::ControllerEvent: {
-      auto controller_event = reinterpret_cast<ControllerEvent*>(event->data);
+      const auto controller_event = reinterpret_cast<ControllerEvent*>(event->data);
       this->handle_controller_event(*controller_event);
       delete controller_event;
       break;
     }
     case EngineEventType::SpawnCharacter: {
-      auto character_event = reinterpret_cast<CharacterSpawnEvent*>(event->data);
+      const auto character_event = reinterpret_cast<CharacterSpawnEvent*>(event->data);
       this->handle_character_spawn_event(*character_event);
       delete character_event;
       break;
     }
     case EngineEventType::SpawnStaticMesh: {
-      auto staticmesh_event = reinterpret_cast<StaticMeshSpawnEvent*>(event->data);
+      const auto staticmesh_event = reinterpret_cast<StaticMeshSpawnEvent*>(event->data);
       this->handle_static_mesh_spawn_event(*staticmesh_event);
       delete staticmesh_event;
       break;
@@ -294,7 +294,7 @@ void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback cal
 {
   this->spawn_character("raptr", [&, controller_id, callback](auto& character)
   {
-    character->position().y = 1000;
+    character->position().y = 0;
     character->flashlight = true;
     character->attach_controller(controllers[controller_id]);
     renderer->camera_follow(character);
@@ -343,7 +343,7 @@ bool Game::init()
   }
 
   config.reset(new Config());
-  gravity = -4500;
+  gravity_ps2 = -9.82 * meters_to_pixels;
 
   if (!this->init_controllers()) {
     logger->error("Failed to initialize controllers");

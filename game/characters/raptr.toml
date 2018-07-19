@@ -1,14 +1,15 @@
 [character]
 name = "Raptr"
-walk_speed = 100
-run_speed = 300
-jump_vel = 850
+mass_kg = 80.0
+walk_speed_kmh = 14
+run_speed_kmh = 24
+jump_vel_ms = 4
 jumps_allowed = 2
 jump_perfect_scale = 1.50
 fast_fall_scale = 2.5
 dash_scale = 1.25
-dash_speed = 650
-dash_length_ms = 250
+dash_speed_kmh = 40
+dash_length_msec = 150
 
 [sprite]
 path = "textures/raptor.json"

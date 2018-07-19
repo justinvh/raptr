@@ -28,8 +28,7 @@ std::vector<Rect> Entity::want_position_x(int64_t delta_us)
   double dt = delta_us / 1e6;
   Point pos = this->position();
   const Point& vel = this->velocity();
-  const Point& acc = this->acceleration();
-  pos.x += vel.x * dt + 0.5 * acc.x * dt * dt;
+  pos.x += vel.x * dt;
 
   // Need a transformation matrix for this sort of stuff
   std::vector<Rect> rects = this->bbox();
@@ -43,11 +42,13 @@ std::vector<Rect> Entity::want_position_x(int64_t delta_us)
 
 std::vector<Rect> Entity::want_position_y(int64_t delta_us)
 {
-  double dt = delta_us / 1e6;
+  const auto delta_sec = delta_us / 1e6;
   Point pos = this->position();
-  const Point& vel = this->velocity();
-  const Point& acc = this->acceleration();
-  pos.y += -vel.y * dt + -0.5 * acc.y * dt * dt;
+  const auto& vel = this->velocity();
+  const auto& acc = this->acceleration();
+  const auto delta_vel = delta_sec * acc.y;
+  pos.y += -(vel.y + delta_vel / 2.0) * delta_sec;
+
   std::vector<Rect> rects = this->bbox();
   for (auto& r : rects) {
     r.x = pos.x;

@@ -139,11 +139,11 @@ public:
   //! How long the character has been jumping
   int64_t jump_time_us;
 
-  int64_t dash_length_us;
+  int64_t dash_length_usec;
 
-  int64_t dash_time_us;
+  int64_t dash_time_usec;
 
-  int32_t dash_speed;
+  double dash_speed_ps;
 
   //! Current jump count
   uint32_t jump_count;
@@ -155,13 +155,15 @@ public:
   double jump_perfect_scale;
 
   //! The walk speed in pixels/sec
-  int32_t walk_speed;
+  double walk_speed_ps;
 
   //! The run speed in pixels/sec
-  int32_t run_speed;
+  double run_speed_ps;
+
+  double mass_kg;
 
   //! The initial velocity (v(0)) for computing how high the character will jump
-  int32_t jump_vel;
+  double jump_vel_ps;
 
   int32_t bunny_hop_count;
 

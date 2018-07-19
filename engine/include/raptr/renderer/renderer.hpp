@@ -85,7 +85,7 @@ struct Renderable
 
 /*!
   The Renderer is the class that will setup a Window and environment to render.
-  It defines conveniences for creating textures from SDL surfaces, ways to add
+  It defines conveniences for creating textures from SDL surfaces, ways to add_texture
   a renderable object to the screen, and methods for interacting with the window
   itself, such as toggling fullscreen.
 */
@@ -100,7 +100,7 @@ public:
   Renderer(const Renderer&) = default;
   Renderer(Renderer&&) = default;
   ~Renderer();
-
+  
 public:
   /*!
     Add an object to the renderer to be drawn on the screen.
@@ -112,7 +112,7 @@ public:
     /param flip_x - Flip the texture along the X-axis, after the src has been cropped out
     /param flip_y - Flip the texture along the Y-axis, after the sr has been cropped out
   */
-  void add(std::shared_ptr<SDL_Texture>& texture,
+  void add_texture(std::shared_ptr<SDL_Texture>& texture,
            SDL_Rect src, SDL_Rect dst,
            float angle, bool flip_x, bool flip_y,
            bool absolute_positioning = false,
@@ -134,7 +134,8 @@ public:
     Follow an entity so that the camera is centered on it
     /param entity - The entity to follow
   */
-  void camera_follow(std::vector<std::shared_ptr<Entity>> entity);
+  void camera_follow(std::vector<std::shared_ptr<Entity>> entities);
+
   void camera_follow(std::shared_ptr<Entity> entity);
 
   /*!
@@ -157,13 +158,11 @@ public:
   */
   void run_frame(bool force_render = false);
 
-  void scale(float ratio);
+  void scale(const float ratio);
 
-  void scale_to_height(int32_t height);
-  void scale_to_height(float ratio);
+  void scale_to_height(const int32_t height);
 
-  void scale_to_width(int32_t width);
-  void scale_to_width(float ratio);
+  void scale_to_width(const int32_t width);
 
   /*!
     Toggles between a BORDERLESS fullscreen and Window mode
@@ -194,6 +193,7 @@ public:
     SDL_Renderer* renderer;
   } sdl;
 
+  SDL_Point zero_offset;
   SDL_Rect logical_size;
   SDL_Rect desired_size;
   double current_ratio;

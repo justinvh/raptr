@@ -13,8 +13,7 @@ namespace
 auto logger = raptr::_get_logger(__FILE__);
 };
 
-namespace raptr
-{
+namespace raptr {
 void Controller::on_button_down(const ControllerCallback& callback, int32_t priority)
 {
   button_down_callbacks.push_back(std::make_pair(priority, callback));
@@ -39,10 +38,9 @@ void Controller::on_right_joy(const ControllerCallback& callback, int32_t priori
   std::sort(right_joy_callbacks.begin(), right_joy_callbacks.end());
 }
 
-ControllerState state_from_joystick_event(SDL_Joystick* controller, const SDL_Event& e)
+ControllerState state_from_joystick_event(ControllerState& state, SDL_Joystick* controller, const SDL_Event& e)
 {
   float mag[2] = {0.0f, 0.0f};
-  ControllerState state;
 
   int16_t primary_axis = 0;
 
@@ -70,10 +68,19 @@ ControllerState state_from_joystick_event(SDL_Joystick* controller, const SDL_Ev
   state.angle = angle;
   state.joystick = primary_axis;
 
-  if (e.jbutton.button == 0) {
+  return state;
+}
+
+ControllerState state_from_button_event(ControllerState& state, SDL_GameController* controller, const SDL_Event& e)
+{
+  if (e.cbutton.button == SDL_CONTROLLER_BUTTON_A) {
     state.button = Button::a;
-  } else if (e.jbutton.button == 1) {
+  } else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_B) {
     state.button = Button::b;
+  } else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_X) {
+    state.button = Button::x;
+  } else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_Y) {
+    state.button = Button::y;
   } else {
     state.button = Button::not_set;
   }
@@ -81,10 +88,26 @@ ControllerState state_from_joystick_event(SDL_Joystick* controller, const SDL_Ev
   return state;
 }
 
-ControllerState state_from_joystick_event(SDL_GameController* controller, const SDL_Event& e)
+ControllerState state_from_button_event(ControllerState& state, SDL_Joystick* controller, const SDL_Event& e)
+{
+  if (e.jbutton.button == SDL_CONTROLLER_BUTTON_A) {
+    state.button = Button::a;
+  } else if (e.jbutton.button == SDL_CONTROLLER_BUTTON_B) {
+    state.button = Button::b;
+  } else if (e.jbutton.button == SDL_CONTROLLER_BUTTON_X) {
+    state.button = Button::x;
+  } else if (e.jbutton.button == SDL_CONTROLLER_BUTTON_Y) {
+    state.button = Button::y;
+  } else {
+    state.button = Button::not_set;
+  }
+
+  return state;
+}
+
+ControllerState state_from_joystick_event(ControllerState& state, SDL_GameController* controller, const SDL_Event& e)
 {
   float mag[2] = {0.0f, 0.0f};
-  ControllerState state;
 
   int16_t primary_axis = 0;
 
@@ -127,27 +150,14 @@ ControllerState state_from_joystick_event(SDL_GameController* controller, const 
   state.angle = angle;
   state.joystick = primary_axis;
 
-  if (e.cbutton.button == SDL_CONTROLLER_BUTTON_A) {
-    state.button = Button::a;
-  } else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_B) {
-    state.button = Button::b;
-  } else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_X) {
-    state.button = Button::x;
-  } else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_Y) {
-    state.button = Button::y;
-  } else {
-    state.button = Button::not_set;
-  }
-
   return state;
 }
 
 void Controller::process_event(const SDL_Event& e)
 {
-  ControllerState state;
   switch (e.type) {
     case SDL_JOYBUTTONDOWN:
-      state = state_from_joystick_event(sdl.joystick, e);
+      state = state_from_button_event(state, sdl.joystick, e);
       for (auto& callback : button_down_callbacks) {
         // If a callback returns false it means do not bubble
         if (!callback.second(state)) {
@@ -156,7 +166,7 @@ void Controller::process_event(const SDL_Event& e)
       }
       break;
     case SDL_CONTROLLERBUTTONDOWN:
-      state = state_from_joystick_event(sdl.controller, e);
+      state = state_from_button_event(state, sdl.controller, e);
       for (auto& callback : button_down_callbacks) {
         // If a callback returns false it means do not bubble
         if (!callback.second(state)) {
@@ -165,7 +175,7 @@ void Controller::process_event(const SDL_Event& e)
       }
       break;
     case SDL_JOYBUTTONUP:
-      state = state_from_joystick_event(sdl.joystick, e);
+      state = state_from_button_event(state, sdl.joystick, e);
       for (auto& callback : button_up_callbacks) {
         // If a callback returns false it means do not bubble
         if (!callback.second(state)) {
@@ -174,7 +184,7 @@ void Controller::process_event(const SDL_Event& e)
       }
       break;
     case SDL_CONTROLLERBUTTONUP:
-      state = state_from_joystick_event(sdl.controller, e);
+      state = state_from_button_event(state, sdl.controller, e);
       for (auto& callback : button_up_callbacks) {
         // If a callback returns false it means do not bubble
         if (!callback.second(state)) {
@@ -183,7 +193,7 @@ void Controller::process_event(const SDL_Event& e)
       }
       break;
     case SDL_JOYAXISMOTION:
-      state = state_from_joystick_event(sdl.joystick, e);
+      state = state_from_joystick_event(state, sdl.joystick, e);
       // If a callback returns false it means do not bubble
       for (auto& callback : left_joy_callbacks) {
         if (!callback.second(state)) {
@@ -194,7 +204,7 @@ void Controller::process_event(const SDL_Event& e)
     case SDL_CONTROLLERAXISMOTION:
       int16_t axis = static_cast<int16_t>(e.caxis.axis) / 2;
       if (axis == 0 || axis == 1) {
-        state = state_from_joystick_event(sdl.controller, e);
+        state = state_from_joystick_event(state, sdl.controller, e);
         switch (axis) {
           case 0:
             // If a callback returns false it means do not bubble

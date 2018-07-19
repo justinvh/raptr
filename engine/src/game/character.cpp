@@ -30,9 +30,9 @@ Character::Character()
 {
   fast_fall_scale = 1.0;
   jump_perfect_scale = 1.0;
-  walk_speed = 100;
-  run_speed = 100;
-  jump_vel = 100;
+  walk_speed_ps = 100;
+  run_speed_ps = 100;
+  jump_vel_ps = 100;
   fast_fall = false;
   falling = false;
 }
@@ -56,14 +56,15 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
 
   std::string toml_keys[] = {
     "character.name",
-    "character.walk_speed",
-    "character.run_speed",
-    "character.jump_vel",
+    "character.walk_speed_kmh",
+    "character.run_speed_kmh",
+    "character.jump_vel_ms",
+    "character.mass_kg",
     "character.jumps_allowed",
     "character.jump_perfect_scale",
     "character.fast_fall_scale",
-    "character.dash_speed",
-    "character.dash_length_ms",
+    "character.dash_speed_kmh",
+    "character.dash_length_msec",
     "sprite.path",
     "sprite.scale"
   };
@@ -97,9 +98,10 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   character->sprite = Sprite::from_json(sprite_file);
   character->sprite->scale = dict["sprite.scale"]->as<double>();
   character->sprite->set_animation("Idle");
-  character->walk_speed = dict["character.walk_speed"]->as<int32_t>();
-  character->run_speed = dict["character.run_speed"]->as<int32_t>();
-  character->jump_vel = dict["character.jump_vel"]->as<int32_t>();
+  character->walk_speed_ps = dict["character.walk_speed_kmh"]->as<int32_t>() * kmh_to_ps;
+  character->run_speed_ps = dict["character.run_speed_kmh"]->as<int32_t>() * kmh_to_ps;
+  character->jump_vel_ps = dict["character.jump_vel_ms"]->as<int32_t>() * ms_to_ps;
+  character->mass_kg = dict["character.mass_kg"]->as<double>();
 
   character->jumps_allowed = dict["character.jumps_allowed"]->as<int32_t>();
   character->jump_perfect_scale = dict["character.jump_perfect_scale"]->as<double>();
@@ -107,9 +109,9 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   character->sprite->x = 0;
   character->sprite->y = 0;
   character->jump_count = 0;
-  character->dash_speed = dict["character.dash_speed"]->as<int32_t>();
-  character->dash_length_us = dict["character.dash_length_ms"]->as<int32_t>() * 1e3;
-  character->dash_time_us = 0;
+  character->dash_speed_ps = dict["character.dash_speed_kmh"]->as<int32_t>() * kmh_to_ps;
+  character->dash_length_usec = static_cast<int32_t>(dict["character.dash_length_msec"]->as<int32_t>() * 1e3);
+  character->dash_time_usec = 0;
 
   character->do_pixel_collision_test = false;
   if (character->sprite->has_animation("Collision")) {
@@ -138,7 +140,8 @@ void Character::crouch()
 
 void Character::think(std::shared_ptr<Game>& game)
 {
-  int64_t delta_us = game->frame_delta_us;
+  const auto delta_us = game->frame_delta_us;
+  const auto delta_s = delta_us / 1e6;
   auto& vel = this->velocity();
   auto& acc = this->acceleration();
   auto& pos = this->position();
@@ -148,14 +151,14 @@ void Character::think(std::shared_ptr<Game>& game)
   }
 
   bool in_dash = false;
-  if (dash_time_us > 0) {
+  if (dash_time_usec > 0) {
     in_dash = true;
-    dash_time_us += delta_us;
+    dash_time_usec += delta_us;
   }
 
-  if (dash_time_us > dash_length_us) {
+  if (dash_time_usec > dash_length_usec) {
     in_dash = false;
-    dash_time_us = 0;
+    dash_time_usec = 0;
     this->on_left_joy(this->last_controller_state);
   }
 
@@ -178,10 +181,10 @@ void Character::think(std::shared_ptr<Game>& game)
     }
   }
 
-  float mag_x = std::fabs(vel.x);
+  const auto mag_x = std::fabs(vel.x);
   if (in_dash) {
     sprite->set_animation("Dash");
-  } else if (mag_x > walk_speed) {
+  } else if (mag_x > walk_speed_ps) {
     sprite->set_animation("Run");
   } else if (mag_x > 0) {
     sprite->set_animation("Walk");
@@ -189,21 +192,21 @@ void Character::think(std::shared_ptr<Game>& game)
     sprite->set_animation("Idle");
   }
 
-  acc.y = game->gravity;
+  acc.y = game->gravity_ps2;
   if (in_dash) {
     acc.y = 0;
   }
 
   // External forces, like gravity
   Rect fall_check = this->want_position_y(delta_us)[0];
-  fall_check.y += 0.1;
+  fall_check.y += 0.05;
 
   auto intersected_entity = game->intersect_world(this, fall_check);
   if (!intersected_entity && !in_dash) {
     if (fast_fall) {
-      vel.y += fast_fall_scale * game->gravity * delta_us / 1e6;
+      vel.y += fast_fall_scale * game->gravity_ps2 * delta_us / 1e6;
     } else {
-      vel.y += game->gravity * delta_us / 1e6;
+      vel.y += game->gravity_ps2 * delta_us / 1e6;
     }
     fall_time_us += delta_us;
     falling = true;
@@ -212,12 +215,13 @@ void Character::think(std::shared_ptr<Game>& game)
       jump_count = 0;
       jump_time_us = 0;
       fast_fall = false;
+      logger->debug("Fell for {}s. Final velocity was {}m/s", fall_time_us / 1e6, vel.y * pixels_to_meters);
       vel.y = 0;
 
       float mag_x = std::fabs(vel.x);
       if (in_dash) {
         sprite->set_animation("Dash");
-      } else if (mag_x > walk_speed) {
+      } else if (mag_x > walk_speed_ps) {
         sprite->set_animation("Run");
       } else if (mag_x > 0) {
         sprite->set_animation("Walk");
@@ -232,14 +236,15 @@ void Character::think(std::shared_ptr<Game>& game)
   Rect want_x = this->want_position_x(delta_us)[0];
   Rect want_y = this->want_position_y(delta_us)[0];
 
-  int32_t steps_x = static_cast<int32_t>(std::abs(pos.x - want_x.x) / 4 + 1);
-  double delta_x = (pos.x - want_x.x) / double(steps_x);
-  bool intersected = false;
+  const auto steps_x = static_cast<int32_t>(std::abs(pos.x - want_x.x) / 4 + 1);
+  const auto delta_x = (pos.x - want_x.x) / double(steps_x);
+  auto intersected = false;
   want_x.x = pos.x;
-  for (int32_t i = 1; i <= steps_x; ++i) {
+  for (auto i = 1; i <= steps_x; ++i) {
     want_x.x -= delta_x * i;
     intersected |= game->intersect_world(this, want_x) != nullptr;
     if (intersected) {
+
       break;
     }
   }
@@ -262,12 +267,12 @@ void Character::think(std::shared_ptr<Game>& game)
     }
     pos.x = want_x.x;
   } else {
-    dash_time_us = 0;
+    dash_time_usec = 0;
     sprite->set_animation("Idle");
   }
 
-  int32_t steps_y = static_cast<int32_t>(std::abs(pos.y - want_y.y) / 4 + 1);
-  double delta_y = (pos.y - want_y.y) / double(steps_y);
+  const auto steps_y = static_cast<int32_t>(std::abs(pos.y - want_y.y) / 4 + 1);
+  const auto delta_y = (pos.y - want_y.y) / double(steps_y);
   want_y.y = pos.y;
   intersected_entity.reset();
 
@@ -276,13 +281,14 @@ void Character::think(std::shared_ptr<Game>& game)
     intersected_entity = game->intersect_world(this, want_y);
     if (intersected_entity) {
       break;
+  logger->debug("Run speed is {}m/s.", vel.x * meters_to_pixels);
     }
   }
 
   if (!intersected_entity) {
     pos.y = want_y.y;
   } else {
-    Character* character = dynamic_cast<Character*>(intersected_entity.get());
+    const auto character = dynamic_cast<Character*>(intersected_entity.get());
     if (character) {
       auto& ov = intersected_entity->velocity();
       ov.y = vel.y;
@@ -303,10 +309,12 @@ void Character::walk(float scale)
 {
   moving = true;
   auto& vel = this->velocity();
-  if (std::fabs(scale * run_speed) > std::fabs(vel.x)) {
-    vel.x = scale * run_speed;
+  if (std::fabs(scale * run_speed_ps) > std::fabs(vel.x)) {
+    vel.x = scale * run_speed_ps;
   }
-  vel_exp.x = scale * run_speed;
+  vel_exp.x = scale * run_speed_ps;
+
+  logger->debug("Walk speed is {}m/s.", vel.x * pixels_to_meters);
   if (!falling) {
     sprite->set_animation("Walk");
     sprite->speed = std::fabs(scale * 1.5);
@@ -319,14 +327,16 @@ void Character::run(float scale)
   auto& vel = this->velocity();
 
   if (vel.x > 0 && scale < 0 || vel.x < 0 && scale > 0) {
-    dash_time_us = 0;
-    vel.x = scale * run_speed;
+    dash_time_usec = 0;
+    vel.x = scale * run_speed_ps;
   }
 
-  if (std::fabs(scale * run_speed) > std::fabs(vel.x)) {
-    vel.x = scale * run_speed;
+  if (std::fabs(scale * run_speed_ps) > std::fabs(vel.x)) {
+    vel.x = scale * run_speed_ps;
   }
-  vel_exp.x = scale * run_speed;
+  vel_exp.x = scale * run_speed_ps;
+
+  logger->debug("Run speed is {}m/s.", vel.x * pixels_to_meters);
 
   if (!falling) {
     sprite->set_animation("Run");
@@ -338,7 +348,7 @@ void Character::stop()
 {
   moving = false;
   auto& vel = this->velocity();
-  dash_time_us = 0;
+  dash_time_usec = 0;
   vel_exp.x = 0;
   sprite->speed = 1.0;
   if (!falling) {
@@ -387,20 +397,20 @@ bool Character::on_button_down(const ControllerState& state)
   auto& vel = this->velocity();
   auto& acc = this->acceleration();
   if (state.button == Button::a && jump_count < jumps_allowed) {
-    vel.y = jump_vel;
+    vel.y = jump_vel_ps;
     jump_time_us = clock::ticks();
     sprite->set_animation("Jump");
     ++jump_count;
-    dash_time_us = 0;
+    dash_time_usec = 0;
   } else if (state.button == Button::y) {
     sprite->flip_x = !sprite->flip_x;
-  } else if (state.button == Button::x && dash_time_us == 0 && jump_count <= jumps_allowed) {
+  } else if (state.button == Button::x && dash_time_usec == 0 && jump_count <= jumps_allowed) {
     sprite->set_animation("Dash");
-    dash_time_us = 1;
+    dash_time_usec = 1;
     if (sprite->flip_x) {
-      vel.x += dash_speed;
+      vel.x += dash_speed_ps;
     } else {
-      vel.x -= dash_speed;
+      vel.x -= dash_speed_ps;
     }
 
     vel.y = 0;
@@ -467,9 +477,9 @@ void Character::serialize(std::vector<NetField>& list)
     CNF(jump_count),
     CNF(jumps_allowed),
     CNF(jump_perfect_scale),
-    CNF(walk_speed),
-    CNF(run_speed),
-    CNF(jump_vel),
+    CNF(walk_speed_ps),
+    CNF(run_speed_ps),
+    CNF(jump_vel_ps),
     CNF(bunny_hop_count)
   };
 
