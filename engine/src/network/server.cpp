@@ -126,6 +126,8 @@ void Server::run()
   while (!game->shutdown) {
     auto current_time_us = clock::ticks();
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
     if (!is_client && sock && current_time_us - frame_last_time >= sync_rate) {
       this->update_game_state();
       frame_last_time = clock::ticks();

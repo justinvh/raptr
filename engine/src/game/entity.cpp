@@ -2,6 +2,7 @@
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/game/entity.hpp>
 #include <raptr/common/logging.hpp>
+#include <raptr/common/clock.hpp>
 #include <crossguid/guid.hpp>
 
 namespace
@@ -16,6 +17,10 @@ Entity::Entity()
   auto g = xg::newGuid();
   guid_ = g.bytes();
   fall_time_us = 0;
+  collidable = true;
+  think_rate_us = 0;
+  gravity_ps2 = -9.8 * meters_to_pixels;
+  last_think_time_us = clock::ticks();
 }
 
 const std::array<unsigned char, 16>& Entity::guid() const
@@ -63,6 +68,10 @@ bool Entity::intersects(const Entity* other) const
     return false;
   }
 
+  if (!other->collidable || !this->collidable) {
+    return false;
+  }
+
   if (other->do_pixel_collision_test && do_pixel_collision_test) {
     for (auto& other_box : other->bbox()) {
       if (this->intersect_slow(other, other_box)) {
@@ -93,9 +102,18 @@ bool Entity::intersects(const Rect& bbox) const
 
 bool Entity::intersects(const Entity* other, const Rect& bbox) const
 {
-  if (this->do_pixel_collision_test) {
+  if (other->guid() == this->guid()) {
+    return false;
+  }
+
+  if (!other->collidable || !this->collidable) {
+    return false;
+  }
+
+  if (this->do_pixel_collision_test && other->do_pixel_collision_test) {
     return this->intersect_slow(other, bbox);
   }
+
   return this->intersect_fast(bbox);
 }
 
@@ -104,12 +122,12 @@ bool Entity::intersect_slow(const Entity* other, const Rect& this_bbox) const
   auto& this_sprite = this->sprite;
   const auto& this_surface = this_sprite->surface;
   const uint8_t* this_pixels = reinterpret_cast<uint8_t*>(this_surface->pixels);
-  int32_t this_bpp = this_surface->format->BytesPerPixel;
+  const int32_t this_bpp = this_surface->format->BytesPerPixel;
 
   auto& other_sprite = other->sprite;
   const auto& other_surface = other_sprite->surface;
   const uint8_t* other_pixels = reinterpret_cast<uint8_t*>(other_surface->pixels);
-  int32_t other_bpp = other_surface->format->BytesPerPixel;
+  const int32_t other_bpp = other_surface->format->BytesPerPixel;
 
   auto& this_pos = this->position();
   auto& other_pos = other->position();
@@ -168,24 +186,26 @@ bool Entity::intersect_slow(const Rect& other_box) const
 {
   const auto& surface = sprite->surface;
   const uint8_t* pixels = reinterpret_cast<uint8_t*>(surface->pixels);
-  int32_t bpp = surface->format->BytesPerPixel;
+  const int32_t bpp = surface->format->BytesPerPixel;
 
   auto& pos = this->position();
   auto& frame = collision_frame;
 
   // x0 position
-  int32_t x0_min = static_cast<int32_t>(std::max(other_box.x, pos.x));
-  int32_t x0_max = static_cast<int32_t>(std::min(other_box.x + other_box.w,
-                                                 pos.x + frame->w - 1));
+  const auto x0_min = static_cast<int32_t>(std::max(other_box.x, pos.x));
+  const auto x0_max = static_cast<int32_t>(std::min(other_box.x + other_box.w,
+                                                    pos.x + frame->w - 1));
 
   // y0 position
-  int32_t y0_min = static_cast<int32_t>(std::max(other_box.y, pos.y));
-  int32_t y0_max = static_cast<int32_t>(std::min(other_box.y + other_box.h,
-                                                 pos.y + frame->h - 1));
+  const auto y0_min = static_cast<int32_t>(std::max(other_box.y, pos.y));
+  const auto y0_max = static_cast<int32_t>(std::min(other_box.y + other_box.h,
+                                                    pos.y + frame->h - 1));
+
+  int32_t th = surface->h;
 
   for (int32_t x0 = x0_min; x0 <= x0_max; ++x0) {
     for (int32_t y0 = y0_min; y0 <= y0_max; ++y0) {
-      int32_t idx = (frame->y + y0) * surface->pitch + (x0 + frame->x) * bpp;
+      const int32_t idx = (frame->y + th - y0) * surface->pitch + (x0 + frame->x) * bpp;
       const uint8_t* px = pixels + idx;
       if (*px > 0) {
         return true;

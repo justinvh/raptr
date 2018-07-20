@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     raptr::Server server("127.0.0.1:7272");
     server.fps = 20;
 
-    std::string game_root = options["game"].as<std::string>();
+    const std::string game_root = options["game"].as<std::string>();
     auto game = raptr::Game::create(game_root);
     server.attach(game);
 
@@ -46,9 +46,8 @@ int main(int argc, char** argv)
     server.run();
   }
 
-  uint32_t time_end_ms = SDL_GetTicks();
-
-  uint32_t time_played = (time_end_ms - time_start_ms) / 1000.0;
+  const auto time_end_ms = SDL_GetTicks();
+  const auto time_played = static_cast<uint32_t>((time_end_ms - time_start_ms) / 1000.0);
 
   logger->info("Okay, quitting. You played for {}s. Bye Bye. Press enter to exit.", time_played);
   std::cin.get();

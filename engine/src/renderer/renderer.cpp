@@ -9,8 +9,8 @@
 #include <raptr/common/clock.hpp>
 #include <raptr/common/logging.hpp>
 
-constexpr int32_t GAME_WIDTH = 480 * 1.5;
-constexpr int32_t GAME_HEIGHT = 270 * 1.5;
+constexpr int32_t GAME_WIDTH = 720;
+constexpr int32_t GAME_HEIGHT = 405;
 
 namespace
 {
@@ -47,8 +47,8 @@ Renderer::~Renderer()
 
 void Renderer::scale(const float ratio)
 {
-  const int32_t w = GAME_WIDTH * ratio;
-  const int32_t h = GAME_HEIGHT * ratio;
+  const auto w = static_cast<int32_t>(GAME_WIDTH * ratio);
+  const auto h = static_cast<int32_t>(GAME_HEIGHT * ratio);
   desired_ratio = ratio;
   desired_size.w = w;
   desired_size.h = h;
@@ -58,8 +58,8 @@ void Renderer::scale(const float ratio)
 void Renderer::scale_to_height(const int32_t height)
 {
   const auto ratio = float(height) / GAME_HEIGHT;
-  const int32_t w = GAME_WIDTH * ratio;
-  const int32_t h = GAME_HEIGHT * ratio;
+  const auto w = static_cast<int32_t>(GAME_WIDTH * ratio);
+  const auto h = static_cast<int32_t>(GAME_HEIGHT * ratio);
   desired_ratio = ratio;
   desired_size.w = w;
   desired_size.h = h;
@@ -69,8 +69,8 @@ void Renderer::scale_to_height(const int32_t height)
 void Renderer::scale_to_width(const int32_t width)
 {
   const auto ratio = float(width) / GAME_WIDTH;
-  const int32_t w = GAME_WIDTH * ratio;
-  const int32_t h = GAME_HEIGHT * ratio;
+  const auto w = static_cast<int32_t>(GAME_WIDTH * ratio);
+  const auto h = static_cast<int32_t>(GAME_HEIGHT * ratio);
   desired_ratio = ratio;
   desired_size.w = w;
   desired_size.h = h;
@@ -132,8 +132,8 @@ void Renderer::run_frame(bool force_render)
       current_ratio = desired_ratio;
       logical_size = desired_size;
     } else {
-      const int32_t w = GAME_WIDTH * current_ratio;
-      const int32_t h = GAME_HEIGHT * current_ratio;
+      const auto w = static_cast<int32_t>(GAME_WIDTH * current_ratio);
+      const auto h = static_cast<int32_t>(GAME_HEIGHT * current_ratio);
       logical_size.w = w;
       logical_size.h = h;
     }
@@ -144,12 +144,7 @@ void Renderer::run_frame(bool force_render)
   const auto num_entities = entities_followed.size();
   size_t index = 0;
 
-  struct ClipCamera
-  {
-    SDL_Rect clip, viewport;
-    int32_t left_offset;
-    std::vector<std::shared_ptr<Entity>> contains;
-  };
+  
 
   // Determine the cameras
   std::vector<ClipCamera> hclippings;
@@ -260,41 +255,22 @@ void Renderer::run_frame(bool force_render)
   for (const auto& clip_cam : clippings) {
     SDL_RenderSetViewport(sdl.renderer, &clip_cam.viewport);
 
-    SDL_Rect bg_clip = clip_cam.clip;
+    auto bg_clip = clip_cam.clip;
     bg_clip.x -= clip_cam.left_offset;
     for (auto& background : backgrounds) {
       background->render(this, bg_clip, clip_cam.left_offset);
     }
 
-    for (auto w : will_render_middle) {
-      auto transformed_dst = w.dst;
-
-      // Invert the coordinate system so up is positive and down is negative
-      transformed_dst.y = GAME_HEIGHT - (transformed_dst.y + transformed_dst.h);
-
-      if (!w.absolute_positioning) {
-        transformed_dst.x -= clip_cam.clip.x;
-        transformed_dst.y -= clip_cam.clip.y;
-      }
-
-      SDL_RenderCopyEx(sdl.renderer, w.texture.get(), &w.src, &transformed_dst,
-                       w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
+    for (const auto& w : will_render_middle) {
+      w->render(this, clip_cam);
     }
 
     for (auto& foreground : foregrounds) {
       foreground->render(this, bg_clip, clip_cam.left_offset);
     }
 
-    for (auto w : will_render_foreground) {
-      auto transformed_dst = w.dst;
-
-      if (!w.absolute_positioning) {
-        transformed_dst.x -= clip_cam.clip.x;
-        transformed_dst.y -= clip_cam.clip.y;
-      }
-
-      SDL_RenderCopyEx(sdl.renderer, w.texture.get(), &w.src, &transformed_dst,
-                       w.angle, nullptr, static_cast<SDL_RendererFlip>(w.flip_mask()));
+    for (const auto& w : will_render_foreground) {
+      w->render(this, clip_cam);
     }
     ++index;
   }
@@ -307,10 +283,10 @@ void Renderer::run_frame(bool force_render)
   ++total_frames_rendered;
   
   if (clock::ticks() - frame_counter_time_start >= 5e6) {
-    double secs = (clock::ticks() - frame_counter_time_start) / 1e6;
+    const auto secs = (clock::ticks() - frame_counter_time_start) / 1e6;
     logger->debug("FPS = {} (target={}) ({} frames in {}s)", frame_counter / secs, fps, frame_counter, secs);
     frame_counter_time_start = clock::ticks();
-    frame_fps = frame_counter / secs;
+    frame_fps = static_cast<float>(frame_counter / secs);
     frame_counter = 1;
   }
 }
@@ -358,7 +334,31 @@ void Renderer::add_texture(std::shared_ptr<SDL_Texture>& texture,
     return;
   }
 
-  Renderable renderable = {texture, src, dst, angle, flip_x, flip_y, absolute_positioning};
+  std::shared_ptr<RenderableTexture> renderable(new RenderableTexture);
+  renderable->texture = texture;
+  renderable->src = src;
+  renderable->dst = dst;
+  renderable->angle = angle;
+  renderable->flip_x = flip_x;
+  renderable->flip_y = flip_y;
+  renderable->absolute_positioning = absolute_positioning;
+
+  if (render_in_foreground) {
+    will_render_foreground.push_back(renderable);
+  } else {
+    will_render_middle.push_back(renderable);
+  }
+}
+
+void Renderer::add_rect(SDL_Rect rect, SDL_Color color,
+                        bool absolute_positioning,
+                        bool render_in_foreground)
+{
+  std::shared_ptr<RenderableRect> renderable(new RenderableRect);
+  renderable->rect = rect;
+  renderable->color = color;
+  renderable->absolute_positioning = absolute_positioning;
+
   if (render_in_foreground) {
     will_render_foreground.push_back(renderable);
   } else {
@@ -375,4 +375,38 @@ void Renderer::add_foreground(std::shared_ptr<Parallax>& foreground)
 {
   foregrounds.push_back(foreground);
 }
+
+void RenderableTexture::render(Renderer* renderer, const ClipCamera& camera)
+{
+  auto transformed_dst = dst;
+
+  transformed_dst.y = GAME_HEIGHT - (transformed_dst.y + transformed_dst.h);
+
+  if (!absolute_positioning) {
+    transformed_dst.x -= camera.clip.x;
+    transformed_dst.y -= camera.clip.y;
+  }
+
+  SDL_RenderCopyEx(renderer->sdl.renderer, texture.get(), &src, 
+                   &transformed_dst, angle, nullptr, 
+                   static_cast<SDL_RendererFlip>(flip_mask()));
+}
+
+void RenderableRect::render(Renderer* renderer, const ClipCamera& camera)
+{
+  auto transformed_dst = rect;
+
+  transformed_dst.y = GAME_HEIGHT - (transformed_dst.y + transformed_dst.h);
+
+  if (!absolute_positioning) {
+    transformed_dst.x -= camera.clip.x;
+    transformed_dst.y -= camera.clip.y;
+  }
+
+  const auto sdl_rend = renderer->sdl.renderer;
+  SDL_SetRenderDrawColor(sdl_rend, color.r, color.g, color.b, color.a);
+  SDL_RenderDrawRect(sdl_rend, &transformed_dst);
+}
+
+
 } // namespace raptr

@@ -21,6 +21,12 @@ struct Point
 //! A double precision rectangle
 struct Rect
 {
+  Rect() = default;
+  Rect(double x_, double y_, double w_, double h_)
+    : x(x_), y(y_), w(w_), h(h_)
+  {
+  }
+
   double x, y, w, h;
 
   bool operator==(const Rect& other) const

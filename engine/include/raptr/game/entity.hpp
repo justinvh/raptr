@@ -175,11 +175,16 @@ public:
   bool deserialize(const std::vector<NetField>& fields) override = 0;
 
 public:
+  double gravity_ps2;
+
   //! The name of the entity
   std::string name;
 
   //! The unique ID of the entity
   std::array<unsigned char, 16> guid_;
+
+  //! Is collision possible?
+  bool collidable;
 
   //! The current position
   Point pos_;
@@ -201,5 +206,8 @@ public:
 
   //! Specific frame used for collisions
   AnimationFrame* collision_frame;
+
+  int64_t think_rate_us;
+  int64_t last_think_time_us;
 };
 } // namespace raptr

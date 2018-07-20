@@ -10,6 +10,7 @@
 #include <raptr/config.hpp>
 #include <raptr/game/character.hpp>
 #include <raptr/game/game.hpp>
+#include <raptr/game/trigger.hpp>
 #include <raptr/input/controller.hpp>
 #include <raptr/renderer/parallax.hpp>
 #include <raptr/renderer/renderer.hpp>
@@ -41,7 +42,7 @@ std::shared_ptr<Game> Game::create(const fs::path& game_root)
 
 std::shared_ptr<Game> Game::create_headless(const fs::path& game_root)
 {
-  fs::path full_path = fs::absolute(game_root);
+  auto const full_path = fs::absolute(game_root);
   auto game = std::shared_ptr<Game>(new Game(full_path));
   game->is_headless = true;
   if (!game->is_init) {
@@ -161,6 +162,14 @@ void Game::handle_mesh_static_spawn_event(const MeshStaticSpawnEvent& event)
   event.callback(mesh);
 }
 
+void Game::handle_trigger_spawn_event(const TriggerSpawnEvent& event)
+{
+  auto trigger = Trigger::from_params(event.rect);
+  trigger->guid_ = event.guid;
+  this->spawn_now(trigger);
+  event.callback(trigger);
+}
+
 void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
 {
   switch (event->type) {
@@ -182,6 +191,15 @@ void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
       delete staticmesh_event;
       break;
     }
+    case EngineEventType::SpawnTrigger: {
+      const auto trigger_event = reinterpret_cast<TriggerSpawnEvent*>(event->data);
+      this->handle_trigger_spawn_event(*trigger_event);
+      delete trigger_event;
+      break;
+    }
+    default: {
+      logger->info("Unhandled event type: {}", static_cast<int32_t>(event->type));
+    }
   }
 }
 
@@ -199,8 +217,9 @@ bool Game::process_engine_events()
     this->dispatch_event(engine_event);
   }
 
+  auto this_ptr = this->shared_from_this();
   for (auto& entity : entities) {
-    entity->think(this->shared_from_this());
+    entity->think(this_ptr);
 
     const Point& old_point = last_known_entity_pos[entity];
     Point& new_point = entity->position();
@@ -242,7 +261,8 @@ bool Game::run()
   return true;
 }
 
-std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
+std::vector<std::shared_ptr<Entity>> Game::intersect_entities(
+  Entity* entity, const Rect& bbox, IntersectEntityFilter post_filter, size_t limit)
 {
   double min_bounds[2] = {bbox.x, bbox.y};
   double max_bounds[2] = {bbox.x + bbox.w, bbox.y + bbox.h};
@@ -251,20 +271,27 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
   {
     Entity* check;
     Rect bbox;
-    Entity* found;
+    size_t limit;
+    std::vector<Entity*> found;
     bool intersected;
+    IntersectEntityFilter post_filter;
   } condition_met;
 
   condition_met.check = entity;
   condition_met.intersected = false;
   condition_met.bbox = bbox;
-  condition_met.found = nullptr;
+  condition_met.post_filter = post_filter;
+  condition_met.limit = limit;
 
   rtree.Search(min_bounds, max_bounds, [](Entity* found, void* context) -> bool
   {
     const auto condition = reinterpret_cast<ConditionMet*>(context);
     Entity* self = condition->check;
     if (self->guid() == found->guid()) {
+      return true;
+    }
+
+    if (!found->collidable) {
       return true;
     }
 
@@ -275,20 +302,71 @@ std::shared_ptr<Entity> Game::intersect_world(Entity* entity, const Rect& bbox)
       has_intersection = self->intersects(condition->bbox);
     }
 
-    if (has_intersection) {
+    if (has_intersection && condition->post_filter(found)) {
       condition->intersected = true;
-      condition->found = found;
-      return false;
+      condition->found.push_back(found);
+
+      if (condition->limit > 0 && condition->found.size() >= condition->limit) {
+        return false;
+      }
     }
 
     return true;
   }, reinterpret_cast<void*>(&condition_met));
 
   if (condition_met.intersected) {
-    return entity_lut[condition_met.found->guid()];
+    std::vector<std::shared_ptr<Entity>> entities_found;
+
+    for (auto& found : condition_met.found) {
+      entities_found.push_back(entity_lut[found->guid()]);
+    }
+
+    return entities_found;
   }
 
-  return nullptr;
+  return {};
+}
+
+std::shared_ptr<Entity> Game::intersect_entity(Entity* entity, const Rect& bbox, IntersectEntityFilter post_filter)
+{
+  auto found = this->intersect_entities(entity, bbox, post_filter, 1);
+  if (found.empty()) {
+    return nullptr;
+  }
+
+  return found[0];
+}
+
+std::vector<std::shared_ptr<Character>> Game::intersect_characters(
+  Entity* entity, const Rect& bbox, IntersectCharacterFilter post_filter, size_t limit)
+{
+  IntersectEntityFilter combined_filter = [&](const Entity* entity) -> bool
+  {
+    auto character = dynamic_cast<const Character*>(entity);
+    if (!character) {
+      return false;
+    }
+
+    return post_filter(character);
+  };
+
+  std::vector<std::shared_ptr<Character>> characters;
+  for (auto& found : this->intersect_entities(entity, bbox, combined_filter, limit)) {
+    characters.push_back(std::dynamic_pointer_cast<Character>(found));
+  }
+
+  return characters;
+}
+
+std::shared_ptr<Character> Game::intersect_character(
+  Entity* entity, const Rect& bbox, IntersectCharacterFilter post_filter)
+{
+  auto found = this->intersect_characters(entity, bbox, post_filter, 1);
+  if (found.empty()) {
+    return nullptr;
+  }
+
+  return found[0];
 }
 
 void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback callback)
@@ -328,6 +406,19 @@ void Game::spawn_character(const std::string& path, CharacterSpawnEvent::Callbac
   event->path = "characters/" + path + ".toml";
   event->callback = callback;
   this->add_event<CharacterSpawnEvent>(event);
+}
+
+/*!
+Spawn a trigger to the world
+*/
+void Game::spawn_trigger(const Rect& rect, TriggerSpawnEvent::Callback callback)
+{
+  auto event = new TriggerSpawnEvent();
+  auto g = xg::newGuid();
+  event->guid = g.bytes();
+  event->rect = rect;
+  event->callback = callback;
+  this->add_event<TriggerSpawnEvent>(event);
 }
 
 bool Game::init()
@@ -458,18 +549,16 @@ bool Game::init_controllers()
   }
 
   for (int32_t i = 0; i < SDL_NumJoysticks(); ++i) {
-    auto controller = Controller::open(game_path, i);
+    const auto controller = Controller::open(game_path, i);
     controllers[controller->id()] = controller;
   }
 
   return !controllers.empty();
 }
 
-void Game::spawn_now(std::shared_ptr<Entity> entity)
+void Game::spawn_now(const std::shared_ptr<Entity>& entity)
 {
   auto& pos = entity->position();
-  pos.x = 0;
-  pos.y = 0;
 
   const auto& bounds = entity->bounds();
   last_known_entity_pos[entity] = entity->position();
@@ -492,10 +581,33 @@ bool Game::init_demo()
     renderer->add_background(background);
   }
 
+  /*
   auto foreground = Parallax::from_toml(game_path.from_root("foreground/nightsky.toml"));
   if (foreground) {
     renderer->add_foreground(foreground);
   }
+  */
+
+  this->spawn_trigger({100, 0, 256, 512}, [&](auto& trigger)
+  {
+    trigger->on_enter = [&](std::shared_ptr<Character>& character, Trigger* trigger)
+    {
+      character->gravity_ps2 = -gravity_ps2;
+    };
+
+    trigger->on_exit = [&](std::shared_ptr<Character>& character, Trigger* trigger)
+    {
+      character->gravity_ps2 = gravity_ps2;
+    };
+  });
+
+  this->spawn_trigger({500, 10, 64, 64}, [](auto& trigger)
+  {
+    trigger->on_enter = [](std::shared_ptr<Character>& character, Trigger* trigger)
+    {
+      character->velocity().y += 25 * kmh_to_ps;
+    };
+  });
 
   this->spawn_mesh_static("mesh-static/demo/demo.toml", [](auto& mesh)
   {
@@ -567,9 +679,9 @@ bool Game::init_lua()
 
 void Game::serialize(std::vector<NetField>& list)
 {
-  for (int i = 0; i < entities.size(); ++i) {
+  for (size_t i = 0; i < entities.size(); ++i) {
     auto& entity = entities[i];
-    const char* uid = reinterpret_cast<const char*>(&entity->guid()[0]);
+    const auto uid = reinterpret_cast<const char*>(&entity->guid()[0]);
     list.push_back(
       {"EntityMarker", NetFieldType::EntityMarker, 0, sizeof(unsigned char) * 16, uid}
     );

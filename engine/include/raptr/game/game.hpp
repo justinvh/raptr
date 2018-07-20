@@ -29,6 +29,9 @@ class Entity;
 class Renderer;
 class Sound;
 
+using IntersectEntityFilter = std::function<bool(const Entity*)>;
+using IntersectCharacterFilter = std::function<bool(const Character*)>;
+
 /*!
   The Game is a class that ties together the Renderer, Sound, Input, and Entities
   into one cohesive interaction. It can be thought of the main loop of the application
@@ -76,6 +79,8 @@ public:
 
   void handle_mesh_static_spawn_event(const MeshStaticSpawnEvent& event);
 
+  void handle_trigger_spawn_event(const TriggerSpawnEvent& event);
+
 public:
   /*!
     Returns true if a given entity can teleport to a region defined by a bounding box
@@ -83,9 +88,21 @@ public:
     \param bbox - The bounding box that the entity wants to teleport to
     \return The first entity that the object intersected or null if nothing
   */
-  std::shared_ptr<Entity> intersect_world(Entity* entity, const Rect& bbox);
+  std::shared_ptr<Entity> intersect_entity(Entity* entity, const Rect& bbox,
+                                           IntersectEntityFilter post_filter = [](const Entity*) -> bool { return true;  });
 
-  void spawn_now(std::shared_ptr<Entity> entity);
+  std::vector<std::shared_ptr<Entity>> intersect_entities(Entity* entity, const Rect& bbox,
+    IntersectEntityFilter post_filter = [](const Entity*) -> bool { return true; },
+    size_t limit = 0);
+
+  std::shared_ptr<Character> intersect_character(Entity* entity, const Rect& bbox, 
+                                                 IntersectCharacterFilter post_filter = [](const Character*) -> bool { return true;  });
+
+  std::vector<std::shared_ptr<Character>> intersect_characters(Entity* entity, const Rect& bbox,
+    IntersectCharacterFilter post_filter = [](const Character*) -> bool { return true; },
+    size_t limit = 0);
+
+  void spawn_now(const std::shared_ptr<Entity>& entity);
 
   /*!
     Spawn an entity to the world
@@ -110,6 +127,13 @@ public:
                     CharacterSpawnEvent::Callback callback = [](auto& a)
                     {
                     });
+
+  /*
+   */
+  void spawn_trigger(const Rect& rect,
+                     TriggerSpawnEvent::Callback callback = [](auto& a)
+                     {
+                     });
 
   /*!
     Run the game and manage maintaining a healthy FPS

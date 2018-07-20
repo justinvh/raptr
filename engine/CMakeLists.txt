@@ -11,6 +11,7 @@ set(RAPTR_CPP
     src/game/entity.cpp
     src/game/game.cpp
     src/game/map.cpp
+    src/game/trigger.cpp
 
     # Input sources
     src/input/controller.cpp
@@ -48,6 +49,7 @@ set(RAPTR_HPP
     include/raptr/game/entity.hpp
     include/raptr/game/game.hpp
     include/raptr/game/map.hpp
+    include/raptr/game/trigger.hpp
 
     # Input headers
     include/raptr/input/controller.hpp

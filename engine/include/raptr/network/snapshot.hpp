@@ -9,6 +9,7 @@
 #include <functional>
 
 #include <raptr/common/clock.hpp>
+#include <raptr/common/rect.hpp>
 
 #include <SDL_events.h>
 
@@ -17,6 +18,7 @@ namespace raptr
 constexpr size_t MAX_SNAPSHOT_BUFFER_SIZE = 4096;
 typedef std::array<unsigned char, 16> GUID;
 
+class Trigger;
 class Character;
 class MeshStatic;
 class MeshDynamic;
@@ -27,6 +29,7 @@ enum class NetFieldType
   Character,
   MeshStatic,
   MeshDynamic,
+  Trigger,
   Map,
 };
 
@@ -35,7 +38,8 @@ enum class EngineEventType
   ControllerEvent,
   SpawnCharacter,
   SpawnMeshStatic,
-  SpawnMeshDynamic
+  SpawnMeshDynamic,
+  SpawnTrigger,
 };
 
 struct ControllerEvent
@@ -60,6 +64,15 @@ struct MeshStaticSpawnEvent
   typedef std::function<void(std::shared_ptr<MeshStatic>&)> Callback;
   static const EngineEventType event_type = EngineEventType::SpawnMeshStatic;
   std::string path;
+  GUID guid;
+  Callback callback;
+};
+
+struct TriggerSpawnEvent
+{
+  typedef std::function<void(std::shared_ptr<Trigger>&)> Callback;
+  static const EngineEventType event_type = EngineEventType::SpawnTrigger;
+  Rect rect;
   GUID guid;
   Callback callback;
 };

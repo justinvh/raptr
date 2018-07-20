@@ -29,11 +29,37 @@ namespace raptr
 class Config;
 class Entity;
 class Parallax;
+class Renderer;
 
 struct Camera
 {
   SDL_Point pos;
   int32_t left, right, top, bottom;
+};
+
+struct ClipCamera
+{
+  SDL_Rect clip, viewport;
+  int32_t left_offset;
+  std::vector<std::shared_ptr<Entity>> contains;
+};
+
+class Renderable
+{
+public:
+  virtual ~Renderable() = default;
+  virtual void render(Renderer* renderer, const ClipCamera& camera) = 0;
+  bool absolute_positioning;
+};
+
+class RenderableRect : public Renderable
+{
+public:
+  SDL_Rect rect;
+  SDL_Color color;
+
+public:
+  void render(Renderer* renderer, const ClipCamera& camera) override;
 };
 
 /*!
@@ -42,8 +68,9 @@ struct Camera
   of where it will be blitted on the screen. Additionally, if the texture should
   be flipped or rotated.
 */
-struct Renderable
+class RenderableTexture : public Renderable
 {
+public:
   //! The SDL texture that was generated, for examples see the Sprite class
   std::shared_ptr<SDL_Texture> texture;
 
@@ -61,9 +88,6 @@ struct Renderable
 
   //! Flip the texture along the Y-axis, after the sr has been cropped out
   bool flip_y;
-
-  //! Positioning
-  bool absolute_positioning;
 
   /*!
     Convenience method to translate the flip booleans into SDL masks
@@ -83,6 +107,8 @@ struct Renderable
     }
     return out;
   }
+
+  void render(Renderer* renderer, const ClipCamera& camera) override;
 };
 
 /*!
@@ -119,6 +145,10 @@ public:
            float angle, bool flip_x, bool flip_y,
            bool absolute_positioning = false,
            bool render_in_foreground = false);
+
+  void add_rect(SDL_Rect dst, SDL_Color color, 
+                bool absolute_positioning = false, 
+                bool render_in_foreground = false);
 
   /*!
     Add a background to be rendered, these are special as the rendering call is dependent on the viewport
@@ -205,8 +235,8 @@ public:
 
   //! A list of Renderable objects that will be rendered on the next run_frame()
   std::vector<std::shared_ptr<Entity>> observing;
-  std::vector<Renderable> will_render_middle;
-  std::vector<Renderable> will_render_foreground;
+  std::vector<std::shared_ptr<Renderable>> will_render_middle;
+  std::vector<std::shared_ptr<Renderable>> will_render_foreground;
   std::vector<std::shared_ptr<Entity>> entities_followed;
   std::vector<std::shared_ptr<Parallax>> backgrounds;
   std::vector<std::shared_ptr<Parallax>> foregrounds;

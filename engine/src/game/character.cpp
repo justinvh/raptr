@@ -171,7 +171,12 @@ bool Character::on_button_down(const ControllerState& state)
   auto& vel = this->velocity();
   auto& acc = this->acceleration();
   if (state.button == Button::a && jump_count < jumps_allowed) {
-    vel.y = jump_vel_ps;
+    if (gravity_ps2 < 0) {
+      vel.y = jump_vel_ps;
+    } else {
+      vel.y = -jump_vel_ps;
+    }
+
     jump_time_us = clock::ticks();
     sprite->set_animation("Jump");
     ++jump_count;
@@ -337,24 +342,27 @@ void Character::think(std::shared_ptr<Game>& game)
     this->on_left_joy(this->last_controller_state);
   }
 
-
-
-
-  acc.y = game->gravity_ps2;
+  acc.y = gravity_ps2;
   if (in_dash) {
     acc.y = 0;
   }
 
   // External forces, like gravity
   Rect fall_check = this->want_position_y(delta_us)[0];
-  fall_check.y -= 0.05;
+  if (gravity_ps2 < 0) {
+    fall_check.y -= 0.05;
+    this->sprite->flip_y = false;
+  } else {
+    fall_check.y += 0.05;
+    this->sprite->flip_y = true;
+  }
 
-  auto intersected_entity = game->intersect_world(this, fall_check);
+  auto intersected_entity = game->intersect_entity(this, fall_check);
   if (!intersected_entity && !in_dash) {
     if (fast_fall) {
-      vel.y += fast_fall_scale * game->gravity_ps2 * delta_us / 1e6;
+      vel.y += fast_fall_scale * gravity_ps2 * delta_us / 1e6;
     } else {
-      vel.y += game->gravity_ps2 * delta_us / 1e6;
+      vel.y += gravity_ps2 * delta_us / 1e6;
     }
     fall_time_us += delta_us;
     falling = true;
@@ -416,7 +424,7 @@ void Character::think(std::shared_ptr<Game>& game)
   want_x.x = pos.x;
   for (auto i = 1; i <= steps_x; ++i) {
     want_x.x -= delta_x * i;
-    intersected |= game->intersect_world(this, want_x) != nullptr;
+    intersected |= game->intersect_entity(this, want_x) != nullptr;
     if (intersected) {
 
       break;
@@ -435,7 +443,7 @@ void Character::think(std::shared_ptr<Game>& game)
     // Is there something above us?
     Rect above_check = this->want_position_y(delta_us)[0];
     above_check.y -= 1;
-    auto& intersected = game->intersect_world(this, above_check);
+    auto intersected = game->intersect_entity(this, above_check);
     Character* character = dynamic_cast<Character*>(intersected.get());
     if (character && !character->moving) {
       auto& ov = intersected->velocity();
@@ -455,7 +463,7 @@ void Character::think(std::shared_ptr<Game>& game)
 
   for (int32_t i = 1; i <= steps_y; ++i) {
     want_y.y -= delta_y * i;
-    intersected_entity = game->intersect_world(this, want_y);
+    intersected_entity = game->intersect_entity(this, want_y);
     if (intersected_entity) {
       break;
     }
