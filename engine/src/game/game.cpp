@@ -118,8 +118,17 @@ bool Game::gather_engine_events()
   return true;
 }
 
+void Game::handle_editor_controller_event(const ControllerEvent& controller_event)
+{
+}
+
 void Game::handle_controller_event(const ControllerEvent& controller_event)
 {
+  if (editor) {
+    this->handle_editor_controller_event(controller_event);
+    return;
+  }
+
   const auto& e = controller_event.sdl_event;
   const auto controller_id = controller_event.controller_id;
 
@@ -331,6 +340,7 @@ void Game::spawn_character(const std::string& path, CharacterSpawnEvent::Callbac
 
 bool Game::init()
 {
+  editor = false;
   shutdown = false;
 
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
@@ -518,6 +528,12 @@ bool Game::init_renderer()
 bool Game::init_sound()
 {
   return true;
+}
+
+bool Game::toggle_editor()
+{
+  editor = !editor;
+  return editor;
 }
 
 bool Game::init_filesystem()

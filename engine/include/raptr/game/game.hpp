@@ -73,6 +73,8 @@ public:
 
   void handle_controller_event(const ControllerEvent& event);
 
+  void handle_editor_controller_event(const ControllerEvent& event);
+
   void handle_static_mesh_spawn_event(const StaticMeshSpawnEvent& event);
 
 public:
@@ -115,6 +117,11 @@ public:
     \return Whether or not the game successfully ran
   */
   bool run();
+
+  /*!
+    Toggle the editor
+   */
+  bool toggle_editor();
 
   /*!
   */
@@ -224,6 +231,7 @@ public:
   bool is_init;
   bool is_headless;
   bool shutdown;
+  bool editor;
 
   sol::state lua;
 };

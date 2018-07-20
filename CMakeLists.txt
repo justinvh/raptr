@@ -11,6 +11,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 # Options for the project
 option(BUILD_DOCS "Build documentation" ON)
 option(BUILD_TESTS "Build tests" ON)
+option(BUILD_EDITOR "Build editor" ON)
 
 # Imported target: SDL2
 find_package(SDL2 CONFIG REQUIRED)
@@ -81,6 +82,49 @@ add_subdirectory(engine)
 add_subdirectory(application)
 add_subdirectory(game)
 
+if (BUILD_EDITOR)
+    find_package(Qt5Concurrent CONFIG REQUIRED)
+
+    find_package(Qt5Core CONFIG REQUIRED)
+    find_package(Qt5Widgets CONFIG REQUIRED)
+    find_package(Qt5Gui CONFIG REQUIRED)
+    find_package(Qt5Widgets CONFIG REQUIRED)
+
+    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTOUIC ON)
+
+    add_library(RaptrEditorDependencies INTERFACE)
+
+    target_link_libraries(RaptrEditorDependencies INTERFACE
+	raptr-engine
+	RaptrDependencies
+        Qt5::Core Qt5::CorePrivate
+        Qt5::Concurrent Qt5::ConcurrentPrivate
+        Qt5::WinMain
+	Qt5::Widgets Qt5::WidgetsPrivate
+        Qt5::Gui Qt5::GuiPrivate
+    )
+
+    target_include_directories(RaptrEditorDependencies INTERFACE
+	$<TARGET_PROPERTY:cxxopts::cxxopts,INTERFACE_INCLUDE_DIRECTORIES>
+	$<TARGET_PROPERTY:SDL2::SDL2,INTERFACE_INCLUDE_DIRECTORIES>
+	$<TARGET_PROPERTY:sdl2_ttf::sdl2_ttf,INTERFACE_INCLUDE_DIRECTORIES>
+	$<TARGET_PROPERTY:sdl2_net::sdl2_net,INTERFACE_INCLUDE_DIRECTORIES>
+	$<TARGET_PROPERTY:Picojson::Picojson,INTERFACE_INCLUDE_DIRECTORIES>
+	$<TARGET_PROPERTY:spdlog::spdlog,INTERFACE_INCLUDE_DIRECTORIES>
+	$<TARGET_PROPERTY:fmt::fmt,INTERFACE_INCLUDE_DIRECTORIES>
+	$<TARGET_PROPERTY:tinytoml::tinytoml,INTERFACE_INCLUDE_DIRECTORIES>
+	$<TARGET_PROPERTY:crossguid,INTERFACE_INCLUDE_DIRECTORIES>
+	$<TARGET_PROPERTY:sol2,INTERFACE_INCLUDE_DIRECTORIES>
+	${LUA_INCLUDE_DIR}
+	${SDL2_INCLUDE_DIRS} 
+	${SDL2_IMAGE_INCLUDE_DIRS}
+    )
+
+    add_subdirectory(editor)
+endif()
+
 # Targets that we develop under RAPTR
 if (BUILD_TESTS)
     enable_testing()
@@ -91,6 +135,5 @@ endif()
 if (BUILD_DOCS)
     add_subdirectory(doc)
 endif(BUILD_DOCS)
-
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT raptr-client)

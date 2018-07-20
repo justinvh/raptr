@@ -6,6 +6,7 @@
 
 #include <SDL_net.h>
 
+#include <raptr/common/filesystem.hpp>
 #include <raptr/network/snapshot.hpp>
 
 namespace raptr
