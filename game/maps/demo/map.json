@@ -1,0 +1,22 @@
+{
+	"predefined": 
+	{
+		"test": {
+			"texture": "textures/test",
+			"size": [64, 64],
+			"tiled": true
+		}
+	},
+
+	"tiles":
+	[
+		{
+			"texture": "test",
+			"position": [0, 0]
+		},
+		{
+			"texture": "test",
+			"position": [64, 64]
+		}
+	]
+}

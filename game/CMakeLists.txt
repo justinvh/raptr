@@ -29,12 +29,13 @@ set(RAPTR_GAME
     maps/demo/demo.aseprite
     maps/demo/demo.json
     maps/demo/demo.png
+    maps/demo/map.toml
     maps/demo/map.lua
 
     # Static meshes
-    staticmeshes/fire.toml
-    staticmeshes/platform.toml
-    staticmeshes/staticmeshes.toml
+    objects/fire.toml
+    objects/platform.toml
+    objects/staticmeshes.toml
 
     # Sound
     sound/opening.mp3

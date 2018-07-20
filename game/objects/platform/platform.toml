@@ -2,5 +2,5 @@
 name = "Platform"
 
 [sprite]
-path = "textures/platform.json"
+path = "platform.json"
 scale = 1.0

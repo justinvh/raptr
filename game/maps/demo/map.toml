@@ -1,0 +1,68 @@
+####################### Layers ###############################
+#
+# Layers are parsed and draw in the order they appear here.
+#
+##############################################################
+
+[[layers]]
+name = "background"
+collison = false
+parallax = true
+
+[[layers]]
+name = "solids"
+collision = true
+
+[[layers]]
+name = "objects"
+collision = true
+
+[[layers]]
+name = "triggers"
+collison = true
+draw = false
+register_collision_callback = "on_trigger_collision"
+
+[[layers]]
+name = "foreground"
+collison = false
+parallax = true
+
+####################### Tilesets ###############################
+#
+# Tilesets are specially constructed tiles for the sake of not
+# repeating the same parameters for a layers tiles
+#
+################################################################
+
+[[tileset]]
+name = "fire"
+texture = textures/fire"
+tiled = true
+
+####################### Tiles ###############################
+#
+# Each layer is defined by its tiles. These tiles simply
+# reference a texture (or not) and a bounding box. They can
+# have an optional ID which allows them to be referenced in
+# the Lua script.
+#
+#############################################################
+
+[[solids]]
+texture = "fire"
+bbox = [0, 0, 1024, 64]
+
+####################### Meshes ##############################
+#
+# A mesh is a scriptable object that will interact with the
+# world. Parameters for the mesh can be defined here to
+# override the defaults that would exist
+#
+#############################################################
+
+[[objects]]
+object = "mad-block"
+bbox = [0, 128, 64, 64]
+speed_kmh = 120
+end = [0, 0]
