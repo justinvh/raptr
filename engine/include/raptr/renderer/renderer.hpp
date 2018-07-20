@@ -11,6 +11,8 @@
 
 #include <vector>
 #include <memory>
+#include <mutex>
+#include <thread>
 
 /*!
 Deleters for SDL objects that are allocated via std::shared_ptr
@@ -144,7 +146,7 @@ public:
     /param surface - A shared pointer to a created SDL_Surface (see Sprite for an example)
     /return A freshly allocated texture created from the surface
   */
-  SDL_Texture* create_texture(std::shared_ptr<SDL_Surface>& surface) const;
+  SDL_Texture* create_texture(std::shared_ptr<SDL_Surface>& surface);
 
   /*!
     Initialize the renderer from a Configuration file
@@ -208,6 +210,8 @@ public:
   std::vector<std::shared_ptr<Entity>> entities_followed;
   std::vector<std::shared_ptr<Parallax>> backgrounds;
   std::vector<std::shared_ptr<Parallax>> foregrounds;
+
+  std::mutex add_object_mutex;
 
   int64_t frame_counter_time_start;
   int32_t frame_counter;

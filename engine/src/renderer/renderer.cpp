@@ -238,71 +238,6 @@ void Renderer::run_frame(bool force_render)
 
   std::vector<ClipCamera> clippings = hclippings;
 
-  /*
-  // So, the idea here is to iterate through our current horizontal cuts and find what entities are in it and then
-  // split the horizontal window in a similar way
-  for (auto& hclip_cam : hclippings) {
-    int32_t top, bottom;
-
-    // Now, create vertical clips
-    std::sort(hclip_cam.contains.begin(),
-      hclip_cam.contains.end(),
-      [](const auto& lhs, const auto& rhs)
-    {
-      auto& p1 = lhs->position();
-      auto& p2 = rhs->position();
-      return p1.y > p2.y;
-    });
-
-    int32_t last_top = GAME_HEIGHT;
-    ClipCamera clip_cam = hclip_cam;
-    clip_cam.contains.clear();
-    current_entity_index = 0;
-    min_rect_h = static_cast<int32_t>((GAME_HEIGHT / hclip_cam.contains.size()));
-    int32_t min_rect_hh = min_rect_h / 2;
-
-    while (current_entity_index < hclip_cam.contains.size()) {
-      // Setup the initial camera where we are going to try and merge players together
-      {
-        const auto& entity = hclip_cam.contains[current_entity_index];
-        auto& pos = entity->position();
-        auto bbox = entity->bbox()[0];
-        int32_t y = pos.y + bbox.h / 2.0;
-        top = y - min_rect_hh;
-        bottom = y + min_rect_hh;
-        clip_cam.contains.push_back(entity);
-      }
-
-      int32_t t_top = top;
-      while (++current_entity_index < hclip_cam.contains.size()) {
-        const auto& entity = hclip_cam.contains[current_entity_index];
-        auto& pos = entity->position();
-        auto bbox = entity->bbox()[0];
-        int32_t y = static_cast<int32_t>(pos.y + bbox.h / 2.0);
-        t_top -= min_rect_hh;
-        if (y >= t_top) {
-          clip_cam.contains.push_back(entity);
-          top -= min_rect_h;
-          t_top = top;
-        } else {
-          break;
-        }
-      }
-
-      clip_cam.clip.y = top;
-      clip_cam.clip.h = (bottom - top);
-
-      clip_cam.viewport.y = last_top - clip_cam.clip.h;
-      clip_cam.viewport.h = clip_cam.clip.h - 1;
-
-      last_top -= clip_cam.clip.h;
-
-      clippings.push_back(clip_cam);
-      ++num_clips;
-    }
-  }
-  */
-
   if (clippings.empty()) {
     ClipCamera clip_cam;
     clip_cam.clip.x = 0;
@@ -370,12 +305,13 @@ void Renderer::run_frame(bool force_render)
 
   ++frame_counter;
   ++total_frames_rendered;
-
+  
   if (clock::ticks() - frame_counter_time_start >= 5e6) {
-    logger->debug("FPS = {} ({} frames in 5s)", frame_counter / 5.0, frame_counter);
+    double secs = (clock::ticks() - frame_counter_time_start) / 1e6;
+    logger->debug("FPS = {} (target={}) ({} frames in {}s)", frame_counter / secs, fps, frame_counter, secs);
     frame_counter_time_start = clock::ticks();
-    frame_fps = frame_counter / 5.0;
-    frame_counter = 0;
+    frame_fps = frame_counter / secs;
+    frame_counter = 1;
   }
 }
 
@@ -403,7 +339,7 @@ void Renderer::camera_follow(std::shared_ptr<Entity> entity)
   entities_followed.push_back(entity);
 }
 
-SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) const
+SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface)
 {
   if (is_headless) {
     return nullptr;

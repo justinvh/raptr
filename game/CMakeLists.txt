@@ -32,20 +32,10 @@ set(RAPTR_GAME
     maps/demo/map.toml
     maps/demo/map.lua
 
-    # Static meshes
-    objects/fire.toml
-    objects/platform.toml
-    objects/staticmeshes.toml
-
     # Sound
     sound/opening.mp3
 
     # Textures
-    textures/fire-sheet.png
-    textures/fire.json
-    textures/fire.png
-    textures/platform.png
-    textures/platform.json
     textures/raptor-spritesheet.png
     textures/raptor.json
     textures/dialog-simple.png

@@ -37,7 +37,7 @@ parallax = true
 
 [[tileset]]
 name = "fire"
-texture = textures/fire"
+texture = textures/fire.json"
 tiled = true
 
 ####################### Tiles ###############################

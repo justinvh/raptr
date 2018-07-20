@@ -16,21 +16,21 @@ class Sprite;
 class Game;
 
 /*!
-  A StaticMesh is a simple collidable Entity in the world. It uses the Sprite
+  A MeshDynamic is a simple collidable Entity in the world. It uses the Sprite
   to define its intersection and bounding box
 */
-class StaticMesh : public Entity
+class MeshDynamic : public Entity
 {
 public:
-  StaticMesh();
-  ~StaticMesh() = default;
-  StaticMesh(const StaticMesh&) = default;
-  StaticMesh(StaticMesh&&) = default;
-  StaticMesh& operator=(const StaticMesh&) = default;
-  StaticMesh& operator=(StaticMesh&&) = default;
+  MeshDynamic();
+  ~MeshDynamic() = default;
+  MeshDynamic(const MeshDynamic&) = default;
+  MeshDynamic(MeshDynamic&&) = default;
+  MeshDynamic& operator=(const MeshDynamic&) = default;
+  MeshDynamic& operator=(MeshDynamic&&) = default;
 
 public:
-  typedef StaticMeshSpawnEvent SpawnEvent;
+  typedef MeshDynamicSpawnEvent SpawnEvent;
 
   /*!
     Returns the bounding box for this static mesh based on its sprite
@@ -39,11 +39,11 @@ public:
   std::vector<Rect> bbox() const override;
 
   /*!
-    Generates a StaticMesh object from a TOML configuration file
+    Generates a MeshDynamic object from a TOML configuration file
     /param path - The path to the TOML file
     /return An instance of the character if found
   */
-  static std::shared_ptr<StaticMesh> from_toml(const FileInfo& path);
+  static std::shared_ptr<MeshDynamic> from_toml(const FileInfo& path);
 
   /*!
   */

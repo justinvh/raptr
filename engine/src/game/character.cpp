@@ -423,6 +423,8 @@ void Character::think(std::shared_ptr<Game>& game)
     }
   }
 
+  bool hitting_wall = false;
+  
   if (!intersected) {
     if (vel.x < 0) {
       sprite->flip_x = false;
@@ -441,6 +443,7 @@ void Character::think(std::shared_ptr<Game>& game)
     }
     pos.x = want_x.x;
   } else {
+    hitting_wall = true;
     dash_time_usec = 0;
     sprite->set_animation("Idle");
   }
@@ -476,6 +479,8 @@ void Character::think(std::shared_ptr<Game>& game)
 
   if (in_dash) {
     sprite->set_animation("Dash");
+  } else if (hitting_wall) {
+    sprite->set_animation("Idle");
   } else if (falling) {
     sprite->set_animation("Jump");
   } else if (mag_x > walk_speed_ps) {

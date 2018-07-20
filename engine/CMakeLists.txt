@@ -21,10 +21,11 @@ set(RAPTR_CPP
     src/network/snapshot.cpp
 
     # Renderer sources
+    src/renderer/mesh_static.cpp
+    src/renderer/mesh_dynamic.cpp
     src/renderer/parallax.cpp
     src/renderer/renderer.cpp
     src/renderer/sprite.cpp
-    src/renderer/static_mesh.cpp
 
     # Sound sources
     src/sound/sound.cpp
@@ -57,10 +58,11 @@ set(RAPTR_HPP
     include/raptr/network/snapshot.hpp
 
     # Renderer headers
+    include/raptr/renderer/mesh_static.hpp
+    include/raptr/renderer/mesh_dynamic.hpp
     include/raptr/renderer/parallax.hpp
     include/raptr/renderer/renderer.hpp
     include/raptr/renderer/sprite.hpp
-    include/raptr/renderer/static_mesh.hpp
 
     # Sound headers
     include/raptr/sound/sound.hpp

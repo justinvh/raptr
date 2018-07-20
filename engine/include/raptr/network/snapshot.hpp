@@ -18,13 +18,15 @@ constexpr size_t MAX_SNAPSHOT_BUFFER_SIZE = 4096;
 typedef std::array<unsigned char, 16> GUID;
 
 class Character;
-class StaticMesh;
+class MeshStatic;
+class MeshDynamic;
 
 enum class NetFieldType
 {
   EntityMarker,
   Character,
-  StaticMesh,
+  MeshStatic,
+  MeshDynamic,
   Map,
 };
 
@@ -32,7 +34,8 @@ enum class EngineEventType
 {
   ControllerEvent,
   SpawnCharacter,
-  SpawnStaticMesh
+  SpawnMeshStatic,
+  SpawnMeshDynamic
 };
 
 struct ControllerEvent
@@ -52,10 +55,19 @@ struct CharacterSpawnEvent
   Callback callback;
 };
 
-struct StaticMeshSpawnEvent
+struct MeshStaticSpawnEvent
 {
-  typedef std::function<void(std::shared_ptr<StaticMesh>&)> Callback;
-  static const EngineEventType event_type = EngineEventType::SpawnStaticMesh;
+  typedef std::function<void(std::shared_ptr<MeshStatic>&)> Callback;
+  static const EngineEventType event_type = EngineEventType::SpawnMeshStatic;
+  std::string path;
+  GUID guid;
+  Callback callback;
+};
+
+struct MeshDynamicSpawnEvent
+{
+  typedef std::function<void(std::shared_ptr<MeshDynamic>&)> Callback;
+  static const EngineEventType event_type = EngineEventType::SpawnMeshDynamic;
   std::string path;
   GUID guid;
   Callback callback;

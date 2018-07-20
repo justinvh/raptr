@@ -14,7 +14,7 @@
 #include <raptr/renderer/parallax.hpp>
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/renderer/sprite.hpp>
-#include <raptr/renderer/static_mesh.hpp>
+#include <raptr/renderer/mesh_static.hpp>
 #include <raptr/sound/sound.hpp>
 
 namespace
@@ -151,9 +151,9 @@ void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
   event.callback(character);
 }
 
-void Game::handle_static_mesh_spawn_event(const StaticMeshSpawnEvent& event)
+void Game::handle_mesh_static_spawn_event(const MeshStaticSpawnEvent& event)
 {
-  auto mesh = StaticMesh::from_toml(game_path.from_root(event.path));
+  auto mesh = MeshStatic::from_toml(game_path.from_root(event.path));
   mesh->guid_ = event.guid;
   mesh->pos_.x = 0;
   mesh->pos_.y = 0;
@@ -176,9 +176,9 @@ void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
       delete character_event;
       break;
     }
-    case EngineEventType::SpawnStaticMesh: {
-      const auto staticmesh_event = reinterpret_cast<StaticMeshSpawnEvent*>(event->data);
-      this->handle_static_mesh_spawn_event(*staticmesh_event);
+    case EngineEventType::SpawnMeshStatic: {
+      const auto staticmesh_event = reinterpret_cast<MeshStaticSpawnEvent*>(event->data);
+      this->handle_mesh_static_spawn_event(*staticmesh_event);
       delete staticmesh_event;
       break;
     }
@@ -222,11 +222,12 @@ bool Game::process_engine_events()
     }
   }
 
-  if (!is_headless) {
+  current_events.clear();
+
+  if (!use_threaded_renderer) {
     renderer->run_frame();
   }
 
-  current_events.clear();
   return true;
 }
 
@@ -306,14 +307,14 @@ void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback cal
 /*!
 Spawn an entity to the world
 */
-void Game::spawn_staticmesh(const std::string& path, StaticMeshSpawnEvent::Callback callback)
+void Game::spawn_mesh_static(const std::string& path, MeshStaticSpawnEvent::Callback callback)
 {
-  auto event = new StaticMeshSpawnEvent();
+  auto event = new MeshStaticSpawnEvent();
   auto g = xg::newGuid();
   event->guid = g.bytes();
   event->path = path;
   event->callback = callback;
-  this->add_event<StaticMeshSpawnEvent>(event);
+  this->add_event<MeshStaticSpawnEvent>(event);
 }
 
 /*!
@@ -332,6 +333,7 @@ void Game::spawn_character(const std::string& path, CharacterSpawnEvent::Callbac
 bool Game::init()
 {
   shutdown = false;
+  use_threaded_renderer = false;
 
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
@@ -495,9 +497,9 @@ bool Game::init_demo()
     renderer->add_foreground(foreground);
   }
 
-  this->spawn_staticmesh("staticmeshes/demo.toml", [](auto& mesh)
+  this->spawn_mesh_static("mesh-static/demo/demo.toml", [](auto& mesh)
   {
-    mesh->position().y = 0;
+    mesh->position().y = 25;
   });
 
   return true;
@@ -512,6 +514,16 @@ bool Game::init_renderer()
   renderer->camera.top = -270;
   renderer->camera.bottom = 270;
   renderer->last_render_time_us = 0;
+
+  if (use_threaded_renderer) {
+    renderer_thread = std::thread([&]()
+    {
+      while (!shutdown) {
+        renderer->run_frame();
+      }
+    });
+  }
+
   return true;
 }
 

@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <thread>
 
 #include <sol.hpp>
 #include <crossguid/guid.hpp>
@@ -73,7 +74,7 @@ public:
 
   void handle_controller_event(const ControllerEvent& event);
 
-  void handle_static_mesh_spawn_event(const StaticMeshSpawnEvent& event);
+  void handle_mesh_static_spawn_event(const MeshStaticSpawnEvent& event);
 
 public:
   /*!
@@ -89,8 +90,8 @@ public:
   /*!
     Spawn an entity to the world
   */
-  void spawn_staticmesh(const std::string& path,
-                        StaticMeshSpawnEvent::Callback callback = [](auto& a)
+  void spawn_mesh_static(const std::string& path,
+                        MeshStaticSpawnEvent::Callback callback = [](auto& a)
                         {
                         });
 
@@ -224,6 +225,9 @@ public:
   bool is_init;
   bool is_headless;
   bool shutdown;
+
+  bool use_threaded_renderer;
+  std::thread renderer_thread;
 
   sol::state lua;
 };

@@ -9,7 +9,7 @@
 
 #include <raptr/game/game.hpp>
 #include <raptr/renderer/sprite.hpp>
-#include <raptr/renderer/static_mesh.hpp>
+#include <raptr/renderer/mesh_dynamic.hpp>
 #include <raptr/common/logging.hpp>
 
 namespace
@@ -19,12 +19,12 @@ auto logger = raptr::_get_logger(__FILE__);
 
 namespace raptr
 {
-StaticMesh::StaticMesh()
+MeshDynamic::MeshDynamic()
   : Entity()
 {
 }
 
-std::shared_ptr<StaticMesh> StaticMesh::from_toml(const FileInfo& toml_path)
+std::shared_ptr<MeshDynamic> MeshDynamic::from_toml(const FileInfo& toml_path)
 {
   auto toml_relative = toml_path.file_relative;
   auto ifs = toml_path.open();
@@ -69,7 +69,7 @@ std::shared_ptr<StaticMesh> StaticMesh::from_toml(const FileInfo& toml_path)
   sprite_file.file_relative = sprite_path;
   sprite_file.file_dir = sprite_file.file_path.parent_path();
 
-  std::shared_ptr<StaticMesh> staticmesh(new StaticMesh());
+  std::shared_ptr<MeshDynamic> staticmesh(new MeshDynamic());
   staticmesh->sprite = Sprite::from_json(sprite_file);
   staticmesh->sprite->scale = dict["sprite.scale"]->as<double>();
   staticmesh->sprite->set_animation("Idle");
@@ -96,7 +96,7 @@ std::shared_ptr<StaticMesh> StaticMesh::from_toml(const FileInfo& toml_path)
 }
 
 
-std::vector<Rect> StaticMesh::bbox() const
+std::vector<Rect> MeshDynamic::bbox() const
 {
   std::vector<Rect> boxes;
   Rect box;
@@ -110,26 +110,26 @@ std::vector<Rect> StaticMesh::bbox() const
   return boxes;
 }
 
-void StaticMesh::think(std::shared_ptr<Game>& game)
+void MeshDynamic::think(std::shared_ptr<Game>& game)
 {
   auto& pos = position();
   sprite->x = pos.x;
   sprite->y = pos.y;
 }
 
-void StaticMesh::render(Renderer* renderer)
+void MeshDynamic::render(Renderer* renderer)
 {
   sprite->render(renderer);
 }
 
-void StaticMesh::serialize(std::vector<NetField>& list)
+void MeshDynamic::serialize(std::vector<NetField>& list)
 {
-  NetFieldType cls = NetFieldType::StaticMesh;
+  NetFieldType cls = NetFieldType::MeshDynamic;
 
   // Stop looking at me like that.
   // This macro helps expand our fields into
   // field type, offset into the class, sizeof object, and data
-  #define SNF(field) NetFieldMacro(StaticMesh, field)
+  #define SNF(field) NetFieldMacro(MeshDynamic, field)
 
   NetField states[] = {
     SNF(pos_),
@@ -145,7 +145,7 @@ void StaticMesh::serialize(std::vector<NetField>& list)
 }
 
 
-bool StaticMesh::deserialize(const std::vector<NetField>& fields)
+bool MeshDynamic::deserialize(const std::vector<NetField>& fields)
 {
   return true;
 }
