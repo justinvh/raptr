@@ -374,7 +374,7 @@ void Character::think(std::shared_ptr<Game>& game)
       //logger->debug("Fell for {}s. Final velocity was {}m/s", fall_time_us / 1e6, vel.y * pixels_to_meters);
       vel.y = 0;
 
-      float mag_x = std::fabs(vel.x);
+      const double mag_x = std::fabs(vel.x);
       if (in_dash) {
         sprite->set_animation("Dash");
       } else if (mag_x > walk_speed_ps) {
@@ -516,6 +516,14 @@ void Character::walk(float scale)
     sprite->set_animation("Walk");
     sprite->speed = std::fabs(scale * 2.0);
   }
+}
+
+void Character::setup_lua_context(sol::state& state)
+{
+  state.new_usertype<Character>("Character",
+    "add_velocity", &Character::add_velocity,
+    "add_acceleration", &Character::add_acceleration
+    );
 }
 
 } // namespace raptr

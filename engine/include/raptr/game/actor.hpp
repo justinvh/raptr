@@ -1,11 +1,12 @@
 /*!
-  /file static_mesh.hpp
-  A static mesh is a simple Entity that is rather dumb, but it serves a purpose:
+  /file actor.hpp
+  An actor is a simple Entity that is rather dumb, but it serves a purpose:
   something that the player can hit and attach to in some way or another.
 */
 #pragma once
 
 #include <memory>
+#include <sol.hpp>
 
 #include <raptr/game/entity.hpp>
 #include <raptr/common/filesystem.hpp>
@@ -16,21 +17,23 @@ class Sprite;
 class Game;
 
 /*!
-  A MeshDynamic is a simple collidable Entity in the world. It uses the Sprite
+  An actor is a simple collidable Entity in the world. It uses the Sprite
   to define its intersection and bounding box
 */
-class MeshDynamic : public Entity
+class Actor : public Entity
 {
 public:
-  MeshDynamic();
-  ~MeshDynamic() = default;
-  MeshDynamic(const MeshDynamic&) = default;
-  MeshDynamic(MeshDynamic&&) = default;
-  MeshDynamic& operator=(const MeshDynamic&) = default;
-  MeshDynamic& operator=(MeshDynamic&&) = default;
+  Actor();
+  ~Actor() = default;
+  Actor(const Actor&) = default;
+  Actor(Actor&&) = default;
+  Actor& operator=(const Actor&) = default;
+  Actor& operator=(Actor&&) = default;
 
 public:
-  typedef MeshDynamicSpawnEvent SpawnEvent;
+  typedef ActorSpawnEvent SpawnEvent;
+
+  static void setup_lua_context(sol::state& state);
 
   /*!
     Returns the bounding box for this static mesh based on its sprite
@@ -39,11 +42,11 @@ public:
   std::vector<Rect> bbox() const override;
 
   /*!
-    Generates a MeshDynamic object from a TOML configuration file
+    Generates a MeshStatic object from a TOML configuration file
     /param path - The path to the TOML file
     /return An instance of the character if found
   */
-  static std::shared_ptr<MeshDynamic> from_toml(const FileInfo& path);
+  static std::shared_ptr<Actor> from_toml(const FileInfo& path);
 
   /*!
   */
@@ -58,5 +61,9 @@ public:
   void serialize(std::vector<NetField>& list) override;
 
   bool deserialize(const std::vector<NetField>& fields) override;
+
+  bool is_scripted;
+  sol::state lua;
+  std::string lua_script;
 };
 } // namespace raptr

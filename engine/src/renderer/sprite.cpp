@@ -37,9 +37,9 @@ AnimationFrame& Animation::current_frame()
   return frames[frame];
 }
 
-bool Animation::next(int64_t clock, float speed_multiplier)
+bool Animation::next(int64_t clock, double speed_multiplier)
 {
-  int64_t curr = clock::ticks();
+  const auto curr = clock::ticks();
   if ((curr - clock) / 1e3 <= frames[frame].duration / (speed * speed_multiplier)) {
     return false;
   }

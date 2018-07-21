@@ -27,6 +27,8 @@ public:
 public:
   typedef TriggerSpawnEvent SpawnEvent;
 
+  static void setup_lua_context(sol::state& state);
+
   static std::shared_ptr<Trigger> from_params(const Rect& area);
 
   /*!

@@ -143,6 +143,11 @@ void Trigger::render(Renderer* renderer)
   renderer->add_rect(dst, color);
 }
 
+void Trigger::setup_lua_context(sol::state& state)
+{
+  state.new_usertype<Trigger>("Trigger");
+}
+
 void Trigger::serialize(std::vector<NetField>& list)
 {
 }

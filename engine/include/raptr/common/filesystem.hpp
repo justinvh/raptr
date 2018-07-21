@@ -22,6 +22,7 @@ public:
 
 public:
   std::optional<std::ifstream> open(bool binary = true) const;
+  std::optional<std::string> read(bool binary = true) const;
   FileInfo from_root(const fs::path& relative_path) const;
 };
 

@@ -7,6 +7,7 @@ set(RAPTR_CPP
     src/common/clock.cpp
 
     # Game sources
+    src/game/actor.cpp
     src/game/character.cpp
     src/game/entity.cpp
     src/game/game.cpp
@@ -22,8 +23,6 @@ set(RAPTR_CPP
     src/network/snapshot.cpp
 
     # Renderer sources
-    src/renderer/mesh_static.cpp
-    src/renderer/mesh_dynamic.cpp
     src/renderer/parallax.cpp
     src/renderer/renderer.cpp
     src/renderer/sprite.cpp
@@ -45,6 +44,7 @@ set(RAPTR_HPP
     include/raptr/common/logging.hpp
 
     # Game headers
+    include/raptr/game/actor.hpp
     include/raptr/game/character.hpp
     include/raptr/game/entity.hpp
     include/raptr/game/game.hpp
@@ -60,8 +60,6 @@ set(RAPTR_HPP
     include/raptr/network/snapshot.hpp
 
     # Renderer headers
-    include/raptr/renderer/mesh_static.hpp
-    include/raptr/renderer/mesh_dynamic.hpp
     include/raptr/renderer/parallax.hpp
     include/raptr/renderer/renderer.hpp
     include/raptr/renderer/sprite.hpp

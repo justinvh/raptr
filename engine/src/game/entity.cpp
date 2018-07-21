@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/game/entity.hpp>
+#include <raptr/game/character.hpp>
 #include <raptr/common/logging.hpp>
 #include <raptr/common/clock.hpp>
 #include <crossguid/guid.hpp>
@@ -60,6 +61,23 @@ std::vector<Rect> Entity::want_position_y(int64_t delta_us)
     r.y = pos.y;
   }
   return rects;
+}
+
+bool Entity::is_player() const
+{
+  return dynamic_cast<const Character*>(this) != nullptr;
+}
+
+void Entity::add_velocity(double x_kmh, double y_kmh)
+{
+  vel_.x += x_kmh * kmh_to_ps;
+  vel_.y += y_kmh * kmh_to_ps;
+}
+
+void Entity::add_acceleration(double x_ms2, double y_ms2)
+{
+  acc_.x += x_ms2 * meters_to_pixels;
+  acc_.y += y_ms2 * meters_to_pixels;
 }
 
 bool Entity::intersects(const Entity* other) const
@@ -147,24 +165,24 @@ bool Entity::intersect_slow(const Entity* other, const Rect& this_bbox) const
   double by1 = other_pos.y + other_frame->h - 1;
 
   // Overlap
-  double cx0 = std::max(ax0, bx0);
-  double cx1 = std::min(ax1, bx1);
-  double cy0 = std::max(ay0, by0);
-  double cy1 = std::min(ay1, by1);
+  auto cx0 = std::max(ax0, bx0);
+  auto cx1 = std::min(ax1, bx1);
+  auto cy0 = std::max(ay0, by0);
+  auto cy1 = std::min(ay1, by1);
 
   // This pixel offsets
-  int32_t tx0 = static_cast<int32_t>(cx0 - ax0);
-  int32_t ty0 = static_cast<int32_t>(cy0 - ay0);
+  auto tx0 = static_cast<int32_t>(cx0 - ax0);
+  auto ty0 = static_cast<int32_t>(cy0 - ay0);
 
   // Other pixel offsets
-  int32_t ox0 = static_cast<int32_t>(cx0 - bx0);
-  int32_t oy0 = static_cast<int32_t>(cy0 - by0);
+  auto ox0 = static_cast<int32_t>(cx0 - bx0);
+  auto oy0 = static_cast<int32_t>(cy0 - by0);
 
-  int32_t th = this_bbox.h - 1;
-  int32_t oh = other_frame->h - 1;
+  auto th = static_cast<int32_t>(this_bbox.h - 1);
+  auto oh = static_cast<int32_t>(other_frame->h - 1);
 
-  int32_t w = static_cast<int32_t>(cx1 - cx0);
-  int32_t h = static_cast<int32_t>(cy1 - cy0);
+  auto w = static_cast<int32_t>(cx1 - cx0);
+  auto h = static_cast<int32_t>(cy1 - cy0);
 
   for (int32_t x = 0; x < w; ++x) {
     for (int32_t y = 0; y < h; ++y) {

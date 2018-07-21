@@ -1,3 +1,4 @@
+#include <sstream>
 #include <raptr/common/filesystem.hpp>
 #include <raptr/common/logging.hpp>
 
@@ -26,6 +27,18 @@ std::optional<std::ifstream> FileInfo::open(bool binary) const
 
   logger->error("{} could not be opened, though it exists.", full_path);
   return {};
+}
+
+std::optional<std::string> FileInfo::read(bool binary) const
+{
+  auto ifs = this->open(binary);
+  if (!ifs) {
+    return {};
+  }
+
+  std::stringstream ss;
+  ss << ifs->rdbuf();
+  return ss.str();
 }
 
 FileInfo FileInfo::from_root(const fs::path& relative_path) const

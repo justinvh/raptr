@@ -1,0 +1,9 @@
+[actor]
+name = "mad-block"
+
+[sprite]
+path = "mad-block.json"
+scale = 1.0
+
+[script]
+path = "mad-block.lua"

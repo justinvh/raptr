@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <sol.hpp>
 #include <raptr/common/rect.hpp>
 #include <raptr/network/snapshot.hpp>
 
@@ -170,6 +171,12 @@ public:
     return acc_;
   }
 
+  virtual void add_velocity(double x_kmh, double y_kmh);
+
+  virtual void add_acceleration(double x_ms2, double y_ms2);
+
+  virtual bool is_player() const;
+
   void serialize(std::vector<NetField>& list) override = 0;
 
   bool deserialize(const std::vector<NetField>& fields) override = 0;
@@ -196,7 +203,7 @@ public:
   Point acc_;
 
   //! How long the entity has been falling in milliseconds, if any
-  uint32_t fall_time_us;
+  int64_t fall_time_us;
 
   //! Collision test per pixel
   bool do_pixel_collision_test;

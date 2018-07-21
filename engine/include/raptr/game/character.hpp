@@ -35,6 +35,8 @@ public:
 public:
   typedef CharacterSpawnEvent SpawnEvent;
 
+  static void setup_lua_context(sol::state& state);
+
   void serialize(std::vector<NetField>& list) override;
 
   bool deserialize(const std::vector<NetField>& fields) override;

@@ -15,7 +15,7 @@
 #include <raptr/renderer/parallax.hpp>
 #include <raptr/renderer/renderer.hpp>
 #include <raptr/renderer/sprite.hpp>
-#include <raptr/renderer/mesh_static.hpp>
+#include <raptr/game/actor.hpp>
 #include <raptr/sound/sound.hpp>
 
 namespace
@@ -27,7 +27,7 @@ namespace raptr
 {
 std::shared_ptr<Game> Game::create(const fs::path& game_root)
 {
-  fs::path full_path = fs::absolute(game_root);
+  const auto full_path = fs::absolute(game_root);
   auto game = std::shared_ptr<Game>(new Game(full_path));
   game->is_headless = false;
   if (!game->is_init) {
@@ -73,8 +73,8 @@ bool Game::poll_events()
   } else if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type ==
     SDL_CONTROLLERBUTTONUP ||
     e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
-    int32_t controller_id = e.jdevice.which;
-    ControllerEvent* controller_event = new ControllerEvent();
+    const int32_t controller_id = e.jdevice.which;
+    auto controller_event = new ControllerEvent();
     controller_event->controller_id = controller_id;
     controller_event->sdl_event = e;
     this->add_event(controller_event);
@@ -91,13 +91,13 @@ bool Game::poll_events()
       renderer->camera_follow(character);
     });
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F3) {
-    renderer->scale(renderer->current_ratio / 2.0);
+    renderer->scale(renderer->current_ratio / 2.0f);
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F4) {
-    renderer->scale(1.0);
+    renderer->scale(1.0f);
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F5) {
     clock::toggle();
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F6) {
-    int64_t us = 1.0 / renderer->fps * 1e6;
+    const auto us = static_cast<int64_t>(1.0 / renderer->fps * 1e6);
     logger->debug("Stepping by {}ms", us / 1e3);
     clock::start();
     std::this_thread::sleep_for(std::chrono::microseconds(us));
@@ -152,14 +152,76 @@ void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
   event.callback(character);
 }
 
-void Game::handle_mesh_static_spawn_event(const MeshStaticSpawnEvent& event)
+void Game::setup_lua_context(sol::state& state)
 {
-  auto mesh = MeshStatic::from_toml(game_path.from_root(event.path));
-  mesh->guid_ = event.guid;
-  mesh->pos_.x = 0;
-  mesh->pos_.y = 0;
-  this->spawn_now(mesh);
-  event.callback(mesh);
+  Actor::setup_lua_context(state);
+  Character::setup_lua_context(state);
+  Trigger::setup_lua_context(state);
+
+  state.set_function("spawn_trigger", [&](sol::table trigger_params, sol::protected_function lua_on_enter, sol::protected_function lua_on_exit)
+  {
+    const Rect trigger_rect = {
+      trigger_params[1],
+      trigger_params[2],
+      trigger_params[3],
+      trigger_params[4]
+    };
+
+    auto g = xg::newGuid();
+    auto trigger_id = g.str();
+
+    logger->debug("Spawning a Trigger at {}", trigger_rect);
+
+    // This is basically a hack to get around the garbage collector
+    // Since Lua will keep track of its shit.
+    auto table = state.create_named_table(trigger_id);
+
+    table["on_enter"] = lua_on_enter;
+    table["on_exit"] = lua_on_exit;
+
+    this->spawn_trigger(trigger_rect, [&, trigger_id](auto& trigger)
+    {
+      logger->debug("Trigger spawned in Lua land");
+      trigger->on_enter = [&, trigger_id](std::shared_ptr<Character>& character, Trigger* trigger)
+      {
+        const auto func = state[trigger_id];
+        logger->debug("Sending an on_enter trigger in Lua land");
+        auto result = func["on_enter"](*character.get(), *trigger);
+        if (result.valid()) {
+          logger->debug("Lua on enter called successfully");
+        }
+      };
+
+      trigger->on_exit = [&, trigger_id](std::shared_ptr<Character>& character, Trigger* trigger)
+      {
+        logger->debug("Sending an on_exit trigger in Lua land");
+        const auto func = state[trigger_id];
+        auto result = func["on_exit"](*character.get(), *trigger);
+        if (result.valid()) {
+          logger->debug("Lua on exit called successfully");
+        }
+      };
+    });
+  });
+}
+
+
+void Game::handle_actor_spawn_event(const ActorSpawnEvent& event)
+{
+  auto actor = Actor::from_toml(game_path.from_root(event.path));
+  actor->guid_ = event.guid;
+  actor->pos_.x = 0;
+  actor->pos_.y = 0;
+  if (actor->is_scripted) {
+    this->setup_lua_context(actor->lua);
+    actor->lua.script(actor->lua_script);
+  }
+
+  this->spawn_now(actor);
+  event.callback(actor);
+  if (actor->is_scripted) {
+    actor->lua["init"](actor);
+  }
 }
 
 void Game::handle_trigger_spawn_event(const TriggerSpawnEvent& event)
@@ -185,9 +247,9 @@ void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
       delete character_event;
       break;
     }
-    case EngineEventType::SpawnMeshStatic: {
-      const auto staticmesh_event = reinterpret_cast<MeshStaticSpawnEvent*>(event->data);
-      this->handle_mesh_static_spawn_event(*staticmesh_event);
+    case EngineEventType::SpawnActor: {
+      const auto staticmesh_event = reinterpret_cast<ActorSpawnEvent*>(event->data);
+      this->handle_actor_spawn_event(*staticmesh_event);
       delete staticmesh_event;
       break;
     }
@@ -385,14 +447,14 @@ void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback cal
 /*!
 Spawn an entity to the world
 */
-void Game::spawn_mesh_static(const std::string& path, MeshStaticSpawnEvent::Callback callback)
+void Game::spawn_actor(const std::string& path, ActorSpawnEvent::Callback callback)
 {
-  auto event = new MeshStaticSpawnEvent();
+  auto event = new ActorSpawnEvent();
   auto g = xg::newGuid();
   event->guid = g.bytes();
   event->path = path;
   event->callback = callback;
-  this->add_event<MeshStaticSpawnEvent>(event);
+  this->add_event<ActorSpawnEvent>(event);
 }
 
 /*!
@@ -609,9 +671,15 @@ bool Game::init_demo()
     };
   });
 
-  this->spawn_mesh_static("mesh-static/demo/demo.toml", [](auto& mesh)
+  this->spawn_actor("actors/demo/demo.toml", [](auto& mesh)
   {
     mesh->position().y = 25;
+  });
+
+  this->spawn_actor("actors/mad-block/mad-block.toml", [](auto& mesh)
+  {
+    mesh->position().y = 200;
+    mesh->position().x = 20;
   });
 
   return true;

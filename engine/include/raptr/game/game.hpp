@@ -5,6 +5,7 @@
 */
 #pragma once
 
+#define SOL_PRINT_ERRORS 1
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
@@ -77,9 +78,11 @@ public:
 
   void handle_controller_event(const ControllerEvent& event);
 
-  void handle_mesh_static_spawn_event(const MeshStaticSpawnEvent& event);
+  void handle_actor_spawn_event(const ActorSpawnEvent& event);
 
   void handle_trigger_spawn_event(const TriggerSpawnEvent& event);
+
+  void setup_lua_context(sol::state& state);
 
 public:
   /*!
@@ -107,8 +110,8 @@ public:
   /*!
     Spawn an entity to the world
   */
-  void spawn_mesh_static(const std::string& path,
-                        MeshStaticSpawnEvent::Callback callback = [](auto& a)
+  void spawn_actor(const std::string& path,
+                        ActorSpawnEvent::Callback callback = [](auto& a)
                         {
                         });
 

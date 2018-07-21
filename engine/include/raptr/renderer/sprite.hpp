@@ -92,7 +92,7 @@ public:
     /param speed_multiplier - Play animations faster
     /return Whether the frame was advanced
   */
-  bool next(int64_t clock_us, float speed_multiplier = 1.0);
+  bool next(int64_t clock_us, double speed_multiplier = 1.0);
 };
 
 //! A mapping of Animation names to the Animation themselves
@@ -165,7 +165,7 @@ public:
   double scale;
 
   //! Playback speed
-  float speed;
+  double speed;
 
   //! When the Sprite was last rendered
   int64_t last_frame_tick;

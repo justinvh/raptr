@@ -20,15 +20,14 @@ typedef std::array<unsigned char, 16> GUID;
 
 class Trigger;
 class Character;
-class MeshStatic;
+class Actor;
 class MeshDynamic;
 
 enum class NetFieldType
 {
   EntityMarker,
   Character,
-  MeshStatic,
-  MeshDynamic,
+  Actor,
   Trigger,
   Map,
 };
@@ -37,8 +36,7 @@ enum class EngineEventType
 {
   ControllerEvent,
   SpawnCharacter,
-  SpawnMeshStatic,
-  SpawnMeshDynamic,
+  SpawnActor,
   SpawnTrigger,
 };
 
@@ -59,10 +57,10 @@ struct CharacterSpawnEvent
   Callback callback;
 };
 
-struct MeshStaticSpawnEvent
+struct ActorSpawnEvent
 {
-  typedef std::function<void(std::shared_ptr<MeshStatic>&)> Callback;
-  static const EngineEventType event_type = EngineEventType::SpawnMeshStatic;
+  typedef std::function<void(std::shared_ptr<Actor>&)> Callback;
+  static const EngineEventType event_type = EngineEventType::SpawnActor;
   std::string path;
   GUID guid;
   Callback callback;
@@ -73,15 +71,6 @@ struct TriggerSpawnEvent
   typedef std::function<void(std::shared_ptr<Trigger>&)> Callback;
   static const EngineEventType event_type = EngineEventType::SpawnTrigger;
   Rect rect;
-  GUID guid;
-  Callback callback;
-};
-
-struct MeshDynamicSpawnEvent
-{
-  typedef std::function<void(std::shared_ptr<MeshDynamic>&)> Callback;
-  static const EngineEventType event_type = EngineEventType::SpawnMeshDynamic;
-  std::string path;
   GUID guid;
   Callback callback;
 };
