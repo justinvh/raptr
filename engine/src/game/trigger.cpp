@@ -89,8 +89,8 @@ std::vector<Rect> Trigger::bbox() const
   Rect rect;
   rect.w = shape.w;
   rect.h = shape.h;
-  rect.x = position().x;
-  rect.y = position().y;
+  rect.x = this->position_abs().x;
+  rect.y = this->position_abs().y;
   return {rect};
 }
 
@@ -131,8 +131,8 @@ void Trigger::render(Renderer* renderer)
   SDL_Rect dst;
   dst.w = static_cast<int32_t>(shape.w);
   dst.h = static_cast<int32_t>(shape.h);
-  dst.x = static_cast<int32_t>(position().x);
-  dst.y = static_cast<int32_t>(position().y); // H - (y + dst.h));
+  dst.x = static_cast<int32_t>(position_abs().x);
+  dst.y = static_cast<int32_t>(position_abs().y); // H - (y + dst.h));
 
   SDL_Color color;
   color.a = 255;
@@ -145,7 +145,9 @@ void Trigger::render(Renderer* renderer)
 
 void Trigger::setup_lua_context(sol::state& state)
 {
-  state.new_usertype<Trigger>("Trigger");
+  state.new_usertype<Trigger>("Trigger",
+    sol::base_classes, sol::bases<Entity>()
+  );
 }
 
 void Trigger::serialize(std::vector<NetField>& list)

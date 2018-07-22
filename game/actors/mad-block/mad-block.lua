@@ -1,10 +1,15 @@
-function init(instance)
+function init()
 	dprintf("Spawning mad block!")
-	game:spawn_trigger({200, 100, 256, 128}, on_danger_zone_enter, on_danger_zone_exit)
+	local trigger_size = {0, -256, 32, 256}
+	game:spawn_trigger(trigger_size, on_danger_init, on_danger_zone_enter, on_danger_zone_exit)
 end
 
-function think(instance, delta_ms)
+function think(delta_ms)
 		
+end
+
+function on_danger_init(trigger)
+	instance:add_child(trigger)
 end
 
 function on_danger_zone_enter(character, trigger)

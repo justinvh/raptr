@@ -161,6 +161,7 @@ void Game::handle_actor_spawn_event(const ActorSpawnEvent& event)
   actor->pos_.y = 0;
   if (actor->is_scripted) {
     this->setup_lua_context(actor->lua);
+    actor->lua["instance"] = actor;
     actor->lua["__filename__"] = actor->lua_script_fileinfo.file_relative.string();
     actor->lua.safe_script(actor->lua_script);
   }
@@ -168,7 +169,7 @@ void Game::handle_actor_spawn_event(const ActorSpawnEvent& event)
   this->spawn_now(actor);
   event.callback(actor);
   if (actor->is_scripted) {
-    actor->lua["init"](actor);
+    actor->lua["init"]();
   }
 }
 
@@ -232,7 +233,7 @@ bool Game::process_engine_events()
     entity->think(this_ptr);
 
     const Point& old_point = last_known_entity_pos[entity];
-    Point& new_point = entity->position();
+    Point& new_point = entity->position_abs();
 
     if (std::fabs(old_point.x - new_point.x) > 0.5 ||
       std::fabs(old_point.y - new_point.y) > 0.5) {
@@ -243,7 +244,7 @@ bool Game::process_engine_events()
       for (auto& b : entity->bounds()) {
         rtree.Insert(b.min, b.max, entity.get());
       }
-      last_known_entity_pos[entity] = entity->position();
+      last_known_entity_pos[entity] = entity->position_abs();
     }
 
     if (new_point.y < -100) {
@@ -383,7 +384,7 @@ void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback cal
 {
   this->spawn_character("raptr", [&, controller_id, callback](auto& character)
   {
-    character->position().y = 500;
+    character->position_rel().y = 500;
     character->flashlight = true;
     character->attach_controller(controllers[controller_id]);
     renderer->camera_follow(character);
@@ -568,10 +569,10 @@ bool Game::init_controllers()
 
 void Game::spawn_now(const std::shared_ptr<Entity>& entity)
 {
-  auto& pos = entity->position();
+  auto pos = entity->position_abs();
 
   const auto& bounds = entity->bounds();
-  last_known_entity_pos[entity] = entity->position();
+  last_known_entity_pos[entity] = entity->position_abs();
   last_known_entity_bounds[entity] = bounds;
 
   for (const auto& b : bounds) {
@@ -615,19 +616,19 @@ bool Game::init_demo()
   {
     trigger->on_enter = [](std::shared_ptr<Character>& character, Trigger* trigger)
     {
-      character->velocity().y += 25 * kmh_to_ps;
+      character->velocity_rel().y += 25 * kmh_to_ps;
     };
   });
 
   this->spawn_actor("actors/demo/demo.toml", [](auto& mesh)
   {
-    mesh->position().y = 25;
+    mesh->position_rel().y = 25;
   });
 
-  this->spawn_actor("actors/mad-block/mad-block.toml", [](auto& mesh)
+  this->spawn_actor("actors/mad-block/mad-block.toml", [&](auto& mesh)
   {
-    mesh->position().y = 200;
-    mesh->position().x = 20;
+    mesh->position_rel().y = 200;
+    mesh->position_rel().x = 20;
   });
 
   return true;

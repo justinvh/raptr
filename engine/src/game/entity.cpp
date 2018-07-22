@@ -31,9 +31,9 @@ const std::array<unsigned char, 16>& Entity::guid() const
 
 std::vector<Rect> Entity::want_position_x(int64_t delta_us)
 {
-  double dt = delta_us / 1e6;
-  Point pos = this->position();
-  const Point& vel = this->velocity();
+  const double dt = delta_us / 1e6;
+  Point pos = this->position_rel();
+  const Point& vel = this->velocity_rel();
   pos.x += vel.x * dt;
 
   // Need a transformation matrix for this sort of stuff
@@ -49,9 +49,9 @@ std::vector<Rect> Entity::want_position_x(int64_t delta_us)
 std::vector<Rect> Entity::want_position_y(int64_t delta_us)
 {
   const auto delta_sec = delta_us / 1e6;
-  Point pos = this->position();
-  const auto& vel = this->velocity();
-  const auto& acc = this->acceleration();
+  Point pos = this->position_rel();
+  const auto& vel = this->velocity_rel();
+  const auto& acc = this->acceleration_rel();
   const auto delta_vel = delta_sec * acc.y;
   pos.y += vel.y * delta_sec + delta_vel / 2.0 * delta_sec;
 
@@ -147,8 +147,8 @@ bool Entity::intersect_slow(const Entity* other, const Rect& this_bbox) const
   const uint8_t* other_pixels = reinterpret_cast<uint8_t*>(other_surface->pixels);
   const int32_t other_bpp = other_surface->format->BytesPerPixel;
 
-  auto& this_pos = this->position();
-  auto& other_pos = other->position();
+  auto this_pos = this->position_abs();
+  const auto other_pos = other->position_abs();
   auto& this_frame = this->collision_frame;
   auto& other_frame = other->collision_frame;
 
@@ -206,7 +206,7 @@ bool Entity::intersect_slow(const Rect& other_box) const
   const uint8_t* pixels = reinterpret_cast<uint8_t*>(surface->pixels);
   const int32_t bpp = surface->format->BytesPerPixel;
 
-  auto& pos = this->position();
+  const auto pos = this->position_abs();
   auto& frame = collision_frame;
 
   // x0 position
@@ -234,6 +234,34 @@ bool Entity::intersect_slow(const Rect& other_box) const
   return false;
 }
 
+void Entity::add_child(std::shared_ptr<Entity> child)
+{
+  child->set_parent(this->shared_from_this());
+  children.push_back(child);
+}
+
+void Entity::remove_child(const std::shared_ptr<Entity>& child)
+{
+  std::vector<std::shared_ptr<Entity>> new_children;
+
+  for (auto& c : children) {
+    if (c == child) {
+      continue;
+    }
+    new_children.push_back(c);
+  }
+
+  children = new_children;
+}
+
+void Entity::set_parent(std::shared_ptr<Entity> new_parent)
+{
+  if (parent) {
+    parent->remove_child(this->shared_from_this());
+  }
+  parent = new_parent;
+}
+
 bool Entity::intersect_fast(const Rect& other_box) const
 {
   const auto& self_boxes = this->bbox();
@@ -246,4 +274,15 @@ bool Entity::intersect_fast(const Rect& other_box) const
 
   return false;
 }
+
+
+void Entity::setup_lua_context(sol::state& state)
+{
+  state.new_usertype<Entity>("Entity",
+    "add_child", &Entity::add_child,
+    "remove_child", &Entity::remove_child,
+    "set_parent", &Entity::set_parent
+  );
+}
+
 } // namespace raptr

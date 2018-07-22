@@ -173,8 +173,8 @@ void Renderer::run_frame(bool force_render)
             entities_followed.end(),
             [](const auto& lhs, const auto& rhs)
             {
-              auto& p1 = lhs->position();
-              auto& p2 = rhs->position();
+              auto& p1 = lhs->position_abs();
+              auto& p2 = rhs->position_abs();
               return p1.x < p2.x;
             });
 
@@ -200,7 +200,7 @@ void Renderer::run_frame(bool force_render)
     // Setup the initial camera where we are going to try and merge players together
     {
       const auto& entity = entities_followed[current_entity_index];
-      auto& pos = entity->position();
+      auto pos = entity->position_abs();
       auto bbox = entity->bbox()[0];
 
       int32_t x = static_cast<int32_t>((pos.x + bbox.w / 2.0));
@@ -215,7 +215,7 @@ void Renderer::run_frame(bool force_render)
     int32_t t_right = right;
     while (++current_entity_index < num_entities) {
       const auto& entity = entities_followed[current_entity_index];
-      auto& pos = entity->position();
+      auto pos = entity->position_abs();
       auto bbox = entity->bbox()[0];
       int32_t x = static_cast<int32_t>(pos.x + bbox.w / 2.0);
       t_right += min_rect_hw;

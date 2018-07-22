@@ -25,7 +25,10 @@ auto logger = raptr::_get_logger(__FILE__);
 
 namespace raptr {
 
-void Game::lua_trigger_wrapper(sol::state& view, sol::table trigger_params, sol::protected_function lua_on_enter, sol::protected_function lua_on_exit)
+void Game::lua_trigger_wrapper(sol::state& view, sol::table trigger_params, 
+                               sol::protected_function lua_on_init,
+                               sol::protected_function lua_on_enter, 
+                               sol::protected_function lua_on_exit)
 {
   if (trigger_params == sol::nil) {
     logger->error("spawn_trigger requires 3 arguments");
@@ -45,22 +48,26 @@ void Game::lua_trigger_wrapper(sol::state& view, sol::table trigger_params, sol:
   // Since Lua will keep track of its shit.
   auto table = view.create_named_table(trigger_id);
 
+  table["on_init"] = lua_on_init;
   table["on_enter"] = lua_on_enter;
   table["on_exit"] = lua_on_exit;
 
   this->spawn_trigger(trigger_rect, [&, trigger_id](auto& trigger)
   {
-    trigger->on_enter = [&, trigger_id](std::shared_ptr<Character>& character, Trigger* trigger)
+    trigger->on_enter = [&, trigger_id](std::shared_ptr<Character>& character, Trigger* trigger_l)
     {
       const auto func = view[trigger_id];
-      auto result = func["on_enter"](*character.get(), *trigger);
+      auto result = func["on_enter"](character, trigger_l->shared_from_this());
     };
 
-    trigger->on_exit = [&, trigger_id](std::shared_ptr<Character>& character, Trigger* trigger)
+    trigger->on_exit = [&, trigger_id](std::shared_ptr<Character>& character, Trigger* trigger_l)
     {
       const auto func = view[trigger_id];
-      auto result = func["on_exit"](*character.get(), *trigger);
+      auto result = func["on_exit"](character, trigger_l->shared_from_this());
     };
+
+    const auto init_func = view[trigger_id];
+    init_func["on_init"](trigger->shared_from_this());
   });
 }
 
@@ -68,6 +75,7 @@ void Game::setup_lua_context(sol::state& state)
 {
   using namespace std::placeholders;
 
+  Entity::setup_lua_context(state);
   Actor::setup_lua_context(state);
   Character::setup_lua_context(state);
   Trigger::setup_lua_context(state);
@@ -77,10 +85,11 @@ void Game::setup_lua_context(sol::state& state)
 
     "spawn_trigger", [&](Game& game,
                          sol::table trigger_params, 
+                         sol::protected_function lua_on_init, 
                          sol::protected_function lua_on_enter, 
                          sol::protected_function lua_on_exit) -> void
     {
-      game.lua_trigger_wrapper(state, trigger_params, lua_on_enter, lua_on_exit);
+      game.lua_trigger_wrapper(state, trigger_params, lua_on_init, lua_on_enter, lua_on_exit);
     },
 
     "renderer", &Game::renderer,

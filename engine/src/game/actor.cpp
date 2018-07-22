@@ -119,9 +119,9 @@ std::shared_ptr<Actor> Actor::from_toml(const FileInfo& toml_path)
     actor->is_scripted = true;
   }
 
-  auto& pos = actor->position();
-  auto& vel = actor->velocity();
-  auto& acc = actor->acceleration();
+  auto& pos = actor->position_rel();
+  auto& vel = actor->velocity_rel();
+  auto& acc = actor->acceleration_rel();
   pos.x = 0;
   pos.y = 0;
   vel.x = 0;
@@ -134,7 +134,9 @@ std::shared_ptr<Actor> Actor::from_toml(const FileInfo& toml_path)
 
 void Actor::setup_lua_context(sol::state& state)
 {
-  state.new_usertype<Actor>("Actor");
+  state.new_usertype<Actor>("Actor",
+    sol::base_classes, sol::bases<Entity>()
+  );
 }
 
 std::vector<Rect> Actor::bbox() const
@@ -142,7 +144,7 @@ std::vector<Rect> Actor::bbox() const
   std::vector<Rect> boxes;
   Rect box;
   auto& current_frame = sprite->current_animation->current_frame();
-  auto& pos = this->position();
+  auto pos = this->position_abs();
   box.x = pos.x;
   box.y = pos.y;
   box.w = current_frame.w * sprite->scale;
@@ -153,7 +155,7 @@ std::vector<Rect> Actor::bbox() const
 
 void Actor::think(std::shared_ptr<Game>& game)
 {
-  auto& pos = position();
+  auto pos = this->position_abs();
   sprite->x = pos.x;
   sprite->y = pos.y;
 }

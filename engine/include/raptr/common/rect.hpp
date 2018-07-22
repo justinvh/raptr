@@ -12,6 +12,30 @@ struct Point
 {
   double x, y;
 
+  Point operator+(const Point& other) const
+  {
+    return {x + other.x, y + other.y};
+  }
+
+  Point operator-(const Point& other) const
+  {
+    return {x - other.x, y - other.y};
+  }
+
+  Point& operator+=(const Point& other)
+  {
+    x += other.x;
+    y += other.y;
+    return *this;
+  }
+
+  Point& operator-=(const Point& other)
+  {
+    x -= other.x;
+    y -= other.y;
+    return *this;
+  }
+
   bool operator==(const Point& other) const
   {
     return std::fabs(other.x - x) < 1e-5 && std::fabs(other.y - y) < 1e-5;

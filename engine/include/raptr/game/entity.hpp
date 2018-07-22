@@ -37,7 +37,7 @@ typedef std::array<unsigned char, 16> GUID;
   This could be a static mesh, a character, or a simple platform. The idea is that
   an Entity is something you should care about as a player.
 */
-class Entity : public Serializable
+class Entity : public Serializable, public std::enable_shared_from_this<Entity>
 {
 public:
   Entity();
@@ -74,6 +74,11 @@ public:
     return all_bounds;
   }
 
+  virtual void add_child(std::shared_ptr<Entity> child);
+  virtual void remove_child(const std::shared_ptr<Entity>& child);
+
+  virtual void set_parent(std::shared_ptr<Entity> new_parent);
+
   /*!
     Returns the unique id for this entity in the world
     \return a 32-bit signed integer representing a unique entity id
@@ -109,6 +114,8 @@ public:
   */
   virtual void render(Renderer* render) = 0;
 
+  static void setup_lua_context(sol::state& state);
+
   /*!
     This method will determine how the entity interacts with the game.
     This include computing position, velocity, and acceleration updates; how the game elements
@@ -133,13 +140,21 @@ public:
     Return the current position of the entity
     \return A double-precision point of the Entity position
   */
-  virtual Point& position()
+  virtual Point& position_rel()
   {
     return pos_;
   }
 
-  virtual const Point& position() const
+  virtual const Point& position_rel() const
   {
+    return pos_;
+  }
+
+  virtual Point position_abs() const
+  {
+    if (parent) {
+      return parent->position_abs() + pos_;
+    }
     return pos_;
   }
 
@@ -147,13 +162,21 @@ public:
     Return the current velocity of the entity
     \return A double-precision point of the Entity velocity
   */
-  virtual Point& velocity()
+  virtual Point& velocity_rel()
   {
     return vel_;
   }
 
-  virtual const Point& velocity() const
+  virtual const Point& velocity_rel() const
   {
+    return vel_;
+  }
+
+  virtual Point velocity_abs() const
+  {
+    if (parent) {
+      return parent->velocity_abs() + vel_;
+    }
     return vel_;
   }
 
@@ -161,13 +184,21 @@ public:
     Return the current acceleration of the entity
     \return A double-precision point of the Entity acceleration
   */
-  virtual Point& acceleration()
+  virtual Point& acceleration_rel()
   {
     return acc_;
   }
 
-  virtual const Point& acceleration() const
+  virtual const Point& acceleration_rel() const
   {
+    return acc_;
+  }
+
+  virtual Point acceleration_abs() const
+  {
+    if (parent) {
+      return parent->acceleration_abs() + acc_;
+    }
     return acc_;
   }
 
@@ -182,6 +213,9 @@ public:
   bool deserialize(const std::vector<NetField>& fields) override = 0;
 
 public:
+  std::shared_ptr<Entity> parent;
+  std::vector<std::shared_ptr<Entity>> children;
+
   double gravity_ps2;
 
   //! The name of the entity

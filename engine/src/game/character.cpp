@@ -51,7 +51,7 @@ void Character::attach_controller(std::shared_ptr<Controller>& controller_)
 std::vector<Rect> Character::bbox() const
 {
   Rect box;
-  auto& pos = this->position();
+  auto pos = this->position_abs();
   auto& current_frame = sprite->current_animation->current_frame();
   box.x = pos.x;
   box.y = pos.y;
@@ -152,9 +152,9 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
     character->do_pixel_collision_test = true;
   }
 
-  auto& pos = character->position();
-  auto& vel = character->velocity();
-  auto& acc = character->acceleration();
+  auto& pos = character->position_rel();
+  auto& vel = character->velocity_rel();
+  auto& acc = character->acceleration_rel();
   pos.x = 0;
   pos.y = 0;
   vel.x = 0;
@@ -168,8 +168,8 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
 
 bool Character::on_button_down(const ControllerState& state)
 {
-  auto& vel = this->velocity();
-  auto& acc = this->acceleration();
+  auto& vel = this->velocity_rel();
+  auto& acc = this->acceleration_rel();
   if (state.button == Button::a && jump_count < jumps_allowed) {
     if (gravity_ps2 < 0) {
       vel.y = jump_vel_ps;
@@ -200,7 +200,7 @@ bool Character::on_button_down(const ControllerState& state)
 
 bool Character::on_button_up(const ControllerState& state)
 {
-  auto& vel = this->velocity();
+  auto& vel = this->velocity_rel();
   if (state.button == Button::a) {
     if (vel.y > 0) {
       vel.y = 0;
@@ -211,7 +211,7 @@ bool Character::on_button_up(const ControllerState& state)
 
 bool Character::on_left_joy(const ControllerState& state)
 {
-  auto& vel = this->velocity();
+  auto& vel = this->velocity_rel();
   float mag_x = std::fabs(state.x);
 
   if (mag_x < 0.01f) {
@@ -248,7 +248,7 @@ void Character::render(Renderer* renderer)
 void Character::run(float scale)
 {
   moving = true;
-  auto& vel = this->velocity();
+  auto& vel = this->velocity_rel();
 
   if (vel.x > 0 && scale < 0 || vel.x < 0 && scale > 0) {
     dash_time_usec = 0;
@@ -305,7 +305,7 @@ void Character::serialize(std::vector<NetField>& list)
 void Character::stop()
 {
   moving = false;
-  auto& vel = this->velocity();
+  auto& vel = this->velocity_rel();
   dash_time_usec = 0;
   vel_exp.x = 0;
   sprite->speed = 1.0;
@@ -322,9 +322,9 @@ void Character::think(std::shared_ptr<Game>& game)
 {
   const auto delta_us = game->frame_delta_us;
   const auto delta_s = delta_us / 1e6;
-  auto& vel = this->velocity();
-  auto& acc = this->acceleration();
-  auto& pos = this->position();
+  auto& vel = this->velocity_rel();
+  auto& acc = this->acceleration_rel();
+  auto& pos = this->position_rel();
 
   if (jump_count) {
     jump_time_us += delta_us;
@@ -446,7 +446,7 @@ void Character::think(std::shared_ptr<Game>& game)
     auto intersected = game->intersect_entity(this, above_check);
     Character* character = dynamic_cast<Character*>(intersected.get());
     if (character && !character->moving) {
-      auto& ov = intersected->velocity();
+      auto& ov = intersected->velocity_rel();
       ov.x = vel.x;
     }
     pos.x = want_x.x;
@@ -474,7 +474,7 @@ void Character::think(std::shared_ptr<Game>& game)
   } else {
     const auto character = dynamic_cast<Character*>(intersected_entity.get());
     if (character) {
-      auto& ov = intersected_entity->velocity();
+      auto& ov = intersected_entity->velocity_rel();
       ov.y = vel.y;
     } else {
       vel.y = 0;
@@ -499,14 +499,16 @@ void Character::think(std::shared_ptr<Game>& game)
     sprite->set_animation("Idle");
   }
 
-  sprite->x = pos.x;
-  sprite->y = pos.y;
+  auto sprite_pos = this->position_abs();
+
+  sprite->x = sprite_pos.x;
+  sprite->y = sprite_pos.y;
 }
 
 void Character::walk(float scale)
 {
   moving = true;
-  auto& vel = this->velocity();
+  auto& vel = this->velocity_rel();
   if (std::fabs(scale * run_speed_ps) > std::fabs(vel.x)) {
     vel.x = scale * run_speed_ps;
   }

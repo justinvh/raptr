@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include <thread>
+#include <algorithm>
 
 #include <sol.hpp>
 #include <crossguid/guid.hpp>
@@ -54,11 +55,31 @@ public:
   Game& operator=(const Game&) = delete;
   Game& operator=(Game&&) = default;
 
+  std::shared_ptr<Entity>& operator[](const std::string& key)
+  {
+    if (key.size() == 16) {
+      std::array<unsigned char, 16> new_key;
+      std::copy(key.begin(), key.end(), new_key.begin());
+      const auto found = entity_lut.find(new_key);
+      if (found != entity_lut.end()) {
+        return found->second;
+      }
+    }
+    return entity_short_lut[key];
+  }
+
 public:
   /*!
     This should be used when creating a Game. 
   */
   static std::shared_ptr<Game> create(const fs::path& game_root);
+
+  template <class T>
+  std::shared_ptr<T> get_entity(const std::string& key)
+  {
+    const auto entity = (*this)[key];
+    return std::dynamic_pointer_cast<T>(entity);
+  }
 
   /*!
     A headless server. One that does not render or use sound, etc.
@@ -85,6 +106,7 @@ public:
   void lua_trigger_wrapper(
     sol::state& view,
     sol::table trigger_params,
+    sol::protected_function lua_on_init,
     sol::protected_function lua_on_enter,
     sol::protected_function lua_on_exit);
 
@@ -227,7 +249,10 @@ public:
   std::vector<std::shared_ptr<Entity>> entities;
   std::vector<std::shared_ptr<Character>> characters;
 
-  //! A mapping of entity IDs to entities
+  //! A mapping of short-cut IDs
+  std::map<std::string, std::shared_ptr<Entity>> entity_short_lut;
+
+  //! A mapping of entity GUIDs to entities
   std::map<std::array<unsigned char, 16>, std::shared_ptr<Entity>> entity_lut;
 
   //! A map to find what the last known location of an entity was
