@@ -83,7 +83,7 @@ public:
 
   void setup_lua_context(sol::state& state);
   void lua_trigger_wrapper(
-    sol::this_state s,
+    sol::state& view,
     sol::table trigger_params,
     sol::protected_function lua_on_enter,
     sol::protected_function lua_on_exit);

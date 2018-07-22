@@ -11,11 +11,11 @@ Additional developer insight and blog can be found at
 
 ![Our Dinosaur Warrior][raptr-idle]
 
-## Installing and Running v0.1-alpha.7
+## Installing and Running v0.1-alpha.8
 
-It's pretty dang simple under 64-bit Windows right now.
+It's pretty dang simple under 64-bit Windows right now. Raptr is currently in pure engine development.
 
-1. [Download the 0.1-alpha.7 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.7/raptr-0.1.0-alpha.7-Release-win64.zip)
+1. [Download the 0.1-alpha.8 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.8/raptr-0.1.0-alpha.8-Release-win64.zip)
 2. Extract that anywhere your heart desires.
 3. Plug in a 360, GameCube, or Steam controller.
 4. Go into the bin/ folder and run `raptr-client.exe`
@@ -23,14 +23,16 @@ It's pretty dang simple under 64-bit Windows right now.
 
 If you get a complaint about redistributables missing, then try downloading the [Visual C++ Redistributable for Visual Studio 2017 - x64](https://aka.ms/vs/15/release/vc_redist.x64.exe)
 
-## Current State: v0.1-alpha.7
+## Current State: v0.1-alpha.8
 
 Development screenshots are [available in this Imgur Album](https://imgur.com/a/pnREFi5)
 
-![Feature Mash][raptr-0.1-alpha.7]
+![Feature Mash][raptr-0.1-alpha.8]
 
 ## Features with some Hyperbole
 
+- Scriptable objects and triggers
+- An in-game REPL compliments of Lua
 - A state-of-the-art PHY-101 physics system
 - A seamless and fluid split screen local multiplayer
 - An immersive and childish dialog and decision making system
@@ -88,4 +90,4 @@ To be added
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
 
 [raptr-idle]: https://i.imgur.com/sqVdbnN.gif
-[raptr-0.1-alpha.7]: https://i.imgur.com/pNqNhiF.gif
+[raptr-0.1-alpha.8]: https://i.imgur.com/4ThNBMh.gif

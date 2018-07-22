@@ -102,18 +102,19 @@ std::shared_ptr<Actor> Actor::from_toml(const FileInfo& toml_path)
     // The game will initialize this Lua object with other functions
     actor->lua.open_libraries(sol::lib::base, sol::lib::coroutine, sol::lib::string, sol::lib::io);
 
-    FileInfo lua_script;
-    lua_script.game_root = toml_path.game_root;
-    lua_script.file_path = full_script_path;
-    lua_script.file_relative = script_path;
-    lua_script.file_dir = full_script_path.parent_path();
+    FileInfo lua_script_fileinfo;
+    lua_script_fileinfo.game_root = toml_path.game_root;
+    lua_script_fileinfo.file_path = full_script_path;
+    lua_script_fileinfo.file_relative = script_path;
+    lua_script_fileinfo.file_dir = full_script_path.parent_path();
 
-    auto script = lua_script.read();
+    auto script = lua_script_fileinfo.read();
     if (!script) {
-      logger->error("{} failed to read!", lua_script);
+      logger->error("{} failed to read!", lua_script_fileinfo);
       return nullptr;
     }
 
+    actor->lua_script_fileinfo = lua_script_fileinfo;
     actor->lua_script = *script;
     actor->is_scripted = true;
   }

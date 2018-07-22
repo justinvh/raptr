@@ -30,6 +30,7 @@ public:
   void push(const std::string& command);
   void process_commands();
   void think();
+  void show_options(const std::string& options);
 
 public:
   bool shutdown;

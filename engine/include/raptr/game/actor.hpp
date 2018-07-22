@@ -64,6 +64,7 @@ public:
 
   bool is_scripted;
   sol::state lua;
+  FileInfo lua_script_fileinfo;
   std::string lua_script;
 };
 } // namespace raptr

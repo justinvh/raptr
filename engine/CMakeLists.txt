@@ -15,6 +15,9 @@ set(RAPTR_CPP
     src/game/map.cpp
     src/game/trigger.cpp
 
+    # Lua bindings
+    src/game/lua_game.cpp
+
     # Input sources
     src/input/controller.cpp
 

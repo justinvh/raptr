@@ -153,75 +153,6 @@ void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
   event.callback(character);
 }
 
-void Game::lua_trigger_wrapper(sol::this_state s, sol::table trigger_params, sol::protected_function lua_on_enter, sol::protected_function lua_on_exit)
-{
-  sol::state_view view(s);
-
-  if (trigger_params == sol::nil) {
-    logger->error("spawn_trigger requires 3 arguments");
-  }
-
-  const Rect trigger_rect = {
-    trigger_params[1],
-    trigger_params[2],
-    trigger_params[3],
-    trigger_params[4]
-  };
-
-  auto g = xg::newGuid();
-  auto trigger_id = g.str();
-
-  logger->debug("Spawning a Trigger at {}", trigger_rect);
-
-  // This is basically a hack to get around the garbage collector
-  // Since Lua will keep track of its shit.
-  auto table = view.create_named_table(trigger_id);
-
-  table["on_enter"] = lua_on_enter;
-  table["on_exit"] = lua_on_exit;
-
-  this->spawn_trigger(trigger_rect, [&, trigger_id](auto& trigger)
-  {
-    logger->debug("Trigger spawned in Lua land");
-    trigger->on_enter = [&, trigger_id](std::shared_ptr<Character>& character, Trigger* trigger)
-    {
-      const auto func = view[trigger_id];
-      logger->debug("Sending an on_enter trigger in Lua land");
-      auto result = func["on_enter"](*character.get(), *trigger);
-      if (result.valid()) {
-        logger->debug("Lua on enter called successfully");
-      }
-    };
-
-    trigger->on_exit = [&, trigger_id](std::shared_ptr<Character>& character, Trigger* trigger)
-    {
-      logger->debug("Sending an on_exit trigger in Lua land");
-      const auto func = view[trigger_id];
-      auto result = func["on_exit"](*character.get(), *trigger);
-      if (result.valid()) {
-        logger->debug("Lua on exit called successfully");
-      }
-    };
-  });
-}
-
-void Game::setup_lua_context(sol::state& state)
-{
-  using namespace std::placeholders;
-
-  Actor::setup_lua_context(state);
-  Character::setup_lua_context(state);
-  Trigger::setup_lua_context(state);
-  Renderer::setup_lua_context(state);
-
-  state.new_usertype<Game>("Game",
-    "spawn_trigger", &Game::lua_trigger_wrapper,
-    "renderer", &Game::renderer
-  );
-
-  state["game"] = this->shared_from_this();
-}
-
 void Game::handle_actor_spawn_event(const ActorSpawnEvent& event)
 {
   auto actor = Actor::from_toml(game_path.from_root(event.path));
@@ -230,6 +161,7 @@ void Game::handle_actor_spawn_event(const ActorSpawnEvent& event)
   actor->pos_.y = 0;
   if (actor->is_scripted) {
     this->setup_lua_context(actor->lua);
+    actor->lua["__filename__"] = actor->lua_script_fileinfo.file_relative.string();
     actor->lua.safe_script(actor->lua_script);
   }
 

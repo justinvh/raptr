@@ -37,6 +37,11 @@ void Console::process_commands()
       logger->error(e.what());
     }
   }
+
+  if (!commands.empty()) {
+    std::cout << std::endl << "> ";
+  }
+
   commands.clear();
 }
 
@@ -45,7 +50,9 @@ void Console::think()
   bool in_block = false;
   std::stringstream buffer;
   std::string line;
+  std::cout << "> ";
   while (!shutdown) {
+
     std::getline(std::cin, line);
     if (line == "BEGIN") {
       in_block = true;
