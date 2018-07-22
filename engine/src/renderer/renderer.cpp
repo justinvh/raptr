@@ -8,6 +8,7 @@
 #include <raptr/renderer/parallax.hpp>
 #include <raptr/common/clock.hpp>
 #include <raptr/common/logging.hpp>
+#include <raptr/ui/font.hpp>
 
 constexpr int32_t GAME_WIDTH = 720;
 constexpr int32_t GAME_HEIGHT = 405;
@@ -82,6 +83,7 @@ bool Renderer::init(std::shared_ptr<Config>& config)
   this->config = config;
 
   fps = 120;
+  show_fps = false;
   last_render_time_us = clock::ticks();
 
   if (is_headless) {
@@ -98,12 +100,20 @@ bool Renderer::init(std::shared_ptr<Config>& config)
   camera.pos.x = 0;
   camera.pos.y = 0;
 
+  average_frames_after = 5;
+  for (int32_t i = 0; i < average_frames_after; ++i) {
+    metric_frame_lengths.push_back(1e9);
+  }
+  average_frame_length_us = 1e9;
+  average_frame_idx = 0;
+
   logical_size.x = 0;
   logical_size.y = 0;
   logical_size.w = GAME_WIDTH;
   logical_size.h = GAME_HEIGHT;
   desired_size = logical_size;
   window_size = logical_size;
+  render_err_us = 0;
   current_ratio = 1.0;
   desired_ratio = 1.0;
   frame_counter_time_start = clock::ticks();
@@ -122,10 +132,18 @@ void Renderer::run_frame(bool force_render)
     return;
   }
 
-  const auto ms = (clock::ticks() - last_render_time_us) / 1e3;
+  const auto render_delta_us = (clock::ticks() - last_render_time_us);
+  const auto render_delta_ms = render_delta_us * 1e3;
+
+  if (render_delta_us + render_err_us < 1e6 / fps) {
+    return;
+  }
+
+  render_err_us = (render_delta_us + render_err_us) - 1e6 / fps;
+
   last_render_time_us = clock::ticks();
   if (std::fabs(current_ratio - desired_ratio) > 1e-5) {
-    const auto delta_ratio_ms = ratio_per_second / 1000.0 * ms;
+    const auto delta_ratio_ms = ratio_per_second / 1000.0 * render_delta_ms;
     current_ratio += delta_ratio_ms;
     if (delta_ratio_ms > 0 && current_ratio > desired_ratio ||
       delta_ratio_ms < 0 && current_ratio < desired_ratio) {
@@ -281,13 +299,31 @@ void Renderer::run_frame(bool force_render)
 
   ++frame_counter;
   ++total_frames_rendered;
-  
-  if (clock::ticks() - frame_counter_time_start >= 5e6) {
-    const auto secs = (clock::ticks() - frame_counter_time_start) / 1e6;
-    logger->debug("FPS = {} (target={}) ({} frames in {}s)", frame_counter / secs, fps, frame_counter, secs);
-    frame_counter_time_start = clock::ticks();
-    frame_fps = static_cast<float>(frame_counter / secs);
-    frame_counter = 1;
+
+  const int64_t frame_length = clock::ticks() - last_render_time_us;
+  metric_frame_lengths[average_frame_idx % average_frames_after] = frame_length;
+  ++average_frame_idx;
+  average_frame_length_us = 0;
+  for (auto n : metric_frame_lengths) {
+    average_frame_length_us += n;
+  }
+  average_frame_length_us /= average_frames_after;
+
+  if (show_fps) {
+    if (clock::ticks() - frame_counter_time_start >= 1e6) {
+      std::stringstream ss;
+      const auto secs = (clock::ticks() - frame_counter_time_start) / 1e6;
+      const auto current_fps = static_cast<int32_t>(frame_counter / secs);
+      ss << current_fps << " FPS";
+      fps_text = this->add_text({0, 0}, ss.str(), 20);
+      frame_counter_time_start = clock::ticks();
+      frame_fps = static_cast<float>(frame_counter / secs);
+      frame_counter = 1;
+    }
+
+    if (fps_text) {
+      fps_text->render(this, {0, 0});
+    }
   }
 }
 
@@ -315,7 +351,7 @@ void Renderer::camera_follow(std::shared_ptr<Entity> entity)
   entities_followed.push_back(entity);
 }
 
-SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface)
+SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) const
 {
   if (is_headless) {
     return nullptr;
@@ -366,12 +402,20 @@ void Renderer::add_rect(SDL_Rect rect, SDL_Color color,
   }
 }
 
-void Renderer::add_background(std::shared_ptr<Parallax>& background)
+std::shared_ptr<Text> Renderer::add_text(const SDL_Point& position, const std::string& text, 
+                                         uint32_t size, SDL_Color color)
+{
+  auto obj = Text::create(game_root, "default", text, size, color);
+  obj->render(this, position);
+  return obj;
+}
+
+void Renderer::add_background(std::shared_ptr<Parallax> background)
 {
   backgrounds.push_back(background);
 }
 
-void Renderer::add_foreground(std::shared_ptr<Parallax>& foreground)
+void Renderer::add_foreground(std::shared_ptr<Parallax> foreground)
 {
   foregrounds.push_back(foreground);
 }
@@ -408,5 +452,12 @@ void RenderableRect::render(Renderer* renderer, const ClipCamera& camera)
   SDL_RenderDrawRect(sdl_rend, &transformed_dst);
 }
 
+void Renderer::setup_lua_context(sol::state& state)
+{
+  state.new_usertype<Renderer>("Renderer",
+    "show_fps", &Renderer::show_fps,
+    "toggle_fullscreen", &Renderer::toggle_fullscreen
+  );
+}
 
 } // namespace raptr

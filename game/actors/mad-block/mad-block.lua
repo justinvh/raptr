@@ -1,5 +1,5 @@
 function init(instance)
-	spawn_trigger({200, 100, 256, 128}, on_danger_zone_enter, on_danger_zone_exit)
+	game:spawn_trigger({200, 100, 256, 128}, on_danger_zone_enter, on_danger_zone_exit)
 end
 
 function think(instance, delta_ms)

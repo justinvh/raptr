@@ -12,6 +12,7 @@ namespace raptr
 std::optional<std::ifstream> FileInfo::open(bool binary) const
 {
   fs::path full_path = file_path;
+
   logger->debug("Attempting to read {}", file_relative);
 
   if (!fs::exists(full_path)) {

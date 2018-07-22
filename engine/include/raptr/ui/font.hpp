@@ -15,7 +15,8 @@ public:
   std::shared_ptr<SDL_Surface> surface;
   std::shared_ptr<SDL_Texture> texture;
   SDL_Rect bbox;
-  bool allocate(std::shared_ptr<Renderer>& renderer);
+  bool allocate(const Renderer& renderer);
+  void render(Renderer* renderer, const SDL_Point& position);
 
 public:
   static std::shared_ptr<Text> create(const FileInfo& game_root,
@@ -24,5 +25,6 @@ public:
                                       int32_t size,
                                       const SDL_Color& fg,
                                       int32_t max_width = 400);
+
 };
 }

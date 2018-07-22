@@ -84,13 +84,13 @@ bool load_registry(const FileInfo& game_root)
   return true;
 }
 
-bool Text::allocate(std::shared_ptr<Renderer>& renderer)
+bool Text::allocate(const Renderer& renderer)
 {
   if (texture) {
     return false;
   }
 
-  texture.reset(renderer->create_texture(surface), SDLDeleter());
+  texture.reset(renderer.create_texture(surface), SDLDeleter());
   if (!texture) {
     logger->error("Failed to allocate texture");
     return false;
@@ -117,7 +117,7 @@ std::shared_ptr<Text> Text::create(const FileInfo& game_root,
     return nullptr;
   }
 
-  FontAndSize font_size(font, size);
+  const FontAndSize font_size(font, size);
   auto ttf = FONT_REGISTRY.find(font_size);
   if (ttf == FONT_REGISTRY.end()) {
     logger->error("Failed to load {} with font size {}", font, size);
@@ -125,7 +125,7 @@ std::shared_ptr<Text> Text::create(const FileInfo& game_root,
   }
 
   std::shared_ptr<Text> text_obj(new Text);
-  auto renderable = TTF_RenderText_Solid(
+  const auto renderable = TTF_RenderText_Solid(
     ttf->second.get(),
     text.c_str(),
     fg
@@ -139,4 +139,15 @@ std::shared_ptr<Text> Text::create(const FileInfo& game_root,
 
   return text_obj;
 }
+
+
+void Text::render(Renderer* renderer, const SDL_Point& position)
+{
+  this->allocate(*renderer);
+  SDL_Rect dst = bbox;
+  dst.x = position.x;
+  dst.y = position.y;
+  renderer->add_texture(texture, bbox, dst, 0.0, false, false, true, true);
+}
+
 }

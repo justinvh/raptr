@@ -2,6 +2,7 @@
 #include <string>
 
 #include <raptr/game/game.hpp>
+#include <raptr/game/console.hpp>
 #include <raptr/network/server.hpp>
 #include <raptr/common/clock.hpp>
 
@@ -33,7 +34,7 @@ Server::Server(const fs::path& game_root,
   in.reset(SDLNet_AllocPacket(1400));
   out.reset(SDLNet_AllocPacket(1400));
 
-  game = Game::create_headless(game_root);
+  this->attach(Game::create_headless(game_root));
 }
 
 Server::Server(const std::string& server_addr_)
@@ -73,6 +74,8 @@ Server::~Server()
 void Server::attach(std::shared_ptr<Game> game_)
 {
   game = game_;
+  console.reset(new Console());
+  game->setup_lua_context(console->lua);
 }
 
 bool Server::connect()
@@ -121,6 +124,11 @@ void Server::send_engine_events()
 
 void Server::run()
 {
+  if (!game) {
+    logger->error("No game attached");
+    return;
+  }
+
   int64_t sync_rate = static_cast<int64_t>(1.0 / fps * 1e6);
 
   while (!game->shutdown) {
@@ -138,6 +146,7 @@ void Server::run()
       this->send_engine_events();
     }
     game->process_engine_events();
+    console->process_commands();
   }
 }
 

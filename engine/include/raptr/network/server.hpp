@@ -7,12 +7,14 @@
 #include <SDL_net.h>
 
 #include <raptr/network/snapshot.hpp>
+#include "raptr/game/console.hpp"
 
 namespace raptr
 {
 constexpr size_t MAX_SNAPSHOTS = 32;
 
 class Game;
+class Console;
 
 enum class ServerEvent
 {
@@ -67,5 +69,6 @@ public:
   std::string ip_str;
   uint16_t port;
   std::shared_ptr<UDPpacket> in, out;
+  std::shared_ptr<Console> console;
 };
 }

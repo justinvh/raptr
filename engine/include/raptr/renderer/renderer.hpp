@@ -9,6 +9,9 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
+#include <sol.hpp>
+#include <raptr/common/filesystem.hpp>
+
 #include <vector>
 #include <memory>
 #include <mutex>
@@ -30,6 +33,7 @@ class Config;
 class Entity;
 class Parallax;
 class Renderer;
+class Text;
 
 struct Camera
 {
@@ -154,13 +158,16 @@ public:
     Add a background to be rendered, these are special as the rendering call is dependent on the viewport
     /param background- The background that will be rendered (first)
   */
-  void add_background(std::shared_ptr<Parallax>& background);
+  void add_background(std::shared_ptr<Parallax> background);
 
   /*!
     Add a foreground to be rendered, these are special as the rendering call is dependent on the viewport
     /param foreground- The foreground that will be rendered (first)
   */
-  void add_foreground(std::shared_ptr<Parallax>& foreground);
+  void add_foreground(std::shared_ptr<Parallax> foreground);
+
+  std::shared_ptr<Text> add_text(const SDL_Point& position, const std::string& text, 
+                                 uint32_t size = 16, SDL_Color color = {255, 255, 255, 255});
 
   /*!
     Follow an entity so that the camera is centered on it
@@ -176,7 +183,7 @@ public:
     /param surface - A shared pointer to a created SDL_Surface (see Sprite for an example)
     /return A freshly allocated texture created from the surface
   */
-  SDL_Texture* create_texture(std::shared_ptr<SDL_Surface>& surface);
+  SDL_Texture* create_texture(std::shared_ptr<SDL_Surface>& surface) const;
 
   /*!
     Initialize the renderer from a Configuration file
@@ -196,6 +203,9 @@ public:
 
   void scale_to_width(const int32_t width);
 
+
+  static void setup_lua_context(sol::state& state);
+
   /*!
     Toggles between a BORDERLESS fullscreen and Window mode
     /return Whether the window is in fullscreen or not
@@ -207,6 +217,7 @@ public:
 
   //! The configuration that was used to create this Renderer
   std::shared_ptr<Config> config;
+  std::shared_ptr<Text> fps_text;
 
   //! How many frames have been rendered
   uint64_t total_frames_rendered;
@@ -241,8 +252,15 @@ public:
   std::vector<std::shared_ptr<Parallax>> backgrounds;
   std::vector<std::shared_ptr<Parallax>> foregrounds;
 
-  std::mutex add_object_mutex;
+  int64_t render_err_us;
+  int32_t average_frames_after;
+  size_t average_frame_idx;
+  std::vector<int64_t> metric_frame_lengths;
 
+  bool show_fps;
+  FileInfo game_root;
+  std::mutex add_object_mutex;
+  int64_t average_frame_length_us;
   int64_t frame_counter_time_start;
   int32_t frame_counter;
   float frame_fps;

@@ -9,6 +9,7 @@ set(RAPTR_CPP
     # Game sources
     src/game/actor.cpp
     src/game/character.cpp
+    src/game/console.cpp
     src/game/entity.cpp
     src/game/game.cpp
     src/game/map.cpp
@@ -46,6 +47,7 @@ set(RAPTR_HPP
     # Game headers
     include/raptr/game/actor.hpp
     include/raptr/game/character.hpp
+    include/raptr/game/console.hpp
     include/raptr/game/entity.hpp
     include/raptr/game/game.hpp
     include/raptr/game/map.hpp

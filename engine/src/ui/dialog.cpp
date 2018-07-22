@@ -426,7 +426,7 @@ bool Dialog::think(std::shared_ptr<Game>& game) const
   {
     SDL_Rect dst;
     auto& text = active_prompt->r_text;
-    text->allocate(renderer);
+    text->allocate(*renderer);
     auto& texture = text->texture;
     auto& bbox = text->bbox;
     dst.w = bbox.w;
@@ -440,7 +440,7 @@ bool Dialog::think(std::shared_ptr<Game>& game) const
   {
     SDL_Rect dst;
     auto& text = active_prompt->r_name;
-    text->allocate(renderer);
+    text->allocate(*renderer);
     auto& texture = text->texture;
     auto& bbox = text->bbox;
     dst.w = bbox.w;
@@ -458,7 +458,7 @@ bool Dialog::think(std::shared_ptr<Game>& game) const
       auto& choice = active_prompt->choices[i];
       SDL_Rect dst;
       auto& text = i == selected_choice ? choice.r_button_hover : choice.r_button;
-      text->allocate(renderer);
+      text->allocate(*renderer);
       auto& texture = text->texture;
       auto& bbox = text->bbox;
       dst.w = bbox.w;

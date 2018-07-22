@@ -5,7 +5,6 @@
 */
 #pragma once
 
-#define SOL_PRINT_ERRORS 1
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
@@ -83,6 +82,11 @@ public:
   void handle_trigger_spawn_event(const TriggerSpawnEvent& event);
 
   void setup_lua_context(sol::state& state);
+  void lua_trigger_wrapper(
+    sol::this_state s,
+    sol::table trigger_params,
+    sol::protected_function lua_on_enter,
+    sol::protected_function lua_on_exit);
 
 public:
   /*!
