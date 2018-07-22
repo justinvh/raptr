@@ -90,4 +90,4 @@ To be added
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
 
 [raptr-idle]: https://i.imgur.com/sqVdbnN.gif
-[raptr-0.1-alpha.8]: https://i.imgur.com/4ThNBMh.gif
+[raptr-0.1-alpha.8]: https://i.imgur.com/6nBe7DG.gif
