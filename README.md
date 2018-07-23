@@ -23,9 +23,7 @@ It's pretty dang simple under 64-bit Windows right now. Raptr is currently in pu
 
 If you get a complaint about redistributables missing, then try downloading the [Visual C++ Redistributable for Visual Studio 2017 - x64](https://aka.ms/vs/15/release/vc_redist.x64.exe)
 
-## Current State: v0.1-alpha.8
-
-Development screenshots are [available in this Imgur Album](https://imgur.com/a/pnREFi5)
+## Current State: v0.1-alpha.8 - [Check out the development Imgur album](https://imgur.com/a/pnREFi5)
 
 ![Feature Mash][raptr-0.1-alpha.8]
 
