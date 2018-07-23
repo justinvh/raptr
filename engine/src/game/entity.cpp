@@ -20,7 +20,7 @@ Entity::Entity()
   fall_time_us = 0;
   collidable = true;
   think_rate_us = 0;
-  gravity_ps2 = -9.8 * meters_to_pixels;
+  gravity_ps2 = 0;
   last_think_time_us = clock::ticks();
 }
 
@@ -291,6 +291,7 @@ void Entity::setup_lua_context(sol::state& state)
     "pos", &Entity::pos_,
     "vel", &Entity::vel_,
     "acc", &Entity::acc_,
+    "gravity_ps2", &Entity::gravity_ps2,
     "add_child", &Entity::add_child,
     "remove_child", &Entity::remove_child,
     "set_parent", &Entity::set_parent,

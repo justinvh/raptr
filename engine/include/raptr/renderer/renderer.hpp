@@ -211,7 +211,7 @@ public:
     Toggles between a BORDERLESS fullscreen and Window mode
     /return Whether the window is in fullscreen or not
   */
-  bool toggle_fullscreen() const;
+  bool toggle_fullscreen();
 
 public:
   bool is_headless;

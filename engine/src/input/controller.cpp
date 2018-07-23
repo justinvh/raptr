@@ -277,4 +277,11 @@ Controller::SDLInternal::~SDLInternal()
     SDL_JoystickClose(joystick);
   }
 }
+
+void Controller::setup_lua_context(sol::state& state)
+{
+  state.new_usertype<Controller>("Controller");
+}
+
+
 } // namespace raptr

@@ -86,7 +86,7 @@ bool Game::poll_events()
     auto controller = controllers.begin();
     ++controller;
     auto x = characters[0]->pos_.x;
-    this->spawn_character("raptr", [&](auto& character)
+    this->spawn_character("characters/raptr.toml", [&](auto& character)
     {
       character->attach_controller(controller->second);
       character->pos_.x = x;
@@ -129,6 +129,7 @@ void Game::handle_controller_event(const ControllerEvent& controller_event)
   // Is this a new character?
   if (e.type == SDL_CONTROLLERBUTTONDOWN &&
     controller_to_character.find(controller_id) == controller_to_character.end()) {
+    controllers_active.push_back(controllers[controller_id]);
     this->spawn_player(controller_id);
     return;
   }
@@ -149,9 +150,21 @@ void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
   character->guid_ = event.guid;
   character->pos_.x = 0;
   character->pos_.y = 0;
-  characters.push_back(character);
+
+  if (character->is_scripted) {
+    this->setup_lua_context(character->lua);
+    character->lua["instance"] = character;
+    character->lua["__filename__"] = character->lua_script_fileinfo.file_relative.string();
+    character->lua.safe_script(character->lua_script);
+  }
+
   this->spawn_now(character);
   event.callback(character);
+  if (character->is_scripted) {
+    character->lua["init"]();
+  }
+
+  characters.push_back(character);
 }
 
 void Game::handle_actor_spawn_event(const ActorSpawnEvent& event)
@@ -383,11 +396,13 @@ std::shared_ptr<Character> Game::intersect_character(
 
 void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback callback)
 {
-  this->spawn_character("raptr", [&, controller_id, callback](auto& character)
+  ///this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
+  this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
   {
     character->position_rel().y = 500;
     character->flashlight = true;
     character->attach_controller(controllers[controller_id]);
+    character->gravity_ps2 = gravity_ps2;
     renderer->camera_follow(character);
     controller_to_character[controller_id].push_back(character);
     callback(character);
@@ -415,7 +430,7 @@ void Game::spawn_character(const std::string& path, CharacterSpawnEvent::Callbac
   auto event = new CharacterSpawnEvent();
   auto g = xg::newGuid();
   event->guid = g.bytes();
-  event->path = "characters/" + path + ".toml";
+  event->path = path;
   event->callback = callback;
   this->add_event<CharacterSpawnEvent>(event);
 }
@@ -436,7 +451,7 @@ void Game::spawn_trigger(const Rect& rect, TriggerSpawnEvent::Callback callback)
 bool Game::init()
 {
   shutdown = false;
-  use_threaded_renderer = true;
+  use_threaded_renderer = false;
 
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
@@ -626,7 +641,7 @@ bool Game::init_demo()
     mesh->position_rel().y = 25;
   });
 
-  this->spawn_actor("actors/mad-block/mad-block.toml", [&](auto& mesh)
+  this->spawn_character("actors/mad-block/mad-block.toml", [&](auto& mesh)
   {
     (*this)["mad-block"] = mesh;
     mesh->position_rel().y = 200;

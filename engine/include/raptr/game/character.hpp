@@ -7,6 +7,7 @@
 #include <memory>
 #include <cstdint>
 #include <raptr/game/entity.hpp>
+#include <raptr/game/actor.hpp>
 #include <raptr/common/filesystem.hpp>
 #include <raptr/input/controller.hpp>
 
@@ -55,13 +56,6 @@ public:
   */
   std::vector<Rect> bbox() const override;
 
-  /*! 
-    Triggers the "crouch" animation of the character. This will influence
-    how the character moves. The crouch factor is multiplied against either the walk
-    or run speed when this is called.
-  */
-  virtual void crouch();
-
   /*!
     Generates a Character object from a TOML configuration file
     /param path - The path to the TOML file
@@ -95,6 +89,38 @@ public:
     \param scale - A 0.0-1.0 multiplier that will be used to calculate the final run speed
   */
   virtual void walk(float scale);
+
+  /*!
+  */
+  virtual void move_to(double x, double y, float scale);
+  virtual void move_to_rel(double x, double y, float scale);
+
+  /*!
+  */
+  virtual void walk_to(double x, double y);
+  virtual void walk_to_rel(double x, double y);
+
+  /*!
+  */
+  virtual void run_to(double x, double y);
+  virtual void run_to_rel(double x, double y);
+
+  /*!
+  */
+  virtual void jump();
+
+  /*!
+   */
+  virtual void fall();
+
+  /*
+  */
+  virtual void dash();
+
+  /*
+  */
+  virtual void turn_around();
+
 
 private:
   /*! 
@@ -130,8 +156,11 @@ public:
   bool flashlight;
   std::shared_ptr<Sprite> flashlight_sprite;
 
+  //! If true, then a tweening is occuring
+  bool is_tweening;
+
   //! If the think() determines the character is falling down, then this will be set
-  bool falling;
+  bool is_falling;
 
   //! If true, then a multiplier is put against the acceleration downwards
   bool fast_fall;
@@ -170,8 +199,15 @@ public:
 
   int32_t bunny_hop_count;
 
+  uint64_t think_frame;
+
   ControllerState last_controller_state, dash_controller_state;
 
   Point vel_exp;
+
+  bool is_scripted;
+  sol::state lua;
+  FileInfo lua_script_fileinfo;
+  std::string lua_script;
 };
 } // namespace raptr

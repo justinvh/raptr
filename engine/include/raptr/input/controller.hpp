@@ -8,6 +8,7 @@
 #include <functional>
 #include <vector>
 #include <memory>
+#include <sol.hpp>
 #include <raptr/common/filesystem.hpp>
 
 #undef SDL_JOYSTICK_DINPUT
@@ -128,6 +129,8 @@ public:
   {
     return sdl.controller_id;
   }
+
+  static void setup_lua_context(sol::state& state);
 
 public:
   ControllerState state;

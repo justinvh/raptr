@@ -4,8 +4,14 @@ function init()
 	game:spawn_trigger(trigger_size, on_danger_init, on_danger_zone_enter, on_danger_zone_exit)
 end
 
-function think(delta_ms)
-		
+walk_dir = -1
+function think(delta_us)
+	if (instance.is_tweening) then
+		return
+	end
+
+	instance:walk_to_rel(walk_dir * 100, 0)
+	walk_dir = walk_dir * -1
 end
 
 function on_danger_init(trigger)
@@ -14,9 +20,9 @@ end
 
 function on_danger_zone_enter(character, trigger)
 	dprintf("A character entered. Increasing velocity!")
-	character:add_velocity(0, 50)
+	character.gravity_ps2 = -character.gravity_ps2
 end
 
-function on_danger_zone_exit(entity, trigger)
-	dprintf("A character exited...")
+function on_danger_zone_exit(character, trigger)
+	character.gravity_ps2 = -character.gravity_ps2
 end

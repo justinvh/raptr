@@ -75,6 +75,7 @@ void Game::setup_lua_context(sol::state& state)
 {
   using namespace std::placeholders;
 
+  Controller::setup_lua_context(state);
   Entity::setup_lua_context(state);
   Actor::setup_lua_context(state);
   Character::setup_lua_context(state);
@@ -82,7 +83,7 @@ void Game::setup_lua_context(sol::state& state)
   Renderer::setup_lua_context(state);
 
   state.new_usertype<Game>("Game",
-
+    "controllers", &Game::controllers_active,
     "get_actor", &Game::get_entity<Actor>,
     "get_entity", &Game::get_entity<Entity>,
     "get_character", &Game::get_entity<Character>,

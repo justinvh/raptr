@@ -90,18 +90,23 @@ bool Renderer::init(std::shared_ptr<Config>& config)
   zero_offset.x = 0;
   zero_offset.y = -GAME_HEIGHT;
 
+  /*
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+  */
 
   // Initialize SDL with some basics
-  sdl.window = SDL_CreateWindow("RAPTR", 10, 10, 960, 540, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
-  sdl.gl = SDL_GL_CreateContext(sdl.window);
+  sdl.window = SDL_CreateWindow("RAPTR", 10, 10, 960, 540, SDL_WINDOW_SHOWN);
 
+  //sdl.gl = SDL_GL_CreateContext(sdl.window);
+
+  /*
   if (!sdl.gl) {
     logger->error("OpenGL context could not be created: {}", SDL_GetError());
     return false;
   }
+  */
 
   /*
   if (!gladLoadGLLoader(static_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
@@ -324,8 +329,9 @@ void Renderer::run_frame(bool force_render)
   }
 }
 
-bool Renderer::toggle_fullscreen() const
+bool Renderer::toggle_fullscreen() 
 {
+  //std::scoped_lock<add_object_mutex> lck();
   if (is_headless) {
     return false;
   }

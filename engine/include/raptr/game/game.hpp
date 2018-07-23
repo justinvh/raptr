@@ -245,6 +245,7 @@ public:
   FileInfo game_path;
 
   //! A mapping of controller device ID to controller instances
+  std::vector<std::shared_ptr<Controller>> controllers_active;
   std::map<int32_t, std::shared_ptr<Controller>> controllers;
   std::map<int32_t, std::vector<std::shared_ptr<Character>>> controller_to_character;
 

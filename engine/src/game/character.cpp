@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <thread>
 
 #pragma warning(disable : 4996)
 #include <toml/toml.h>
@@ -29,13 +30,15 @@ namespace raptr
 Character::Character()
   : Entity()
 {
+  think_frame = 0;
   fast_fall_scale = 1.0;
   jump_perfect_scale = 1.0;
   walk_speed_ps = 100;
   run_speed_ps = 100;
   jump_vel_ps = 100;
   fast_fall = false;
-  falling = false;
+  is_falling = false;
+  is_tweening = false;
 }
 
 void Character::attach_controller(std::shared_ptr<Controller>& controller_)
@@ -58,11 +61,6 @@ std::vector<Rect> Character::bbox() const
   box.w = current_frame.w * sprite->scale;
   box.h = current_frame.h * sprite->scale;
   return {box};
-}
-
-void Character::crouch()
-{
-  sprite->set_animation("Crouch", true);
 }
 
 bool Character::deserialize(const std::vector<NetField>& fields)
@@ -100,6 +98,7 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
     "character.dash_length_msec",
     "sprite.path",
     "sprite.scale"
+    "script.path"
   };
 
   std::map<std::string, const toml::Value*> dict;
@@ -107,21 +106,38 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   for (const auto& key : toml_keys) {
     const toml::Value* value = v.find(key);
     if (!value) {
-      logger->error("{} is missing {}", toml_relative, key);
-      return nullptr;
+      logger->warn("{} is missing {}", toml_relative, key);
+      continue;
     }
     dict[key] = value;
   }
 
-  std::string sprite_path = dict["sprite.path"]->as<std::string>();
-  if (!fs::exists(toml_path.game_root / sprite_path)) {
-    logger->error("{} is not a valid sprite path in {}", sprite_path, toml_relative);
+  const auto sprite_path = dict["sprite.path"]->as<std::string>();
+  auto full_sprite_path = toml_path.file_dir / sprite_path;
+  if (!fs::exists(full_sprite_path)) {
+    full_sprite_path = toml_path.game_root / sprite_path;
+    if (!fs::exists(full_sprite_path)) {
+      logger->error("{} is not a valid sprite path in {}", sprite_path, toml_relative);
+      return nullptr;
+    }
   }
 
+  auto V = [&](const std::string& key, auto default_value) -> decltype(default_value)
+  {
+    const auto found = dict.find(key);
+    if (found == dict.end()) {
+      logger->warn("Defaulting {} to {}", key, default_value);
+      return default_value;
+    }
+
+    return found->second->as<decltype(default_value)>();
+  };
+
   std::shared_ptr<Character> character(new Character());
+
   FileInfo sprite_file;
   sprite_file.game_root = toml_path.game_root;
-  sprite_file.file_path = toml_path.game_root / sprite_path;
+  sprite_file.file_path = full_sprite_path;
   sprite_file.file_relative = sprite_path;
   sprite_file.file_dir = sprite_file.file_path.parent_path();
 
@@ -129,27 +145,60 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   character->flashlight_sprite->blend_mode = SDL_BLENDMODE_ADD;
   character->flashlight_sprite->render_in_foreground = true;
   character->sprite = Sprite::from_json(sprite_file);
-  character->sprite->scale = dict["sprite.scale"]->as<double>();
+  character->sprite->scale = V("sprite.scale", 1.0);
   character->sprite->set_animation("Idle");
-  character->walk_speed_ps = dict["character.walk_speed_kmh"]->as<int32_t>() * kmh_to_ps;
-  character->run_speed_ps = dict["character.run_speed_kmh"]->as<int32_t>() * kmh_to_ps;
-  character->jump_vel_ps = dict["character.jump_vel_ms"]->as<int32_t>() * ms_to_ps;
-  character->mass_kg = dict["character.mass_kg"]->as<double>();
+  character->walk_speed_ps = V("character.walk_speed_kmh", 10) * kmh_to_ps;
+  character->run_speed_ps = V("character.run_speed_kmh", 20) * kmh_to_ps;
+  character->jump_vel_ps = V("character.jump_vel_ms", 25) * ms_to_ps;
+  character->mass_kg = V("character.mass_kg", 100.0);
 
-  character->jumps_allowed = dict["character.jumps_allowed"]->as<int32_t>();
-  character->jump_perfect_scale = dict["character.jump_perfect_scale"]->as<double>();
-  character->fast_fall_scale = dict["character.fast_fall_scale"]->as<double>();
+  character->jumps_allowed = V("character.jumps_allowed", 1);
+  character->jump_perfect_scale = V("character.jump_perfect_scale", 1.25);
+  character->fast_fall_scale = V("character.fast_fall_scale", 1.25);
   character->sprite->x = 0;
   character->sprite->y = 0;
   character->jump_count = 0;
-  character->dash_speed_ps = dict["character.dash_speed_kmh"]->as<int32_t>() * kmh_to_ps;
-  character->dash_length_usec = static_cast<int32_t>(dict["character.dash_length_msec"]->as<int32_t>() * 1e3);
+  character->dash_speed_ps = V("character.dash_speed_kmh", 50) * kmh_to_ps;
+  character->dash_length_usec = V("character.dash_length_msec", 100) * 1e3;
   character->dash_time_usec = 0;
 
   character->do_pixel_collision_test = false;
   if (character->sprite->has_animation("Collision")) {
     character->collision_frame = &character->sprite->animations["Collision"].frames[0];
     character->do_pixel_collision_test = true;
+  }
+
+  character->is_scripted = false;
+  const auto script_path_value = v.find("script.path");
+  if (script_path_value) {
+    const auto script_path = script_path_value->as<std::string>();
+    auto full_script_path = toml_path.file_dir / script_path;
+    if (!fs::exists(full_script_path)) {
+      full_script_path = toml_path.game_root / script_path;
+      if (!fs::exists(full_script_path)) {
+        logger->error("{} is not a valid script path in {}", script_path, toml_relative);
+        return nullptr;
+      }
+    }
+
+    // The game will initialize this Lua object with other functions
+    character->lua.open_libraries(sol::lib::base, sol::lib::coroutine, sol::lib::string, sol::lib::io);
+
+    FileInfo lua_script_fileinfo;
+    lua_script_fileinfo.game_root = toml_path.game_root;
+    lua_script_fileinfo.file_path = full_script_path;
+    lua_script_fileinfo.file_relative = script_path;
+    lua_script_fileinfo.file_dir = full_script_path.parent_path();
+
+    auto script = lua_script_fileinfo.read();
+    if (!script) {
+      logger->error("{} failed to read!", lua_script_fileinfo);
+      return nullptr;
+    }
+
+    character->lua_script_fileinfo = lua_script_fileinfo;
+    character->lua_script = *script;
+    character->is_scripted = true;
   }
 
   auto& pos = character->position_rel();
@@ -168,43 +217,158 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
 
 bool Character::on_button_down(const ControllerState& state)
 {
-  auto& vel = this->velocity_rel();
-  auto& acc = this->acceleration_rel();
-  if (state.button == Button::a && jump_count < jumps_allowed) {
-    if (gravity_ps2 < 0) {
-      vel.y = jump_vel_ps;
-    } else {
-      vel.y = -jump_vel_ps;
-    }
-
-    jump_time_us = clock::ticks();
-    sprite->set_animation("Jump");
-    ++jump_count;
-    dash_time_usec = 0;
+  if (state.button == Button::a) {
+    this->jump();
   } else if (state.button == Button::y) {
-    sprite->flip_x = !sprite->flip_x;
-  } else if (state.button == Button::x && dash_time_usec == 0 && jump_count <= jumps_allowed) {
-    sprite->set_animation("Dash");
-    dash_time_usec = 1;
-    if (sprite->flip_x) {
-      vel.x += dash_speed_ps;
-    } else {
-      vel.x -= dash_speed_ps;
+    this->turn_around();
+  } else if (state.button == Button::x) {
+    this->dash();
+  }
+
+  return false;
+}
+
+void Character::walk_to(double x, double y)
+{
+  this->move_to(x, y, 0.5);
+}
+
+void Character::run_to(double x, double y)
+{
+  this->move_to(x, y, 1.0);
+}
+
+void Character::walk_to_rel(double x, double y)
+{
+  this->move_to_rel(x, y, 0.5);
+}
+
+void Character::run_to_rel(double x, double y)
+{
+  this->move_to_rel(x, y, 1.0);
+}
+
+void Character::move_to(double x, double y, float scale)
+{
+  is_tweening = true;
+
+  auto walk_async = [&, x, y, scale]()
+  {
+    auto think_last_frame = think_frame;
+    while (true) {
+      if (think_last_frame == think_frame) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        continue;
+      }
+      think_last_frame = think_frame;
+      const auto pos_abs = this->position_abs();
+      const auto made_it = std::fabs(pos_abs.x - x) < 4; // within 4 pixels
+      if (made_it) {
+        this->stop();
+        break;
+      } else if (x > pos_abs.x) {
+        this->walk(scale);
+      } else {
+        this->walk(-scale);
+      }
+    }
+    is_tweening = false;
+  };
+
+  std::thread t1(walk_async);
+  t1.detach();
+}
+
+void Character::move_to_rel(double x, double y, float scale)
+{
+  is_tweening = true;
+
+  auto walk_async = [&, x, y, scale]()
+  {
+    auto dst = this->position_abs();
+    dst.x += x;
+    dst.y += y;
+
+    auto think_last_frame = think_frame;
+    while (true) {
+      if (think_last_frame == think_frame) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        continue;
+      }
+      think_last_frame = think_frame;
+      const auto pos_abs = this->position_abs();
+      const auto made_it = std::fabs(pos_abs.x - dst.x) < 4; // within 4 pixels
+      if (made_it) {
+        this->position_rel().x += (pos_abs.x - dst.x);
+        this->stop();
+        break;
+      } else if (dst.x > pos_abs.x) {
+        this->walk(scale);
+      } else {
+        this->walk(-scale);
+      }
     }
 
-    vel.y = 0;
-    jump_count++;
+    is_tweening = false;
+  };
+
+  std::thread t1(walk_async);
+  t1.detach();
+}
+
+void Character::jump()
+{
+  if (jump_count >= jumps_allowed) {
+    return;
   }
-  return false;
+
+  auto& vel = this->velocity_rel();
+  if (gravity_ps2 < 0) {
+    vel.y = jump_vel_ps;
+  } else {
+    vel.y = -jump_vel_ps;
+  }
+  jump_time_us = clock::ticks();
+  sprite->set_animation("jump");
+  dash_time_usec = 0;
+  ++jump_count;
+}
+
+void Character::turn_around()
+{
+  sprite->flip_x = !sprite->flip_x;
+}
+
+void Character::dash()
+{
+  auto& vel = this->velocity_rel();
+  if (dash_time_usec != 0 || jump_count >= jumps_allowed) {
+    return;
+  }
+  dash_time_usec = 1;
+  if (sprite->flip_x) {
+    vel.x += dash_speed_ps;
+  } else {
+    vel.x -= dash_speed_ps;
+  }
+
+  vel.y = 0;
+  ++jump_count;
+  sprite->set_animation("Dash");
+}
+
+void Character::fall()
+{
+  auto& vel = this->velocity_rel();
+  if (vel.y > 0) {
+    vel.y = 0;
+  }
 }
 
 bool Character::on_button_up(const ControllerState& state)
 {
-  auto& vel = this->velocity_rel();
   if (state.button == Button::a) {
-    if (vel.y > 0) {
-      vel.y = 0;
-    }
+    this->fall();
   }
   return true;
 }
@@ -222,7 +386,7 @@ bool Character::on_left_joy(const ControllerState& state)
     this->run(state.x);
   }
 
-  if (falling && state.y > 0.5) {
+  if (is_falling && state.y > 0.5) {
     fast_fall = true;
   }
 
@@ -262,7 +426,7 @@ void Character::run(float scale)
 
   //logger->debug("Run speed is {}m/s.", vel.x * pixels_to_meters);
 
-  if (!falling) {
+  if (!is_falling) {
     sprite->set_animation("Run");
     sprite->speed = std::fabs(scale * 2.0);
   }
@@ -282,7 +446,7 @@ void Character::serialize(std::vector<NetField>& list)
     CNF(vel_.y),
     CNF(moving),
     CNF(flashlight),
-    CNF(falling),
+    CNF(is_falling),
     CNF(fast_fall),
     CNF(fast_fall_scale),
     CNF(jump_time_us),
@@ -309,11 +473,11 @@ void Character::stop()
   dash_time_usec = 0;
   vel_exp.x = 0;
   sprite->speed = 1.0;
-  if (!falling) {
+  if (!is_falling) {
     sprite->set_animation("Idle");
   }
 
-  if (falling) {
+  if (is_falling) {
     vel.x = 0;
   }
 }
@@ -349,7 +513,7 @@ void Character::think(std::shared_ptr<Game>& game)
 
   // External forces, like gravity
   Rect fall_check = this->want_position_y(delta_us)[0];
-  if (gravity_ps2 < 0) {
+  if (gravity_ps2 <= 0) {
     fall_check.y -= 0.05;
     this->sprite->flip_y = false;
   } else {
@@ -365,9 +529,9 @@ void Character::think(std::shared_ptr<Game>& game)
       vel.y += gravity_ps2 * delta_us / 1e6;
     }
     fall_time_us += delta_us;
-    falling = true;
+    is_falling = true;
   } else if (!in_dash) {
-    if (falling) {
+    if (is_falling) {
       jump_count = 0;
       jump_time_us = 0;
       fast_fall = false;
@@ -385,7 +549,7 @@ void Character::think(std::shared_ptr<Game>& game)
         sprite->set_animation("Idle");
       }
     }
-    falling = false;
+    is_falling = false;
     fall_time_us = 0;
   }
 
@@ -395,7 +559,7 @@ void Character::think(std::shared_ptr<Game>& game)
     friction /= 2;
   }
 
-  if (falling) {
+  if (is_falling) {
     friction /= 2;
   }
 
@@ -442,7 +606,7 @@ void Character::think(std::shared_ptr<Game>& game)
 
     // Is there something above us?
     Rect above_check = this->want_position_y(delta_us)[0];
-    above_check.y -= 1;
+    above_check.y += 1;
     auto intersected = game->intersect_entity(this, above_check);
     Character* character = dynamic_cast<Character*>(intersected.get());
     if (character && !character->moving) {
@@ -480,7 +644,7 @@ void Character::think(std::shared_ptr<Game>& game)
       vel.y = 0;
     }
 
-    if (!falling) {
+    if (!is_falling) {
       jump_count = 0;
     }
   }
@@ -489,7 +653,7 @@ void Character::think(std::shared_ptr<Game>& game)
     sprite->set_animation("Dash");
   } else if (hitting_wall) {
     sprite->set_animation("Idle");
-  } else if (falling) {
+  } else if (is_falling) {
     sprite->set_animation("Jump");
   } else if (mag_x > walk_speed_ps) {
     sprite->set_animation("Run");
@@ -503,6 +667,12 @@ void Character::think(std::shared_ptr<Game>& game)
 
   sprite->x = sprite_pos.x;
   sprite->y = sprite_pos.y;
+
+  if (is_scripted) {
+    lua["think"](delta_us);
+  }
+
+  ++think_frame;
 }
 
 void Character::walk(float scale)
@@ -514,7 +684,7 @@ void Character::walk(float scale)
   }
   vel_exp.x = scale * run_speed_ps;
 
-  if (!falling) {
+  if (!is_falling) {
     sprite->set_animation("Walk");
     sprite->speed = std::fabs(scale * 2.0);
   }
@@ -525,6 +695,17 @@ void Character::setup_lua_context(sol::state& state)
   state.new_usertype<Character>("Character",
     "add_velocity", &Character::add_velocity,
     "add_acceleration", &Character::add_acceleration,
+    "attach_controller", &Character::attach_controller,
+    "walk_to", &Character::walk_to,
+    "walk_to_rel", &Character::walk_to_rel,
+    "run_to", &Character::run_to,
+    "run_to_rel", &Character::run_to_rel,
+    "controller", &Character::controller,
+    "is_tweening", &Character::is_tweening,
+    "jump", &Character::jump,
+    "fall", &Character::fall,
+    "dash", &Character::dash,
+    "turn_around", &Character::turn_around,
     sol::base_classes, sol::bases<Entity>()
     );
 }
