@@ -164,6 +164,9 @@ public:
                      {
                      });
 
+  bool remove_entity_by_key(const std::string key);
+  bool remove_entity(std::shared_ptr<Entity> entity);
+
   /*!
     Run the game and manage maintaining a healthy FPS
     \return Whether or not the game successfully ran

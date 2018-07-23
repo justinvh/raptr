@@ -524,7 +524,8 @@ void Character::setup_lua_context(sol::state& state)
 {
   state.new_usertype<Character>("Character",
     "add_velocity", &Character::add_velocity,
-    "add_acceleration", &Character::add_acceleration
+    "add_acceleration", &Character::add_acceleration,
+    sol::base_classes, sol::bases<Entity>()
     );
 }
 

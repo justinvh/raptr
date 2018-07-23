@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <functional>
+#include <algorithm>
 
 #include <raptr/common/filesystem.hpp>
 #include <raptr/common/logging.hpp>
@@ -92,7 +93,7 @@ bool Game::poll_events()
       renderer->camera_follow(character);
     });
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F3) {
-    renderer->scale(renderer->current_ratio / 2.0f);
+    renderer->scale(static_cast<float>(renderer->current_ratio / 2.0f));
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F4) {
     renderer->scale(1.0f);
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F5) {
@@ -627,6 +628,7 @@ bool Game::init_demo()
 
   this->spawn_actor("actors/mad-block/mad-block.toml", [&](auto& mesh)
   {
+    (*this)["mad-block"] = mesh;
     mesh->position_rel().y = 200;
     mesh->position_rel().x = 20;
   });
@@ -654,6 +656,86 @@ bool Game::init_renderer()
     });
   }
 
+  return true;
+}
+
+bool Game::remove_entity_by_key(const std::string key)
+{
+  const auto entity = this->get_entity<Entity>(key);
+  if (!entity) {
+    return false;
+  }
+  return this->remove_entity(entity);
+}
+
+bool Game::remove_entity(std::shared_ptr<Entity> entity)
+{
+  for (auto& child : entity->children) {
+    this->remove_entity(child);
+  }
+
+  entity->children.clear();
+
+  const auto found1 = last_known_entity_pos.find(entity);
+  last_known_entity_pos.erase(found1);
+
+  for (auto& b : last_known_entity_bounds[entity]) {
+    rtree.Remove(b.min, b.max, entity.get());
+  }
+
+  const auto found2 = last_known_entity_bounds.find(entity);
+  last_known_entity_bounds.erase(found2);
+
+  const auto found3 = std::find(entities.begin(), entities.end(), entity);
+  entities.erase(found3);
+
+  std::vector<std::string> keys_to_remove;
+  for (auto& pair : entity_short_lut) {
+    if (pair.second == entity) {
+      keys_to_remove.push_back(pair.first);
+    }
+  }
+
+  for (auto& k : keys_to_remove) {
+    const auto found_key = entity_short_lut.find(k);
+    entity_short_lut.erase(found_key);
+  }
+
+  const auto found_guid = entity_lut.find(entity->guid());
+  entity_lut.erase(found_guid);
+
+  if (entity->is_player()) {
+    const auto character = std::dynamic_pointer_cast<Character>(entity);
+    const auto found4 = std::find(characters.begin(), characters.end(), character);
+    for (auto& pair : controller_to_character) {
+      const auto found5 = std::find(pair.second.begin(), pair.second.end(), character);
+      if (found5 != pair.second.end()) {
+        pair.second.erase(found5);
+      }
+    }
+  }
+
+  if (entity->parent) {
+    entity->parent->remove_child(entity);
+  }
+
+  const auto is_followed = std::find(renderer->entities_followed.begin(),
+    renderer->entities_followed.end(),
+    entity);
+
+  if (is_followed != renderer->entities_followed.end()) {
+    renderer->entities_followed.erase(is_followed);
+  }
+
+  const auto is_observed = std::find(renderer->observing.begin(),
+    renderer->observing.end(),
+    entity);
+
+  if (is_observed != renderer->observing.end()) {
+    renderer->observing.erase(is_observed);
+  }
+
+  entity.reset();
   return true;
 }
 

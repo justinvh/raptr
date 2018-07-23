@@ -29,6 +29,14 @@ const std::array<unsigned char, 16>& Entity::guid() const
   return guid_;
 }
 
+std::string Entity::guid_str() const
+{
+  std::string g;
+  g.resize(16);
+  std::copy(guid_.begin(), guid_.end(), g.begin());
+  return g;
+}
+
 std::vector<Rect> Entity::want_position_x(int64_t delta_us)
 {
   const double dt = delta_us / 1e6;
@@ -242,16 +250,11 @@ void Entity::add_child(std::shared_ptr<Entity> child)
 
 void Entity::remove_child(const std::shared_ptr<Entity>& child)
 {
-  std::vector<std::shared_ptr<Entity>> new_children;
-
-  for (auto& c : children) {
-    if (c == child) {
-      continue;
-    }
-    new_children.push_back(c);
+  const auto found = std::find(children.begin(), children.end(), child);
+  if (found == children.end()) {
+    return;
   }
-
-  children = new_children;
+  children.erase(found);
 }
 
 void Entity::set_parent(std::shared_ptr<Entity> new_parent)
@@ -275,13 +278,24 @@ bool Entity::intersect_fast(const Rect& other_box) const
   return false;
 }
 
-
 void Entity::setup_lua_context(sol::state& state)
 {
+  state.new_usertype<Point>("Point",
+    "x", &Point::x,
+    "y", &Point::y
+  );
+
   state.new_usertype<Entity>("Entity",
+    "e", [](Entity* e) { return e->shared_from_this();  },
+    "guid", &Entity::guid_str,
+    "pos", &Entity::pos_,
+    "vel", &Entity::vel_,
+    "acc", &Entity::acc_,
     "add_child", &Entity::add_child,
     "remove_child", &Entity::remove_child,
-    "set_parent", &Entity::set_parent
+    "set_parent", &Entity::set_parent,
+    "children", &Entity::children,
+    "parent", &Entity::parent
   );
 }
 

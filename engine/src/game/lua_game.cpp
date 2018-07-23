@@ -83,6 +83,12 @@ void Game::setup_lua_context(sol::state& state)
 
   state.new_usertype<Game>("Game",
 
+    "get_actor", &Game::get_entity<Actor>,
+    "get_entity", &Game::get_entity<Entity>,
+    "get_character", &Game::get_entity<Character>,
+    "remove_entity_by_key", &Game::remove_entity_by_key,
+    "remove_entity", &Game::remove_entity,
+
     "spawn_trigger", [&](Game& game,
                          sol::table trigger_params, 
                          sol::protected_function lua_on_init, 
@@ -93,7 +99,14 @@ void Game::setup_lua_context(sol::state& state)
     },
 
     "renderer", &Game::renderer,
-    "characters", &Game::characters
+    "characters", [&](Game& game, int32_t n) -> std::shared_ptr<Character>
+    {
+      if ((n - 1) >= game.characters.size()) {
+        return std::shared_ptr<Character>();
+      }
+
+      return game.characters[n - 1];
+    }
   );
 
   state["__filename__"] = "REPL";

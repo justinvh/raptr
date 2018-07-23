@@ -85,6 +85,7 @@ public:
   */
   virtual const std::array<unsigned char, 16>& guid() const;
 
+  virtual std::string guid_str() const;
 
   /*!
   Returns true if this static mesh intersects with another entity
