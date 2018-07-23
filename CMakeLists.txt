@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 # RAPTR, the best around.
 project(raptr
         VERSION 0.1
-        LANGUAGES CXX)
+	LANGUAGES CXX)
 
 # Include additional custom cmake modules
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
@@ -25,6 +25,7 @@ find_package(tinytoml REQUIRED)
 find_package(crossguid CONFIG REQUIRED)
 find_package(Lua REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
+find_package(OpenGL REQUIRED)
 
 add_library(RaptrDependencies INTERFACE)
 
@@ -39,6 +40,7 @@ target_link_libraries(RaptrDependencies INTERFACE
     sdl2_net::sdl2_net
     crossguid
     sol2
+    ${OPENGL_LIBRARIES}
     ${LUA_LIBRARIES}
     ${SDL2_LIBRARIES} 
     ${SDL2_IMAGE_LIBRARIES}
@@ -55,6 +57,7 @@ target_include_directories(RaptrDependencies INTERFACE
     $<TARGET_PROPERTY:tinytoml::tinytoml,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:crossguid,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:sol2,INTERFACE_INCLUDE_DIRECTORIES>
+    ${OPENGL_INCLUDE_DIR}
     ${LUA_INCLUDE_DIR}
     ${SDL2_INCLUDE_DIRS} 
     ${SDL2_IMAGE_INCLUDE_DIRS}

@@ -30,6 +30,7 @@ set(RAPTR_CPP
     src/renderer/parallax.cpp
     src/renderer/renderer.cpp
     src/renderer/sprite.cpp
+    src/renderer/shader.cpp
 
     # Sound sources
     src/sound/sound.cpp
@@ -68,6 +69,7 @@ set(RAPTR_HPP
     include/raptr/renderer/parallax.hpp
     include/raptr/renderer/renderer.hpp
     include/raptr/renderer/sprite.hpp
+    include/raptr/renderer/shader.hpp
 
     # Sound headers
     include/raptr/sound/sound.hpp

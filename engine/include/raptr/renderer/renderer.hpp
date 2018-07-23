@@ -9,6 +9,8 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
+#include <SDL_opengl.h>
+
 #include <sol.hpp>
 #include <raptr/common/filesystem.hpp>
 
@@ -24,7 +26,6 @@ struct SDLDeleter
 {
   void operator()(SDL_Texture* p) const;
   void operator()(SDL_Surface* p) const;
-  void operator()(TTF_Font* p) const;
 };
 
 namespace raptr
@@ -234,6 +235,7 @@ public:
   {
     SDL_Window* window;
     SDL_Renderer* renderer;
+    SDL_GLContext gl;
   } sdl;
 
   SDL_Point zero_offset;
@@ -253,14 +255,10 @@ public:
   std::vector<std::shared_ptr<Parallax>> foregrounds;
 
   int64_t render_err_us;
-  int32_t average_frames_after;
-  size_t average_frame_idx;
-  std::vector<int64_t> metric_frame_lengths;
 
   bool show_fps;
   FileInfo game_root;
   std::mutex add_object_mutex;
-  int64_t average_frame_length_us;
   int64_t frame_counter_time_start;
   int32_t frame_counter;
   float frame_fps;

@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <numeric>
 
+//#include <glad/glad.h>
+
 #include <raptr/game/entity.hpp>
 #include <raptr/config.hpp>
 #include <raptr/renderer/renderer.hpp>
@@ -27,11 +29,6 @@ void SDLDeleter::operator()(SDL_Surface* p) const
   if (p->refcount == 0) {
     SDL_FreeSurface(p);
   }
-}
-
-void SDLDeleter::operator()(TTF_Font* p) const
-{
-  TTF_CloseFont(p);
 }
 
 namespace raptr
@@ -93,19 +90,30 @@ bool Renderer::init(std::shared_ptr<Config>& config)
   zero_offset.x = 0;
   zero_offset.y = -GAME_HEIGHT;
 
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
   // Initialize SDL with some basics
-  sdl.window = SDL_CreateWindow("RAPTR", 10, 10, 960, 540, 0);
+  sdl.window = SDL_CreateWindow("RAPTR", 10, 10, 960, 540, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+  sdl.gl = SDL_GL_CreateContext(sdl.window);
+
+  if (!sdl.gl) {
+    logger->error("OpenGL context could not be created: {}", SDL_GetError());
+    return false;
+  }
+
+  /*
+  if (!gladLoadGLLoader(static_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
+    logger->error("Failed to initialize GLAD!");
+    return false;
+  }
+  */
+
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
   sdl.renderer = SDL_CreateRenderer(sdl.window, -1, SDL_RENDERER_ACCELERATED);
   camera.pos.x = 0;
   camera.pos.y = 0;
-
-  average_frames_after = 5;
-  for (int32_t i = 0; i < average_frames_after; ++i) {
-    metric_frame_lengths.push_back(1e9);
-  }
-  average_frame_length_us = 1e9;
-  average_frame_idx = 0;
 
   logical_size.x = 0;
   logical_size.y = 0;
@@ -139,7 +147,7 @@ void Renderer::run_frame(bool force_render)
     return;
   }
 
-  render_err_us = (render_delta_us + render_err_us) - 1e6 / fps;
+  render_err_us = static_cast<int64_t>((render_delta_us + render_err_us) - 1e6 / fps);
 
   last_render_time_us = clock::ticks();
   if (std::fabs(current_ratio - desired_ratio) > 1e-5) {
@@ -161,8 +169,6 @@ void Renderer::run_frame(bool force_render)
   SDL_RenderClear(sdl.renderer);
   const auto num_entities = entities_followed.size();
   size_t index = 0;
-
-  
 
   // Determine the cameras
   std::vector<ClipCamera> hclippings;
@@ -299,15 +305,6 @@ void Renderer::run_frame(bool force_render)
 
   ++frame_counter;
   ++total_frames_rendered;
-
-  const int64_t frame_length = clock::ticks() - last_render_time_us;
-  metric_frame_lengths[average_frame_idx % average_frames_after] = frame_length;
-  ++average_frame_idx;
-  average_frame_length_us = 0;
-  for (auto n : metric_frame_lengths) {
-    average_frame_length_us += n;
-  }
-  average_frame_length_us /= average_frames_after;
 
   if (show_fps) {
     if (clock::ticks() - frame_counter_time_start >= 1e6) {
