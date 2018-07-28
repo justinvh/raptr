@@ -18,6 +18,7 @@ You will want to first install [vcpkg from Microsoft](https://github.com/Microso
 | picojson       | JSON parsing (for aseprite) |
 | sdl2           | Window and event abstractions |
 | sdl2-image     | Image loading abstractions |
+| sdl2-mixer     | Cross-platform sound |
 | sdl2-net       | Cross-platform UDP setup |
 | sol2           | C++-Lua helpers |
 | spdlog         | Beautifully simple logging |
@@ -40,7 +41,7 @@ $ git checkout 178517052f42d428bb2f304946e635d3c1f318e9 -- ports/fmt
 Notice that this is a `x64-windows` triplet.
 
 ```
-$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image sdl2-net sdl2-ttf picojson cxxopts spdlog tinytoml catch2 crossguid
+$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image sdl2-mixer sdl2-net sdl2-ttf picojson cxxopts spdlog tinytoml catch2 crossguid
 ```
 
 ### 3. Point CMake to the Toolchain file

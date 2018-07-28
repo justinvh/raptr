@@ -10,6 +10,7 @@
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/common/logging.hpp>
 #include <raptr/common/clock.hpp>
+#include <raptr/sound/sound.hpp>
 
 namespace
 {
@@ -39,9 +40,17 @@ AnimationFrame& Animation::current_frame()
 
 bool Animation::next(int64_t clock, double speed_multiplier)
 {
+  auto& f = frames[frame];
   const auto curr = clock::ticks();
-  if ((curr - clock) / 1e3 <= frames[frame].duration / (speed * speed_multiplier)) {
+  if ((curr - clock) / 1e3 <= f.duration / (speed * speed_multiplier)) {
     return false;
+  }
+
+  if (f.has_sound_effect) {
+    if (sound_effect_loop || (!sound_effect_has_played && !sound_effect_loop)) {
+      play_sound(f.sound_effect);
+      sound_effect_has_played = true;
+    }
   }
 
   switch (direction) {
@@ -76,6 +85,20 @@ bool Animation::next(int64_t clock, double speed_multiplier)
       }
       break;
   }
+
+  return true;
+}
+
+bool Animation::register_sound_effect(int32_t frame, FileInfo wav, bool do_loop)
+{
+  if (frame < 0 || frame >= frames.size()) {
+    return false;
+  }
+
+  auto& f = frames[frame];
+  f.has_sound_effect = true;
+  f.sound_effect = wav;
+  sound_effect_loop = do_loop;
 
   return true;
 }
@@ -145,6 +168,8 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
     animation.to = to - from;
     animation.ping_backwards = false;
     animation.hold_last_frame = false;
+    animation.sound_effect_has_played = false;
+    animation.sound_effect_loop = false;
 
     logger->info("Adding animation {}", tag_name);
 
@@ -175,6 +200,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
       anim_frame.w = p_int(frame_size, "w");
       anim_frame.h = p_int(frame_size, "h");
       anim_frame.duration = p_int(frame, "duration");
+      anim_frame.has_sound_effect = false;
 
       animation.speed = 1.0f;
       animation.frames.push_back(anim_frame);
@@ -250,9 +276,34 @@ bool Sprite::set_animation(const std::string& name, bool hold_last_frame)
     return false;
   }
 
+  current_animation->sound_effect_has_played = false;
   current_animation = &animations[name];
   current_animation->frame = 0;
   current_animation->hold_last_frame = hold_last_frame;
   return true;
 }
+
+bool Sprite::register_sound_effect(const std::string& name, int32_t frame, const FileInfo& wav, bool loop)
+{
+  const auto found = animations.find(name);
+  if (found == animations.end()) {
+    return false;
+  }
+
+  auto& f = found->second;
+
+  if (frame == -1) {
+    for (int32_t i = 0; i < f.frames.size(); ++i) {
+      if (!found->second.register_sound_effect(i, wav, loop)) {
+        return false;
+      }
+    }
+  } else {
+    return found->second.register_sound_effect(frame, wav, loop);
+  }
+
+  return true;
+}
+
+
 } // namespace raptr

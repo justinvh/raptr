@@ -7,6 +7,8 @@
 #include <functional>
 #include <algorithm>
 
+#include <SDL_mixer.h>
+
 #include <raptr/common/filesystem.hpp>
 #include <raptr/common/logging.hpp>
 #include <raptr/config.hpp>
@@ -453,7 +455,7 @@ bool Game::init()
   shutdown = false;
   use_threaded_renderer = false;
 
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
+  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
   if (!this->init_filesystem()) {
     logger->error("Failed to initialize filesystem. "
@@ -756,6 +758,13 @@ bool Game::remove_entity(std::shared_ptr<Entity> entity)
 
 bool Game::init_sound()
 {
+  if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
+    logger->error("Failed to initialize SDL_mixer: {}", Mix_GetError());
+    return false;
+  }
+
+  Mix_AllocateChannels(64);
+
   return true;
 }
 

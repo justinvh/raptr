@@ -97,8 +97,8 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
     "character.dash_speed_kmh",
     "character.dash_length_msec",
     "sprite.path",
-    "sprite.scale"
-    "script.path"
+    "sprite.scale",
+    "script.path",
   };
 
   std::map<std::string, const toml::Value*> dict;
@@ -159,7 +159,7 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   character->sprite->y = 0;
   character->jump_count = 0;
   character->dash_speed_ps = V("character.dash_speed_kmh", 50) * kmh_to_ps;
-  character->dash_length_usec = V("character.dash_length_msec", 100) * 1e3;
+  character->dash_length_usec = static_cast<int64_t>(V("character.dash_length_msec", 100) * 1e3);
   character->dash_time_usec = 0;
 
   character->do_pixel_collision_test = false;
@@ -199,6 +199,64 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
     character->lua_script_fileinfo = lua_script_fileinfo;
     character->lua_script = *script;
     character->is_scripted = true;
+  }
+
+  auto sounds_array_obj = v.find("sounds");
+  if (sounds_array_obj) {
+    size_t k = 0;
+    auto sounds_array = sounds_array_obj->as<toml::Array>();
+    for (auto& sound_group : sounds_array) {
+      auto animation_obj = sound_group.find("animation");
+      auto wav_obj = sound_group.find("wav");
+      auto loop_obj = sound_group.find("loop");
+      auto frame_obj = sound_group.find("frame");
+      int32_t frame = 0;
+      bool looping = false;
+
+      if (!animation_obj) {
+        logger->warn("Skipping [[sounds]] index at {} because it is missing animation key", k);
+        continue;
+      }
+
+      const auto animation_name = animation_obj->as<std::string>();
+      if (!character->sprite->has_animation(animation_name)) {
+        logger->warn("Skipping [[sounds]] index at {} because {} is not an available animation",
+          k, animation_name);
+        continue;
+      }
+
+      if (!wav_obj) {
+        logger->warn("Skipping [[sounds]] index at {} because it is missing wav key", k);
+        continue;
+      }
+
+      const auto wav_path = wav_obj->as<std::string>();
+      auto full_wav_path = toml_path.file_dir / wav_path;
+      if (!fs::exists(full_wav_path)) {
+        full_wav_path = toml_path.game_root / wav_path;
+        if (!fs::exists(full_wav_path)) {
+          logger->error("Skipping [[sounds]] index at {} because wav points to an invalid path {}",
+            k, wav_path);
+          continue;
+        }
+      }
+
+      if (loop_obj) {
+        looping = loop_obj->as<bool>();
+      }
+
+      if (frame_obj) {
+        frame = frame_obj->as<int32_t>();
+      }
+
+      FileInfo wav_fileinfo;
+      wav_fileinfo.game_root = toml_path.game_root;
+      wav_fileinfo.file_path = full_wav_path;
+      wav_fileinfo.file_relative = wav_path;
+      wav_fileinfo.file_dir = full_wav_path.parent_path();
+
+      character->sprite->register_sound_effect(animation_name, frame, wav_fileinfo, looping);
+    }
   }
 
   auto& pos = character->position_rel();
@@ -329,7 +387,8 @@ void Character::jump()
     vel.y = -jump_vel_ps;
   }
   jump_time_us = clock::ticks();
-  sprite->set_animation("jump");
+  sprite->set_animation("Jump");
+  sprite->current_animation->sound_effect_has_played = false;
   dash_time_usec = 0;
   ++jump_count;
 }

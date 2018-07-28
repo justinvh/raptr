@@ -37,6 +37,9 @@ struct AnimationFrame
 
   //! The teeter pixel is the most down and left pixel occuped by the sprite
   int32_t teeter_px;
+
+  bool has_sound_effect;
+  FileInfo sound_effect;
 };
 
 /*!
@@ -78,6 +81,10 @@ public:
   //! A speed multiplier against the duration of the frames (1.0 == same speed)
   float speed;
 
+  bool sound_effect_loop;
+  bool sound_effect_has_played;
+
+
 public:
   /*!
     Retrieve the current AnimationFrame based on what "frame" is at
@@ -93,6 +100,15 @@ public:
     /return Whether the frame was advanced
   */
   bool next(int64_t clock_us, double speed_multiplier = 1.0);
+
+  /*!
+    Register a sound effect that plays with an animation
+    /param name - The animation to register against
+    /param wav - The full path to the wav file to play
+    /param loop - Whether to loop the sound effect, or only play it
+    when the animation has changed
+  */
+  bool register_sound_effect(int32_t frame, FileInfo wav, bool do_loop);
 };
 
 //! A mapping of Animation names to the Animation themselves
@@ -135,6 +151,15 @@ public:
     /return Whether the animation exists
   */
   bool has_animation(const std::string& name);
+
+  /*!
+    Register a sound effect that plays with an animation
+    /param name - The animation to register against
+    /param wav - The full path to the wav file to play
+    /param loop - Whether to loop the sound effect, or only play it
+                  when the animation has changed
+   */
+  bool register_sound_effect(const std::string& name, int32_t frame, const FileInfo& wav, bool loop);
 
 public:
   //! A mapping of animation names to the animation itself

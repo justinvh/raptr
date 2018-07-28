@@ -20,6 +20,7 @@ end
 
 function on_danger_zone_enter(character, trigger)
 	dprintf("A character entered. Increasing velocity!")
+	game:play_sound("sound/whoa.wav");
 	character.gravity_ps2 = -character.gravity_ps2
 end
 

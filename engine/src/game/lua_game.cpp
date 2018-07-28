@@ -89,6 +89,17 @@ void Game::setup_lua_context(sol::state& state)
     "get_character", &Game::get_entity<Character>,
     "remove_entity_by_key", &Game::remove_entity_by_key,
     "remove_entity", &Game::remove_entity,
+    "play_sound", [&](Game& game, std::string path) -> bool
+    {
+      const auto sound_path = game.game_path.from_root(path);
+      if (!fs::exists(sound_path.file_path)) {
+        logger->warn("Sound {} does not exist", sound_path);
+        return false;
+      }
+
+      play_sound(sound_path);
+      return true;
+    },
 
     "spawn_trigger", [&](Game& game,
                          sol::table trigger_params, 

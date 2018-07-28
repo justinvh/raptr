@@ -14,3 +14,25 @@ dash_length_msec = 150
 [sprite]
 path = "textures/raptor.json"
 scale = 1.0
+
+[[sounds]]
+animation = "Walk"
+wav = "sound/characters/raptr/walk.wav"
+loop = true
+frame = -1
+
+[[sounds]]
+animation = "Run"
+wav = "sound/characters/raptr/run.wav"
+loop = true
+frame = -1
+
+[[sounds]]
+animation = "Dash"
+wav = "sound/characters/raptr/dash.wav"
+loop = true
+
+[[sounds]]
+animation = "Jump"
+wav = "sound/characters/raptr/jump.wav"
+loop = false
