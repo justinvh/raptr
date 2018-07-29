@@ -8,6 +8,7 @@ You will want to first install [vcpkg from Microsoft](https://github.com/Microso
 | catch2         | Unit testing |                                
 | crossguid      | GUID for entities in the game |               
 | cxxopts        | Command-line parsing |                        
+| discord-rpc    | Integration with Discord |                        
 | fmt            | Used with spdlog for .format() like strings|  
 | freetype       | Font support in the UI |
 | libjpeg-turbo  | Texture support |
@@ -41,7 +42,7 @@ $ git checkout 178517052f42d428bb2f304946e635d3c1f318e9 -- ports/fmt
 Notice that this is a `x64-windows` triplet.
 
 ```
-$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install sdl2 sdl2-image sdl2-mixer sdl2-net sdl2-ttf picojson cxxopts spdlog tinytoml catch2 crossguid
+$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install discord-rpc sdl2 sdl2-image sdl2-mixer sdl2-net sdl2-ttf picojson cxxopts spdlog tinytoml catch2 crossguid
 ```
 
 ### 3. Point CMake to the Toolchain file

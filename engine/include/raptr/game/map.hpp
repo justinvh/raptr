@@ -16,28 +16,10 @@
 namespace raptr
 {
 
-class Tileset
-{
-public:
-  std::string name;
-  std::string texture;
-  bool tiled;
-};
-
-class Object
+struct Layer
 {
   std::string name;
-};
-
-class Layer
-{
-public:
-  std::string name;
-  std::string register_collision_callback_name;
-  bool draw;
-  bool collision;
-  bool parallax;
-  std::vector<Sprite> tiles;
+  std::vector<uint32_t> data;
 };
 
 class Map
@@ -47,5 +29,6 @@ public:
 
 public:
   std::vector<Layer> layers;
+  uint32_t width, height;
 };
 } // namespace raptr

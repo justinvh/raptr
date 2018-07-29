@@ -27,12 +27,12 @@ wav = "sound/characters/raptr/run.wav"
 loop = true
 frame = -1
 
-[[sounds]]
-animation = "Dash"
-wav = "sound/characters/raptr/dash.wav"
-loop = true
+#[[sounds]]
+#animation = "Dash"
+#wav = "sound/characters/raptr/dash.wav"
+#loop = true
 
-[[sounds]]
-animation = "Jump"
-wav = "sound/characters/raptr/jump.wav"
-loop = false
+#[[sounds]]
+#animation = "Jump"
+#wav = "sound/characters/raptr/jump.wav"
+#loop = false

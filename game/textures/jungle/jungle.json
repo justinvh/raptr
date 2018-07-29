@@ -1,0 +1,35 @@
+{
+  "columns": 0,
+  "grid": {
+    "height": 1,
+    "orientation": "orthogonal",
+    "width": 1
+  },
+  "margin": 0,
+  "name": "Jungle",
+  "spacing": 0,
+  "tilecount": 3,
+  "tileheight": 32,
+  "tiles": {
+    "1": {
+      "image": "spawn.png",
+      "imageheight": 30,
+      "imagewidth": 60,
+      "type": "Player Spawn"
+    },
+    "3": {
+      "image": "grass.png",
+      "imageheight": 32,
+      "imagewidth": 32,
+      "type": "Collidable"
+    },
+    "4": {
+      "image": "plant.png",
+      "imageheight": 32,
+      "imagewidth": 32,
+      "type": "Non-Collidable"
+    }
+  },
+  "tilewidth": 60,
+  "type": "tileset"
+}

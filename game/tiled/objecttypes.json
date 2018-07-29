@@ -1,0 +1,91 @@
+[
+    {
+        "color": "#ff000000",
+        "name": "Collidable",
+        "properties": [
+            {
+                "name": "animation",
+                "type": "string",
+                "value": "Idle"
+            },
+            {
+                "name": "aseprite",
+                "type": "string",
+                "value": ""
+            },
+            {
+                "name": "collision",
+                "type": "bool",
+                "value": true
+            },
+            {
+                "name": "render",
+                "type": "bool",
+                "value": true
+            }
+        ]
+    },
+    {
+        "color": "#ffa0a0a4",
+        "name": "Non-Collidable",
+        "properties": [
+            {
+                "name": "animation",
+                "type": "string",
+                "value": "Idle"
+            },
+            {
+                "name": "aseprite",
+                "type": "string",
+                "value": ""
+            },
+            {
+                "name": "collision",
+                "type": "bool",
+                "value": false
+            },
+            {
+                "name": "render",
+                "type": "bool",
+                "value": true
+            }
+        ]
+    },
+    {
+        "color": "#ffa0a0a4",
+        "name": "Non-Renderable",
+        "properties": [
+            {
+                "name": "collision",
+                "type": "bool",
+                "value": false
+            },
+            {
+                "name": "render",
+                "type": "bool",
+                "value": false
+            }
+        ]
+    },
+    {
+        "color": "#ff00ffff",
+        "name": "Trigger",
+        "properties": [
+            {
+                "name": "collision",
+                "type": "bool",
+                "value": false
+            },
+            {
+                "name": "render",
+                "type": "bool",
+                "value": false
+            },
+            {
+                "name": "script",
+                "type": "string",
+                "value": ""
+            }
+        ]
+    }
+]
