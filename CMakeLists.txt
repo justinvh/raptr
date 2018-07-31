@@ -101,5 +101,4 @@ if (BUILD_DOCS)
     add_subdirectory(doc)
 endif(BUILD_DOCS)
 
-
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT raptr-client)

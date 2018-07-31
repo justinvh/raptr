@@ -31,7 +31,11 @@ void Console::process_commands()
   std::scoped_lock<std::mutex> lck(mutex);
   for (const auto& command : commands) {
     try {
-      lua.safe_script(command);
+      if (command == "!") {
+        lua.safe_script(last_command);
+      } else {
+        lua.safe_script(command);
+      }
     }
     catch (const std::exception& e) {
       logger->error(e.what());
@@ -69,7 +73,11 @@ void Console::think()
     buffer << line;
 
     if (!in_block) {
-      this->push(buffer.str());
+      auto cmd = buffer.str();
+      if (cmd != "!") {
+        last_command = cmd;
+      }
+      this->push(cmd);
       buffer = std::stringstream();
     }
   }

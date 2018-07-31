@@ -53,4 +53,36 @@ FileInfo FileInfo::from_root(const fs::path& relative_path) const
     game_root
   };
 }
+
+FileInfo FileInfo::from_current_dir(const fs::path& relative_path) const
+{
+  const auto is_file = fs::is_regular_file(file_path);
+  const auto new_file_path = is_file ? file_path.parent_path() : file_path;
+  const auto new_file_relative = is_file ? file_relative.parent_path() : file_relative;
+  return {
+    new_file_relative / relative_path,
+    fs::absolute(new_file_path / relative_path),
+    new_file_path,
+    game_root
+  };
+}
+
+FileInfo FileInfo::operator/ (const fs::path& path) const
+{
+  return {
+    file_relative / path,
+    file_path / path,
+    (file_path / path).parent_path(),
+    game_root
+  };
+}
+
+FileInfo& FileInfo::operator/= (const fs::path& path)
+{
+  file_relative /= path;
+  file_path /= path;
+  file_dir = file_path.parent_path();
+  return *this;
+}
+
 } // namespace raptr

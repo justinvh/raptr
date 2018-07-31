@@ -57,7 +57,7 @@ std::shared_ptr<Parallax> Parallax::from_toml(const FileInfo& toml_path)
 
   const toml::Array& layer_values = v.find("layer")->as<toml::Array>();
   for (const toml::Value& l : layer_values) {
-    Layer layer;
+    ParallaxLayer layer;
 
     std::string texture_rel_path = l.get<std::string>("texture");
     uint32_t z_index = l.get<int32_t>("z");

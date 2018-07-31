@@ -35,6 +35,7 @@ class Entity;
 class Parallax;
 class Renderer;
 class Text;
+class Map;
 
 struct Camera
 {
@@ -47,6 +48,13 @@ struct ClipCamera
   SDL_Rect clip, viewport;
   int32_t left_offset;
   std::vector<std::shared_ptr<Entity>> contains;
+};
+
+class RenderInterface
+{
+public:
+  virtual ~RenderInterface() = default;
+  virtual void render(Renderer* renderer) = 0;
 };
 
 class Renderable
@@ -151,6 +159,12 @@ public:
            bool absolute_positioning = false,
            bool render_in_foreground = false);
 
+  template <class T>
+  void add_observable(std::shared_ptr<T> object)
+  {
+    observing.push_back(std::dynamic_pointer_cast<RenderInterface>(object));
+  }
+
   void add_rect(SDL_Rect dst, SDL_Color color, 
                 bool absolute_positioning = false, 
                 bool render_in_foreground = false);
@@ -247,7 +261,7 @@ public:
   double ratio_per_second;
 
   //! A list of Renderable objects that will be rendered on the next run_frame()
-  std::vector<std::shared_ptr<Entity>> observing;
+  std::vector<std::shared_ptr<RenderInterface>> observing;
   std::vector<std::shared_ptr<Renderable>> will_render_middle;
   std::vector<std::shared_ptr<Renderable>> will_render_foreground;
   std::vector<std::shared_ptr<Entity>> entities_followed;

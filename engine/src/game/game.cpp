@@ -15,6 +15,7 @@
 #include <raptr/game/character.hpp>
 #include <raptr/game/game.hpp>
 #include <raptr/game/trigger.hpp>
+#include <raptr/game/map.hpp>
 #include <raptr/input/controller.hpp>
 #include <raptr/renderer/parallax.hpp>
 #include <raptr/renderer/renderer.hpp>
@@ -146,6 +147,25 @@ void Game::handle_controller_event(const ControllerEvent& controller_event)
   }
 }
 
+void Game::handle_load_map_event(const LoadMapEvent& event)
+{
+  if (map) {
+    const auto is_observed = std::find(renderer->observing.begin(),
+      renderer->observing.end(),
+      map);
+
+    if (is_observed != renderer->observing.end()) {
+      renderer->observing.erase(is_observed);
+    }
+  }
+
+  map = Map::load(game_path.from_root(fs::path("maps") / event.name));
+  renderer->add_observable(map);
+  if (event.callback) {
+    event.callback(map);
+  }
+}
+
 void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
 {
   auto character = Character::from_toml(game_path.from_root(event.path));
@@ -200,6 +220,12 @@ void Game::handle_trigger_spawn_event(const TriggerSpawnEvent& event)
 void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
 {
   switch (event->type) {
+    case EngineEventType::LoadMap: {
+      const auto map_event = reinterpret_cast<LoadMapEvent*>(event->data);
+      this->handle_load_map_event(*map_event);
+      delete map_event;
+      break;
+    }
     case EngineEventType::ControllerEvent: {
       const auto controller_event = reinterpret_cast<ControllerEvent*>(event->data);
       this->handle_controller_event(*controller_event);
@@ -230,6 +256,14 @@ void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
   }
 }
 
+void Game::load_map(const std::string& map_name, LoadMapEvent::Callback callback)
+{
+  auto event = new LoadMapEvent();
+  event->name = map_name;
+  event->callback = callback;
+  this->add_event<LoadMapEvent>(event);
+}
+
 bool Game::process_engine_events()
 {
   const auto current_time_us = clock::ticks();
@@ -249,7 +283,7 @@ bool Game::process_engine_events()
     entity->think(this_ptr);
 
     const Point& old_point = last_known_entity_pos[entity];
-    Point& new_point = entity->position_abs();
+    Point new_point = entity->position_abs();
 
     if (std::fabs(old_point.x - new_point.x) > 0.5 ||
       std::fabs(old_point.y - new_point.y) > 0.5) {
@@ -264,7 +298,7 @@ bool Game::process_engine_events()
     }
 
     if (new_point.y < -100) {
-      new_point.y = 500;
+      entity->position_rel().y = 500;
     }
   }
 
@@ -286,6 +320,20 @@ bool Game::run()
     this->process_engine_events();
   }
   return true;
+}
+
+bool Game::intersect_world(Entity* entity, const Rect& bbox)
+{
+  return map->intersects(entity, bbox);
+}
+
+bool Game::intersect_anything(Entity* entity, const Rect& bbox)
+{
+  if (this->intersect_world(entity, bbox)) {
+    return true;
+  }
+  const auto found = this->intersect_entity(entity, bbox);
+  return !!found;
 }
 
 std::vector<std::shared_ptr<Entity>> Game::intersect_entities(
@@ -401,7 +449,8 @@ void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback cal
   ///this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
   this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
   {
-    character->position_rel().y = 500;
+    character->position_rel().y = 300;
+    character->position_rel().x = 50;
     character->flashlight = true;
     character->attach_controller(controllers[controller_id]);
     character->gravity_ps2 = gravity_ps2;
@@ -597,7 +646,7 @@ void Game::spawn_now(const std::shared_ptr<Entity>& entity)
     rtree.Insert(b.min, b.max, entity.get());
   }
 
-  renderer->observing.push_back(entity);
+  renderer->add_observable(entity);
   entities.push_back(entity);
   entity_lut[entity->guid()] = entity;
 }
@@ -605,17 +654,16 @@ void Game::spawn_now(const std::shared_ptr<Entity>& entity)
 bool Game::init_demo()
 {
   // background test
+  /*
   auto background = Parallax::from_toml(game_path.from_root("background/nightsky.toml"));
   if (background) {
     renderer->add_background(background);
   }
 
-  /*
   auto foreground = Parallax::from_toml(game_path.from_root("foreground/nightsky.toml"));
   if (foreground) {
     renderer->add_foreground(foreground);
   }
-  */
 
   this->spawn_trigger({100, 0, 256, 512}, [&](auto& trigger)
   {
@@ -650,6 +698,15 @@ bool Game::init_demo()
     mesh->position_rel().x = 20;
   });
 
+  map = Map::load(game_path.from_root("maps/e1m1"));
+  if (!map) {
+    logger->error("Failed to load map");
+    return false;
+  }
+  renderer->add_observable(map);
+  */
+
+  this->load_map("e1m1");
   return true;
 }
 

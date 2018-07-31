@@ -1,0 +1,24 @@
+{ "columns":0,
+ "grid":
+    {
+     "height":1,
+     "orientation":"orthogonal",
+     "width":1
+    },
+ "margin":0,
+ "name":"Scrap",
+ "spacing":0,
+ "tilecount":1,
+ "tileheight":16,
+ "tiles":
+    {
+     "0":
+        {
+         "image":"guy_dead.png",
+         "imageheight":16,
+         "imagewidth":16
+        }
+    },
+ "tilewidth":16,
+ "type":"tileset"
+}

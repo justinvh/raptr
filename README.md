@@ -11,11 +11,11 @@ Additional developer insight and blog can be found at
 
 ![Our Dinosaur Warrior][raptr-idle]
 
-## Installing and Running v0.1-alpha.8
+## Installing and Running v0.1-alpha.9
 
 It's pretty dang simple under 64-bit Windows right now. Raptr is currently in pure engine development.
 
-1. [Download the 0.1-alpha.8 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.8/raptr-0.1.0-alpha.8-Release-win64.zip)
+1. [Download the 0.1-alpha.9 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.9/raptr-0.1.0-alpha.9-Release-win64.zip)
 2. Extract that anywhere your heart desires.
 3. Plug in a 360, GameCube, or Steam controller.
 4. Go into the bin/ folder and run `raptr-client.exe`
@@ -23,9 +23,9 @@ It's pretty dang simple under 64-bit Windows right now. Raptr is currently in pu
 
 If you get a complaint about redistributables missing, then try downloading the [Visual C++ Redistributable for Visual Studio 2017 - x64](https://aka.ms/vs/15/release/vc_redist.x64.exe)
 
-## Current State: v0.1-alpha.8 - [Check out the development Imgur album](https://imgur.com/a/pnREFi5)
+## Current State: v0.1-alpha.9 - [Check out the development Imgur album](https://imgur.com/a/pnREFi5)
 
-![Feature Mash][raptr-0.1-alpha.8]
+![Feature Mash][raptr-0.1-alpha.9]
 
 ## Features with some Hyperbole
 
@@ -41,12 +41,12 @@ If you get a complaint about redistributables missing, then try downloading the 
 
 ## Building and Running Raptr with CMake
 
-1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.7/vcpkg-export-20180711-180948.7z)
+1. [Download the 7-zip archive of Raptr's dependencies from here](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.9/vcpkg-export-20180730-121939.7z)
 
 ```
 $ git clone https://github.com/justinvh/raptr.git raptr
 $ cd raptr
-$ 7z e vcpkg-export-20180711-180948.7z
+$ 7z e vcpkg-export-20180730-121939.7z
 $ cd build
 $ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="../vcpkg/scripts/buildsystems/vcpkg.cmake" -G "Visual Studio 15 2017 Win64" ..
 ```
@@ -84,8 +84,9 @@ To be added
 * [SDL2_net](https://www.libsdl.org/projects/SDL_net) - SDL Networking
 * [sol2](https://github.com/ThePhD/sol2) - C++ <-> Lua API wrapper with advanced features and top notch performance
 * [spdlog](https://github.com/gabime/spdlog) - Fast C++ logging library
+* [tiled](https://www.mapeditor.org) - A free and easy to use tile map editor
 * [tinytoml](https://github.com/mayah/tinytoml) - A header only C++11 library for parsing TOML
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
 
 [raptr-idle]: https://i.imgur.com/sqVdbnN.gif
-[raptr-0.1-alpha.8]: https://i.imgur.com/6nBe7DG.gif
+[raptr-0.1-alpha.9]: https://thumbs.gfycat.com/ShrillFilthyIslandcanary-size_restricted.gif

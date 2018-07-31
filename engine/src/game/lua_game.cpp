@@ -9,6 +9,8 @@
 
 #include <raptr/common/logging.hpp>
 #include <raptr/config.hpp>
+#include <raptr/common/filesystem.hpp>
+#include <raptr/game/map.hpp>
 #include <raptr/game/character.hpp>
 #include <raptr/game/game.hpp>
 #include <raptr/game/trigger.hpp>
@@ -89,6 +91,7 @@ void Game::setup_lua_context(sol::state& state)
     "get_character", &Game::get_entity<Character>,
     "remove_entity_by_key", &Game::remove_entity_by_key,
     "remove_entity", &Game::remove_entity,
+    "load_map", &Game::load_map,
     "play_sound", [&](Game& game, std::string path) -> bool
     {
       const auto sound_path = game.game_path.from_root(path);

@@ -11,7 +11,7 @@
 
 namespace raptr
 {
-struct Layer
+struct ParallaxLayer
 {
   FileInfo texture_path;
   uint32_t z_index;
@@ -36,6 +36,6 @@ public:
 
 public:
   bool is_foreground;
-  std::vector<Layer> layers;
+  std::vector<ParallaxLayer> layers;
 };
 }

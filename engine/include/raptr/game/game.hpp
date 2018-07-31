@@ -29,6 +29,7 @@ class Controller;
 class Entity;
 class Renderer;
 class Sound;
+class Map;
 
 using IntersectEntityFilter = std::function<bool(const Entity*)>;
 using IntersectCharacterFilter = std::function<bool(const Character*)>;
@@ -94,6 +95,8 @@ public:
 
   void dispatch_event(const std::shared_ptr<EngineEvent>& event);
 
+  void handle_load_map_event(const LoadMapEvent& event);
+
   void handle_character_spawn_event(const CharacterSpawnEvent& event);
 
   void handle_controller_event(const ControllerEvent& event);
@@ -111,6 +114,10 @@ public:
     sol::protected_function lua_on_exit);
 
 public:
+  bool intersect_world(Entity* entity, const Rect& bbox);
+
+  bool intersect_anything(Entity* entity, const Rect& bbox);
+
   /*!
     Returns true if a given entity can teleport to a region defined by a bounding box
     \param entity - The entity that is trying to teleport
@@ -163,6 +170,11 @@ public:
                      TriggerSpawnEvent::Callback callback = [](auto& a)
                      {
                      });
+
+  void load_map(const std::string& map_name,
+                LoadMapEvent::Callback callback = [](auto& a)
+                {
+                });
 
   bool remove_entity_by_key(const std::string key);
   bool remove_entity(std::shared_ptr<Entity> entity);
@@ -279,6 +291,8 @@ public:
 
   int32_t engine_event_index = 0;
   std::vector<std::shared_ptr<EngineEvent>> engine_events_buffers[2];
+
+  std::shared_ptr<Map> map;
 
 public:
   //! If set, then all initialization has happened successfully

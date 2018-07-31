@@ -31,6 +31,8 @@ set(RAPTR_GAME
     maps/demo/demo.png
     maps/demo/map.toml
     maps/demo/map.lua
+    maps/e1m1/map.json
+    maps/e1m1/map.lua
 
     # Sound
     sound/opening.mp3

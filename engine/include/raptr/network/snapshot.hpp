@@ -22,6 +22,7 @@ class Trigger;
 class Character;
 class Actor;
 class MeshDynamic;
+class Map;
 
 enum class NetFieldType
 {
@@ -38,6 +39,7 @@ enum class EngineEventType
   SpawnCharacter,
   SpawnActor,
   SpawnTrigger,
+  LoadMap,
 };
 
 struct ControllerEvent
@@ -72,6 +74,14 @@ struct TriggerSpawnEvent
   static const EngineEventType event_type = EngineEventType::SpawnTrigger;
   Rect rect;
   GUID guid;
+  Callback callback;
+};
+
+struct LoadMapEvent
+{
+  typedef std::function<void(std::shared_ptr<Map>&)> Callback;
+  static const EngineEventType event_type = EngineEventType::LoadMap;
+  std::string name;
   Callback callback;
 };
 

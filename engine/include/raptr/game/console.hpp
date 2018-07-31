@@ -38,6 +38,7 @@ public:
   std::thread think_thread;
   std::mutex mutex;
   std::vector<std::string> commands;
+  std::string last_command;
 };
   
 }

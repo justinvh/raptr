@@ -580,8 +580,8 @@ void Character::think(std::shared_ptr<Game>& game)
     this->sprite->flip_y = true;
   }
 
-  auto intersected_entity = game->intersect_entity(this, fall_check);
-  if (!intersected_entity && !in_dash) {
+  auto intersected = game->intersect_anything(this, fall_check);
+  if (!intersected && !in_dash) {
     if (fast_fall) {
       vel.y += fast_fall_scale * gravity_ps2 * delta_us / 1e6;
     } else {
@@ -643,13 +643,12 @@ void Character::think(std::shared_ptr<Game>& game)
 
   const auto steps_x = static_cast<int32_t>(std::abs(pos.x - want_x.x) / 4 + 1);
   const auto delta_x = (pos.x - want_x.x) / double(steps_x);
-  auto intersected = false;
+  intersected = false;
   want_x.x = pos.x;
   for (auto i = 1; i <= steps_x; ++i) {
     want_x.x -= delta_x * i;
-    intersected |= game->intersect_entity(this, want_x) != nullptr;
+    intersected |= game->intersect_anything(this, want_x);
     if (intersected) {
-
       break;
     }
   }
@@ -682,19 +681,19 @@ void Character::think(std::shared_ptr<Game>& game)
   const auto steps_y = static_cast<int32_t>(std::abs(pos.y - want_y.y) / 4 + 1);
   const auto delta_y = (pos.y - want_y.y) / double(steps_y);
   want_y.y = pos.y;
-  intersected_entity.reset();
-
+  intersected = false;
   for (int32_t i = 1; i <= steps_y; ++i) {
     want_y.y -= delta_y * i;
-    intersected_entity = game->intersect_entity(this, want_y);
-    if (intersected_entity) {
+    intersected = game->intersect_anything(this, want_y);
+    if (intersected) {
       break;
     }
   }
 
-  if (!intersected_entity) {
+  if (!intersected) {
     pos.y = want_y.y;
   } else {
+    auto intersected_entity = game->intersect_entity(this, want_y);
     const auto character = dynamic_cast<Character*>(intersected_entity.get());
     if (character) {
       auto& ov = intersected_entity->velocity_rel();

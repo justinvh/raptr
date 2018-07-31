@@ -12,6 +12,7 @@
 #include <sol.hpp>
 #include <raptr/common/rect.hpp>
 #include <raptr/network/snapshot.hpp>
+#include <raptr/renderer/renderer.hpp>
 
 namespace raptr
 {
@@ -37,7 +38,9 @@ typedef std::array<unsigned char, 16> GUID;
   This could be a static mesh, a character, or a simple platform. The idea is that
   an Entity is something you should care about as a player.
 */
-class Entity : public Serializable, public std::enable_shared_from_this<Entity>
+class Entity : public RenderInterface,
+               public Serializable, 
+               public std::enable_shared_from_this<Entity>
 {
 public:
   Entity();
@@ -110,10 +113,6 @@ public:
   */
   virtual bool intersect_slow(const Rect& bbox) const;
   virtual bool intersect_slow(const Entity* other, const Rect& bbox) const;
-
-  /*!
-  */
-  virtual void render(Renderer* render) = 0;
 
   static void setup_lua_context(sol::state& state);
 
