@@ -35,6 +35,7 @@ public:
   void render(Renderer* renderer, const SDL_Rect& clip, int32_t rx);
 
 public:
+  SDL_Rect dst;
   bool is_foreground;
   std::vector<ParallaxLayer> layers;
 };

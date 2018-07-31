@@ -83,6 +83,7 @@ std::shared_ptr<Parallax> Parallax::from_toml(const FileInfo& toml_path)
     layer.bbox.y = 0; //-layer.surface->h + GAME_HEIGHT;
     layer.bbox.w = layer.surface->w;
     layer.bbox.h = layer.surface->h;
+    bg->dst = layer.bbox;
 
     bg->layers.push_back(layer);
   }
@@ -101,7 +102,7 @@ void Parallax::render(Renderer* renderer, const SDL_Rect& clip, int32_t rx)
 
     int32_t cx = clip.x;
 
-    auto transformed_dst = layer.bbox;
+    auto transformed_dst = dst;
     if (is_foreground) {
       // Things that are closer move faster 
       transformed_dst.x -= static_cast<int32_t>(cx * (1.0 + layer.z_index / 100.0));

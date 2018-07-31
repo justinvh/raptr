@@ -160,6 +160,12 @@ void Game::handle_load_map_event(const LoadMapEvent& event)
   }
 
   map = Map::load(game_path.from_root(fs::path("maps") / event.name));
+  if (!map) {
+    logger->error("{} is not a valid map", event.name);
+    return;
+  }
+
+  map->name = event.name;
   renderer->add_observable(map);
   if (event.callback) {
     event.callback(map);

@@ -92,6 +92,14 @@ void Game::setup_lua_context(sol::state& state)
     "remove_entity_by_key", &Game::remove_entity_by_key,
     "remove_entity", &Game::remove_entity,
     "load_map", &Game::load_map,
+    "reload_map", [&](Game& game)
+    {
+      if (!game.map) {
+        logger->error("There is no map to reload");
+        return;
+      }
+      game.load_map(game.map->name);
+    },
     "play_sound", [&](Game& game, std::string path) -> bool
     {
       const auto sound_path = game.game_path.from_root(path);

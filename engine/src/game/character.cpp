@@ -461,7 +461,7 @@ void Character::render(Renderer* renderer)
     const auto& s1 = sprite->current_animation->current_frame();
     const auto& s2 = flashlight_sprite->current_animation->current_frame();
     const double cx = sprite->x + s1.w / 2.0 - s2.w / 2.0;
-    const double cy = renderer->window_size.h - sprite->y - s1.h / 2.0 - s2.h / 2.0;
+    const double cy = sprite->y - s1.h / 2.0;
     flashlight_sprite->x = cx;
     flashlight_sprite->y = cy;
     flashlight_sprite->render(renderer);

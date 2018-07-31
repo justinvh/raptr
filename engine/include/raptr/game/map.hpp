@@ -17,6 +17,7 @@
 #include <raptr/common/filesystem.hpp>
 #include <raptr/renderer/sprite.hpp>
 #include <raptr/renderer/renderer.hpp>
+#include <raptr/renderer/parallax.hpp>
 
 namespace raptr
 {
@@ -63,7 +64,9 @@ public:
   bool intersect_slow(const Rect& this_bbox) const;
 
 public:
+  std::string name;
   bool tilemap_texture_allocated;
+  std::vector<std::shared_ptr<Parallax>> parallax_bg, parallax_fg;
   std::vector<Layer> layers;
   std::vector<Tile> tilemap;
   uint32_t width, height;
