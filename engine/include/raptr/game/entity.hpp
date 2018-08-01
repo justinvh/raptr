@@ -242,6 +242,9 @@ public:
   //! Collision test per pixel
   bool do_pixel_collision_test;
 
+  //! If true this entity is dead and won't collide anymore
+  bool is_dead;
+
   //! The sprite that is used to render this character
   std::shared_ptr<Sprite> sprite;
 

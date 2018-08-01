@@ -9,6 +9,7 @@
 #include <vector>
 #include <memory>
 #include <sol.hpp>
+#include <initializer_list>
 #include <raptr/common/filesystem.hpp>
 
 #undef SDL_JOYSTICK_DINPUT
@@ -60,13 +61,17 @@ struct ControllerState
 //! The controller callback is a simple function that a caller class must define
 using ControllerCallback = std::function<bool(const ControllerState& controller)>;
 
-//! A sortable pair for vectors
-using ControllerCallbackSortable = std::pair<int32_t, ControllerCallback>;
-
-inline bool operator<(const ControllerCallbackSortable& a, const ControllerCallbackSortable& b)
+struct ControllerSaved
 {
-  return a.first < b.first;
-}
+  int32_t id;
+  int32_t priority;
+  ControllerCallback callback;
+
+  bool operator<(const ControllerSaved& rhs) const
+  {
+    return priority < rhs.priority;
+  }
+};
 
 /*!
   This is an abstraction of a Game Pad, like an Xbox Controller. It provides methods
@@ -79,26 +84,28 @@ public:
   /*!
     Add a callback when a button is pressed down
     /param callback - The function to call when a button down event occurs
+    /return ID of binding
   */
-  void on_button_down(const ControllerCallback& callback, int32_t priority = 0);
+  int32_t on_button_down(const ControllerCallback& callback, int32_t priority = 0);
 
   /*!
     Add a callback when a button is released
     /param callback - The function to call when a button up event occurs
+    /return ID of binding
   */
-  void on_button_up(const ControllerCallback& callback, int32_t priority = 0);
+  int32_t on_button_up(const ControllerCallback& callback, int32_t priority = 0);
 
   /*!
     Add a callback when a left joystick is moved
     /param callback - The function to call when a left joystick event occurs
   */
-  void on_left_joy(const ControllerCallback& callback, int32_t priority = 0);
+  int32_t on_left_joy(const ControllerCallback& callback, int32_t priority = 0);
 
   /*!
     Add a callback when a right joystick is moved
     /param callback - The function to call when a right joystick event occurs
   */
-  void on_right_joy(const ControllerCallback& callback, int32_t priority = 0);
+  int32_t on_right_joy(const ControllerCallback& callback, int32_t priority = 0);
 
   /*!
     Given a controller id as specified by SDL, attach and register this class
@@ -130,22 +137,24 @@ public:
     return sdl.controller_id;
   }
 
+  bool unbind(const std::initializer_list<int32_t>& ids);
+
   static void setup_lua_context(sol::state& state);
 
 public:
   ControllerState state;
 
   //! List of callbacks that are called when a button down event occurs
-  std::vector<ControllerCallbackSortable> button_down_callbacks;
+  std::vector<ControllerSaved> button_down_callbacks;
 
   //! List of callbacks that are called when a button up event occurs
-  std::vector<ControllerCallbackSortable> button_up_callbacks;
+  std::vector<ControllerSaved> button_up_callbacks;
 
   //! List of callbacks that are called when a left joystick event occurs
-  std::vector<ControllerCallbackSortable> left_joy_callbacks;
+  std::vector<ControllerSaved> left_joy_callbacks;
 
   //! List of callbacks that are called when a right joystick event occurs
-  std::vector<ControllerCallbackSortable> right_joy_callbacks;
+  std::vector<ControllerSaved> right_joy_callbacks;
 
 private:
   /*!

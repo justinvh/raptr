@@ -114,7 +114,7 @@
         }, 
         {
          "firstgid":10,
-         "source":"..\/..\/textures\/actors\/actors.tsx"
+         "source":"..\/..\/textures\/actors\/actors.json"
         }],
  "tilewidth":32,
  "type":"map",

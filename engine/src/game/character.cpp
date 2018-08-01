@@ -45,11 +45,24 @@ void Character::attach_controller(std::shared_ptr<Controller>& controller_)
 {
   using std::placeholders::_1;
 
+  if (controller) {
+    this->detach_controller();
+  }
+
   controller = controller_;
-  controller->on_left_joy(std::bind(&Character::on_left_joy, this, _1));
-  controller->on_button_down(std::bind(&Character::on_button_down, this, _1));
-  controller->on_button_up(std::bind(&Character::on_button_up, this, _1));
+  on_left_joy_id = controller->on_left_joy(std::bind(&Character::on_left_joy, this, _1));
+  on_button_down_id = controller->on_button_down(std::bind(&Character::on_button_down, this, _1));
+  on_button_up_id = controller->on_button_up(std::bind(&Character::on_button_up, this, _1));
 }
+
+void Character::detach_controller()
+{
+  if (!controller) {
+    return;
+  }
+  controller->unbind({on_left_joy_id, on_button_down_id, on_button_up_id});
+}
+
 
 std::vector<Rect> Character::bbox() const
 {
@@ -146,10 +159,10 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   character->flashlight_sprite->render_in_foreground = true;
   character->sprite = Sprite::from_json(sprite_file);
   character->sprite->scale = V("sprite.scale", 1.0);
-  character->sprite->set_animation("Idle");
-  character->walk_speed_ps = V("character.walk_speed_kmh", 10) * kmh_to_ps;
-  character->run_speed_ps = V("character.run_speed_kmh", 20) * kmh_to_ps;
-  character->jump_vel_ps = V("character.jump_vel_ms", 25) * ms_to_ps;
+  character->set_animation("Idle");
+  character->walk_speed_ps = V("character.walk_speed_kmh", 10.0) * kmh_to_ps;
+  character->run_speed_ps = V("character.run_speed_kmh", 20.0) * kmh_to_ps;
+  character->jump_vel_ps = V("character.jump_vel_ms", 25.0) * ms_to_ps;
   character->mass_kg = V("character.mass_kg", 100.0);
 
   character->jumps_allowed = V("character.jumps_allowed", 1);
@@ -158,7 +171,7 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   character->sprite->x = 0;
   character->sprite->y = 0;
   character->jump_count = 0;
-  character->dash_speed_ps = V("character.dash_speed_kmh", 50) * kmh_to_ps;
+  character->dash_speed_ps = V("character.dash_speed_kmh", 50.0) * kmh_to_ps;
   character->dash_length_usec = static_cast<int64_t>(V("character.dash_length_msec", 100) * 1e3);
   character->dash_time_usec = 0;
 
@@ -382,12 +395,12 @@ void Character::jump()
 
   auto& vel = this->velocity_rel();
   if (gravity_ps2 < 0) {
-    vel.y = jump_vel_ps;
+    vel.y += jump_vel_ps;
   } else {
-    vel.y = -jump_vel_ps;
+    vel.y -= jump_vel_ps;
   }
   jump_time_us = clock::ticks();
-  sprite->set_animation("Jump");
+  this->set_animation("Jump");
   sprite->current_animation->sound_effect_has_played = false;
   dash_time_usec = 0;
   ++jump_count;
@@ -401,7 +414,7 @@ void Character::turn_around()
 void Character::dash()
 {
   auto& vel = this->velocity_rel();
-  if (dash_time_usec != 0 || jump_count >= jumps_allowed) {
+  if (dash_time_usec != 0) {
     return;
   }
   dash_time_usec = 1;
@@ -412,8 +425,7 @@ void Character::dash()
   }
 
   vel.y = 0;
-  ++jump_count;
-  sprite->set_animation("Dash");
+  this->set_animation("Dash");
 }
 
 void Character::fall()
@@ -426,6 +438,10 @@ void Character::fall()
 
 bool Character::on_button_up(const ControllerState& state)
 {
+  if (is_dead) {
+    return false;
+  }
+
   if (state.button == Button::a) {
     this->fall();
   }
@@ -434,6 +450,10 @@ bool Character::on_button_up(const ControllerState& state)
 
 bool Character::on_left_joy(const ControllerState& state)
 {
+  if (is_dead) {
+    return false;
+  }
+
   auto& vel = this->velocity_rel();
   float mag_x = std::fabs(state.x);
 
@@ -486,7 +506,7 @@ void Character::run(float scale)
   //logger->debug("Run speed is {}m/s.", vel.x * pixels_to_meters);
 
   if (!is_falling) {
-    sprite->set_animation("Run");
+    this->set_animation("Run");
     sprite->speed = std::fabs(scale * 2.0);
   }
 }
@@ -533,7 +553,7 @@ void Character::stop()
   vel_exp.x = 0;
   sprite->speed = 1.0;
   if (!is_falling) {
-    sprite->set_animation("Idle");
+    this->set_animation("Idle");
   }
 
   if (is_falling) {
@@ -599,13 +619,13 @@ void Character::think(std::shared_ptr<Game>& game)
 
       const double mag_x = std::fabs(vel.x);
       if (in_dash) {
-        sprite->set_animation("Dash");
+        this->set_animation("Dash");
       } else if (mag_x > walk_speed_ps) {
-        sprite->set_animation("Run");
+        this->set_animation("Run");
       } else if (mag_x > 0) {
-        sprite->set_animation("Walk");
+        this->set_animation("Walk");
       } else {
-        sprite->set_animation("Idle");
+        this->set_animation("Idle");
       }
     }
     is_falling = false;
@@ -620,6 +640,10 @@ void Character::think(std::shared_ptr<Game>& game)
 
   if (is_falling) {
     friction /= 2;
+  }
+
+  if (is_dead && is_falling) {
+    friction = 0;
   }
 
   if (std::fabs(vel_exp.x) < std::fabs(vel.x)) {
@@ -675,7 +699,7 @@ void Character::think(std::shared_ptr<Game>& game)
   } else {
     hitting_wall = true;
     dash_time_usec = 0;
-    sprite->set_animation("Idle");
+    this->set_animation("Idle");
   }
 
   const auto steps_y = static_cast<int32_t>(std::abs(pos.y - want_y.y) / 4 + 1);
@@ -708,17 +732,17 @@ void Character::think(std::shared_ptr<Game>& game)
   }
 
   if (in_dash) {
-    sprite->set_animation("Dash");
+    this->set_animation("Dash");
   } else if (hitting_wall) {
-    sprite->set_animation("Idle");
+    this->set_animation("Idle");
   } else if (is_falling) {
-    sprite->set_animation("Jump");
+    this->set_animation("Jump");
   } else if (mag_x > walk_speed_ps) {
-    sprite->set_animation("Run");
+    this->set_animation("Run");
   } else if (mag_x > 0) {
-    sprite->set_animation("Walk");
+    this->set_animation("Walk");
   } else {
-    sprite->set_animation("Idle");
+    this->set_animation("Idle");
   }
 
   auto sprite_pos = this->position_abs();
@@ -743,8 +767,27 @@ void Character::walk(float scale)
   vel_exp.x = scale * run_speed_ps;
 
   if (!is_falling) {
-    sprite->set_animation("Walk");
+    this->set_animation("Walk");
     sprite->speed = std::fabs(scale * 2.0);
+  }
+}
+
+void Character::kill()
+{
+  is_dead = true;
+  this->set_animation("Death");
+  this->detach_controller();
+}
+
+void Character::set_animation(const std::string& name)
+{
+  if (is_dead && sprite->current_animation->name != "Death") {
+    sprite->set_animation("Death", true);
+    return;
+  } else if (is_dead) {
+    return;
+  } else {
+    sprite->set_animation(name);
   }
 }
 
@@ -760,6 +803,7 @@ void Character::setup_lua_context(sol::state& state)
     "run_to_rel", &Character::run_to_rel,
     "controller", &Character::controller,
     "is_tweening", &Character::is_tweening,
+    "kill", &Character::kill,
     "jump", &Character::jump,
     "fall", &Character::fall,
     "dash", &Character::dash,

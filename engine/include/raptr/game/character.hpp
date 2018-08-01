@@ -50,6 +50,8 @@ public:
   */
   virtual void attach_controller(std::shared_ptr<Controller>& controller);
 
+  virtual void detach_controller();
+
   /*! 
     Returns the bounding box for this character
     \return An rectangle containing the character
@@ -79,6 +81,11 @@ public:
     \param scale - A 0.0-1.0 multiplier that will be used to calculate the final run speed
   */
   virtual void run(float scale);
+
+  /*!
+    Kill this character. It will not accept any more inputs.
+   */
+  virtual void kill();
 
   /*!
   */
@@ -144,6 +151,8 @@ private:
   */
   virtual bool on_left_joy(const ControllerState& state);
 
+  void set_animation(const std::string& name);
+
 public:
 
   //! The controller that is bound to this character
@@ -198,6 +207,9 @@ public:
   double jump_vel_ps;
 
   int32_t bunny_hop_count;
+  int32_t on_left_joy_id;
+  int32_t on_button_down_id;
+  int32_t on_button_up_id;
 
   uint64_t think_frame;
 

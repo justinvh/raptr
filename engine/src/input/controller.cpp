@@ -11,31 +11,40 @@
 namespace
 {
 auto logger = raptr::_get_logger(__FILE__);
+static int32_t controller_id = 0;
 };
 
 namespace raptr {
-void Controller::on_button_down(const ControllerCallback& callback, int32_t priority)
+int32_t Controller::on_button_down(const ControllerCallback& callback, int32_t priority)
 {
-  button_down_callbacks.push_back(std::make_pair(priority, callback));
+  ControllerSaved saved = {++controller_id, priority, callback};
+  button_down_callbacks.push_back(saved);
   std::sort(button_down_callbacks.begin(), button_down_callbacks.end());
+  return saved.id;
 }
 
-void Controller::on_button_up(const ControllerCallback& callback, int32_t priority)
+int32_t Controller::on_button_up(const ControllerCallback& callback, int32_t priority)
 {
-  button_up_callbacks.push_back(std::make_pair(priority, callback));
+  ControllerSaved saved = {++controller_id, priority, callback};
+  button_up_callbacks.push_back(saved);
   std::sort(button_up_callbacks.begin(), button_up_callbacks.end());
+  return saved.id;
 }
 
-void Controller::on_left_joy(const ControllerCallback& callback, int32_t priority)
+int32_t Controller::on_left_joy(const ControllerCallback& callback, int32_t priority)
 {
-  left_joy_callbacks.push_back(std::make_pair(priority, callback));
+  ControllerSaved saved = {++controller_id, priority, callback};
+  left_joy_callbacks.push_back(saved);
   std::sort(left_joy_callbacks.begin(), left_joy_callbacks.end());
+  return saved.id;
 }
 
-void Controller::on_right_joy(const ControllerCallback& callback, int32_t priority)
+int32_t Controller::on_right_joy(const ControllerCallback& callback, int32_t priority)
 {
-  right_joy_callbacks.push_back(std::make_pair(priority, callback));
+  ControllerSaved saved = {++controller_id, priority, callback};
+  right_joy_callbacks.push_back(saved);
   std::sort(right_joy_callbacks.begin(), right_joy_callbacks.end());
+  return saved.id;
 }
 
 ControllerState state_from_joystick_event(ControllerState& state, SDL_Joystick* controller, const SDL_Event& e)
@@ -160,7 +169,7 @@ void Controller::process_event(const SDL_Event& e)
       state = state_from_button_event(state, sdl.joystick, e);
       for (auto& callback : button_down_callbacks) {
         // If a callback returns false it means do not bubble
-        if (!callback.second(state)) {
+        if (!callback.callback(state)) {
           break;
         }
       }
@@ -169,7 +178,7 @@ void Controller::process_event(const SDL_Event& e)
       state = state_from_button_event(state, sdl.controller, e);
       for (auto& callback : button_down_callbacks) {
         // If a callback returns false it means do not bubble
-        if (!callback.second(state)) {
+        if (!callback.callback(state)) {
           break;
         }
       }
@@ -178,7 +187,7 @@ void Controller::process_event(const SDL_Event& e)
       state = state_from_button_event(state, sdl.joystick, e);
       for (auto& callback : button_up_callbacks) {
         // If a callback returns false it means do not bubble
-        if (!callback.second(state)) {
+        if (!callback.callback(state)) {
           break;
         }
       }
@@ -187,7 +196,7 @@ void Controller::process_event(const SDL_Event& e)
       state = state_from_button_event(state, sdl.controller, e);
       for (auto& callback : button_up_callbacks) {
         // If a callback returns false it means do not bubble
-        if (!callback.second(state)) {
+        if (!callback.callback(state)) {
           break;
         }
       }
@@ -196,7 +205,7 @@ void Controller::process_event(const SDL_Event& e)
       state = state_from_joystick_event(state, sdl.joystick, e);
       // If a callback returns false it means do not bubble
       for (auto& callback : left_joy_callbacks) {
-        if (!callback.second(state)) {
+        if (!callback.callback(state)) {
           break;
         }
       }
@@ -209,7 +218,7 @@ void Controller::process_event(const SDL_Event& e)
           case 0:
             // If a callback returns false it means do not bubble
             for (auto& callback : left_joy_callbacks) {
-              if (!callback.second(state)) {
+              if (!callback.callback(state)) {
                 break;
               }
             }
@@ -217,7 +226,7 @@ void Controller::process_event(const SDL_Event& e)
           case 1:
             // If a callback returns false it means do not bubble
             for (auto& callback : right_joy_callbacks) {
-              if (!callback.second(state)) {
+              if (!callback.callback(state)) {
                 break;
               }
             }
@@ -226,6 +235,34 @@ void Controller::process_event(const SDL_Event& e)
       }
       break;
   }
+}
+
+bool Controller::unbind(const std::initializer_list<int32_t>& ids)
+{
+  const auto remove = [&](std::vector<ControllerSaved>& saved, int32_t id) -> bool
+  {
+    const auto found = std::find_if(saved.begin(), saved.end(), [id](const ControllerSaved& s)
+    {
+      return s.id == id;
+    });
+
+    if (found != saved.end()) {
+      saved.erase(found);
+      return true;
+    }
+
+    return false;
+  };
+
+  bool found = false;
+  for (auto id : ids) {
+    found |= remove(button_down_callbacks, id);
+    found |= remove(button_up_callbacks, id);
+    found |= remove(left_joy_callbacks, id);
+    found |= remove(right_joy_callbacks, id);
+  }
+
+  return found;
 }
 
 bool Controller::is_gamepad() const

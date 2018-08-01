@@ -1,14 +1,14 @@
 [character]
 name = "Raptr"
 mass_kg = 80.0
-walk_speed_kmh = 14
-run_speed_kmh = 24
-jump_vel_ms = 4
+walk_speed_kmh = 14.0
+run_speed_kmh = 24.0
+jump_vel_ms = 4.5
 jumps_allowed = 2
 jump_perfect_scale = 1.50
 fast_fall_scale = 2.5
 dash_scale = 1.25
-dash_speed_kmh = 40
+dash_speed_kmh = 40.0
 dash_length_msec = 150
 
 [sprite]

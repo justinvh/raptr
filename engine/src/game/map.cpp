@@ -74,21 +74,31 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
   uint32_t max_tile_id = 0;
   for (auto& pico_layer : layers) {
     auto layer_type = S("type", pico_layer);
-    if (layer_type != "tilelayer") {
-      continue;
-    }
-    auto layer_data = pico_layer.get("data").get<picojson::array>();
-    int k = 0;
-    for (auto d : layer_data) {
-      k++;
-      auto tile_id = static_cast<uint32_t>(d.get<double>());
-      auto original = tile_id;
-      tile_id &= CLEAR_FLIP;
-      if (tile_id > max_tile_id) {
-        max_tile_id = tile_id;
+    if (layer_type == "tilelayer") {
+      auto layer_data = pico_layer.get("data").get<picojson::array>();
+      int k = 0;
+      for (auto d : layer_data) {
+        k++;
+        auto tile_id = static_cast<uint32_t>(d.get<double>());
+        auto original = tile_id;
+        tile_id &= CLEAR_FLIP;
+        if (tile_id > max_tile_id) {
+          max_tile_id = tile_id;
+        }
+      }
+    } else if (layer_type == "objectgroup") {
+      auto objects = pico_layer.get("objects").get<picojson::array>();
+      for (auto& object : objects) {
+        if (!object.contains("gid")) {
+          continue;
+        }
+        auto tile_id = U("id", object);
+        tile_id &= CLEAR_FLIP;
+        if (tile_id > max_tile_id) {
+          max_tile_id = tile_id;
+        }
       }
     }
-    logger->info("Layer data size is {}", k);
   }
   map->tilemap.resize(max_tile_id + 1);
 
@@ -220,13 +230,13 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
         l.dst.y = (layer.height - y - layer.y - 1) * map->tile_height;
         l.dst.w = tile.src.w;
         l.dst.h = tile.src.h;
-        l.flip_x = tile_index & FLIPPED_HORIZONTALLY_FLAG;
+        l.flip_x = false;
+        l.flip_y = false;
+        //l.flip_x = tile_index & FLIPPED_HORIZONTALLY_FLAG;
         l.flip_y = tile_index & FLIPPED_VERTICALLY_FLAG;
         l.rotation_deg = 0.0;
-        if (tile_index & FLIPPED_DIAGONALLY_FLAG && l.flip_x) {
+        if (tile_index & FLIPPED_DIAGONALLY_FLAG) {
           l.rotation_deg = 90.0;
-        } else if (tile_index & FLIPPED_DIAGONALLY_FLAG) {
-          l.rotation_deg = -90.0;
         }
 
         l.tile = &map->tilemap[tilemap_idx];

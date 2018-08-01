@@ -16,6 +16,7 @@ namespace raptr
 Entity::Entity()
 {
   auto g = xg::newGuid();
+  is_dead = false;
   guid_ = g.bytes();
   fall_time_us = 0;
   collidable = true;
@@ -145,6 +146,10 @@ bool Entity::intersects(const Entity* other, const Rect& bbox) const
 
 bool Entity::intersect_slow(const Entity* other, const Rect& this_bbox) const
 {
+  if (is_dead || other->is_dead) {
+    return false;
+  }
+
   auto& this_sprite = this->sprite;
   const auto& this_surface = this_sprite->surface;
   const uint8_t* this_pixels = reinterpret_cast<uint8_t*>(this_surface->pixels);
@@ -210,6 +215,10 @@ bool Entity::intersect_slow(const Entity* other, const Rect& this_bbox) const
 
 bool Entity::intersect_slow(const Rect& other_box) const
 {
+  if (is_dead) {
+    return false;
+  }
+
   const auto& surface = sprite->surface;
   const uint8_t* pixels = reinterpret_cast<uint8_t*>(surface->pixels);
   const int32_t bpp = surface->format->BytesPerPixel;
@@ -267,6 +276,10 @@ void Entity::set_parent(std::shared_ptr<Entity> new_parent)
 
 bool Entity::intersect_fast(const Rect& other_box) const
 {
+  if (is_dead) {
+    return false;
+  }
+
   const auto& self_boxes = this->bbox();
 
   for (const auto& self_box : self_boxes) {

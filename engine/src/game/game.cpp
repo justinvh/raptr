@@ -23,10 +23,17 @@
 #include <raptr/game/actor.hpp>
 #include <raptr/sound/sound.hpp>
 
-namespace
-{
+namespace {
 auto logger = raptr::_get_logger(__FILE__);
+
+template <class T, class Y>
+void erase(T& container, Y& v)
+{
+  auto it = std::remove(container.begin(), container.end(), v);
+  container.erase(it, container.end());
 };
+
+}
 
 namespace raptr
 {
@@ -107,6 +114,8 @@ bool Game::poll_events()
     clock::start();
     std::this_thread::sleep_for(std::chrono::microseconds(us));
     clock::stop();
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F7) {
+    this->kill(characters[0]);
   } else if (e.type == SDL_WINDOWEVENT) {
     if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
       this->shutdown = true;
@@ -150,13 +159,7 @@ void Game::handle_controller_event(const ControllerEvent& controller_event)
 void Game::handle_load_map_event(const LoadMapEvent& event)
 {
   if (map) {
-    const auto is_observed = std::find(renderer->observing.begin(),
-      renderer->observing.end(),
-      map);
-
-    if (is_observed != renderer->observing.end()) {
-      renderer->observing.erase(is_observed);
-    }
+    erase(renderer->observing, map);
   }
 
   map = Map::load(game_path.from_root(fs::path("maps") / event.name));
@@ -193,6 +196,17 @@ void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
   }
 
   characters.push_back(character);
+
+  std::vector<std::shared_ptr<Entity>> to_erase;
+  for (auto& entity : renderer->entities_followed) {
+    if (entity->is_dead) {
+      to_erase.push_back(entity);
+    }
+  }
+
+  for (auto& e : to_erase) {
+    erase(renderer->entities_followed, e);
+  }
 }
 
 void Game::handle_actor_spawn_event(const ActorSpawnEvent& event)
@@ -455,7 +469,7 @@ void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback cal
   ///this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
   this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
   {
-    character->position_rel().y = 300;
+    character->position_rel().y = 50;
     character->position_rel().x = 50;
     character->flashlight = true;
     character->attach_controller(controllers[controller_id]);
@@ -640,6 +654,21 @@ bool Game::init_controllers()
   return !controllers.empty();
 }
 
+void Game::kill(const std::shared_ptr<Character>& character)
+{
+  if (character->controller) {
+    auto controller_id = character->controller->id();
+    auto potential_characters = controller_to_character[controller_id];
+    erase(potential_characters, character);
+    if (potential_characters.empty()) {
+      controller_to_character.erase(controller_id);
+    }
+  }
+
+  character->kill();
+  erase(characters, character);
+}
+
 void Game::spawn_now(const std::shared_ptr<Entity>& entity)
 {
   auto pos = entity->position_abs();
@@ -712,7 +741,7 @@ bool Game::init_demo()
   renderer->add_observable(map);
   */
 
-  this->load_map("e1m1");
+  this->load_map("prologue");
   return true;
 }
 
@@ -750,24 +779,22 @@ bool Game::remove_entity_by_key(const std::string key)
 
 bool Game::remove_entity(std::shared_ptr<Entity> entity)
 {
+  
+
   for (auto& child : entity->children) {
     this->remove_entity(child);
   }
 
   entity->children.clear();
 
-  const auto found1 = last_known_entity_pos.find(entity);
-  last_known_entity_pos.erase(found1);
+  last_known_entity_pos.erase(entity);
 
   for (auto& b : last_known_entity_bounds[entity]) {
     rtree.Remove(b.min, b.max, entity.get());
   }
 
-  const auto found2 = last_known_entity_bounds.find(entity);
-  last_known_entity_bounds.erase(found2);
-
-  const auto found3 = std::find(entities.begin(), entities.end(), entity);
-  entities.erase(found3);
+  last_known_entity_bounds.erase(entity);
+  erase(entities, entity);
 
   std::vector<std::string> keys_to_remove;
   for (auto& pair : entity_short_lut) {
@@ -777,21 +804,16 @@ bool Game::remove_entity(std::shared_ptr<Entity> entity)
   }
 
   for (auto& k : keys_to_remove) {
-    const auto found_key = entity_short_lut.find(k);
-    entity_short_lut.erase(found_key);
+    entity_short_lut.erase(k);
   }
 
-  const auto found_guid = entity_lut.find(entity->guid());
-  entity_lut.erase(found_guid);
+  entity_lut.erase(entity->guid());
 
   if (entity->is_player()) {
     const auto character = std::dynamic_pointer_cast<Character>(entity);
-    const auto found4 = std::find(characters.begin(), characters.end(), character);
+    erase(characters, character);
     for (auto& pair : controller_to_character) {
-      const auto found5 = std::find(pair.second.begin(), pair.second.end(), character);
-      if (found5 != pair.second.end()) {
-        pair.second.erase(found5);
-      }
+      erase(pair.second, character);
     }
   }
 
@@ -799,21 +821,8 @@ bool Game::remove_entity(std::shared_ptr<Entity> entity)
     entity->parent->remove_child(entity);
   }
 
-  const auto is_followed = std::find(renderer->entities_followed.begin(),
-    renderer->entities_followed.end(),
-    entity);
-
-  if (is_followed != renderer->entities_followed.end()) {
-    renderer->entities_followed.erase(is_followed);
-  }
-
-  const auto is_observed = std::find(renderer->observing.begin(),
-    renderer->observing.end(),
-    entity);
-
-  if (is_observed != renderer->observing.end()) {
-    renderer->observing.erase(is_observed);
-  }
+  erase(renderer->entities_followed, entity);
+  erase(renderer->observing, entity);
 
   entity.reset();
   return true;

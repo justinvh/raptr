@@ -93,6 +93,8 @@ public:
     engine_events_buffers[engine_event_index].push_back(EngineEvent::create<T>(event));
   }
 
+  void kill(const std::shared_ptr<Character>& character);
+
   void dispatch_event(const std::shared_ptr<EngineEvent>& event);
 
   void handle_load_map_event(const LoadMapEvent& event);

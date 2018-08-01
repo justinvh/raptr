@@ -8,7 +8,7 @@
  "margin":0,
  "name":"Jungle",
  "spacing":0,
- "tilecount":5,
+ "tilecount":14,
  "tileheight":32,
  "tiles":
     {
@@ -18,6 +18,55 @@
          "imageheight":30,
          "imagewidth":60,
          "type":"Player Spawn"
+        },
+     "10":
+        {
+         "image":"grass-right-corner.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Collidable"
+        },
+     "11":
+        {
+         "image":"dirt-corner.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Collidable"
+        },
+     "12":
+        {
+         "image":"grass-corner-right.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Collidable"
+        },
+     "13":
+        {
+         "image":"grass-top-bottom.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Collidable"
+        },
+     "14":
+        {
+         "image":"grass-top-bottom-left.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Collidable"
+        },
+     "15":
+        {
+         "image":"grass-top-bottom-right.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Collidable"
+        },
+     "19":
+        {
+         "image":"spike.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Death"
         },
      "3":
         {
@@ -44,7 +93,22 @@
         {
          "image":"bush_berry.png",
          "imageheight":32,
-         "imagewidth":32
+         "imagewidth":32,
+         "type":"Non-Collidable"
+        },
+     "8":
+        {
+         "image":"sign.png",
+         "imageheight":31,
+         "imagewidth":40,
+         "type":"Non-Collidable"
+        },
+     "9":
+        {
+         "image":"grass-corner.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Collidable"
         }
     },
  "tilewidth":60,

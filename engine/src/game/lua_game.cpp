@@ -92,6 +92,7 @@ void Game::setup_lua_context(sol::state& state)
     "remove_entity_by_key", &Game::remove_entity_by_key,
     "remove_entity", &Game::remove_entity,
     "load_map", &Game::load_map,
+    "kill", &Game::kill,
     "reload_map", [&](Game& game)
     {
       if (!game.map) {
