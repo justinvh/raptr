@@ -116,6 +116,8 @@ public:
 
   static void setup_lua_context(sol::state& state);
 
+  virtual AnimationFrame* collision_frame() const;
+
   /*!
     This method will determine how the entity interacts with the game.
     This include computing position, velocity, and acceleration updates; how the game elements
@@ -208,6 +210,10 @@ public:
 
   virtual bool is_player() const;
 
+  virtual void show_collision_frame();
+
+  virtual void hide_collision_frame();
+
   void serialize(std::vector<NetField>& list) override = 0;
 
   bool deserialize(const std::vector<NetField>& fields) override = 0;
@@ -247,9 +253,6 @@ public:
 
   //! The sprite that is used to render this character
   std::shared_ptr<Sprite> sprite;
-
-  //! Specific frame used for collisions
-  AnimationFrame* collision_frame;
 
   int64_t think_rate_us;
   int64_t last_think_time_us;

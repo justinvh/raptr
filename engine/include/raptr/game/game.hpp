@@ -93,7 +93,9 @@ public:
     engine_events_buffers[engine_event_index].push_back(EngineEvent::create<T>(event));
   }
 
-  void kill(const std::shared_ptr<Character>& character);
+  void kill_character(const std::shared_ptr<Character>& character);
+  void kill_entity(const std::shared_ptr<Entity>& entity);
+  void kill_by_guid(const std::array<unsigned char, 16>& guid);
 
   void dispatch_event(const std::shared_ptr<EngineEvent>& event);
 
@@ -245,6 +247,10 @@ public:
   void serialize(std::vector<NetField>& list) override;
   bool deserialize(const std::vector<NetField>& fields) override;
 
+  void show_collision_frames();
+
+  void hide_collision_frames();
+
 public:
   //! Global configuration loaded from a etc/raptr.ini
   std::shared_ptr<Config> config;
@@ -277,6 +283,8 @@ public:
   std::map<std::shared_ptr<Entity>, Point> last_known_entity_pos;
   std::map<std::shared_ptr<Entity>, std::vector<Bounds>> last_known_entity_bounds;
 
+  
+
   //! The r-tree is used as a secondary test for bounding box interactions
   RTree<Entity*, double, 2> rtree;
 
@@ -300,6 +308,7 @@ public:
   //! If set, then all initialization has happened successfully
   bool is_init;
   bool is_headless;
+  bool default_show_collision_frames;
   bool shutdown;
 
   bool use_threaded_renderer;

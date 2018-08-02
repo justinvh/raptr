@@ -91,8 +91,10 @@ void Game::setup_lua_context(sol::state& state)
     "get_character", &Game::get_entity<Character>,
     "remove_entity_by_key", &Game::remove_entity_by_key,
     "remove_entity", &Game::remove_entity,
+    "show_collision_frames", &Game::show_collision_frames,
+    "hide_collision_frames", &Game::hide_collision_frames,
     "load_map", &Game::load_map,
-    "kill", &Game::kill,
+    "kill", &Game::kill_entity,
     "reload_map", [&](Game& game)
     {
       if (!game.map) {

@@ -152,6 +152,8 @@ public:
   */
   bool has_animation(const std::string& name);
 
+  Animation* collision_animation(const std::string& name) const;
+
   /*!
     Register a sound effect that plays with an animation
     /param name - The animation to register against
@@ -206,5 +208,10 @@ public:
 
   //! Path this sprite is from
   FileInfo path;
+
+  //! Specific frame used for collisions
+  bool show_collision_frame;
+  std::map<std::string, Animation*> collision_frame_lut;
+  Animation* current_collision;
 };
 } // namespace raptr

@@ -81,7 +81,11 @@ bool Game::poll_events()
   }
 
   if (e.type == SDL_CONTROLLERBUTTONDOWN && e.cbutton.button == SDL_CONTROLLER_BUTTON_START) {
-    clock::toggle();
+    const auto us = static_cast<int64_t>(1.0 / renderer->fps * 1e6);
+    logger->debug("Stepping by {}ms", us / 1e3);
+    clock::start();
+    std::this_thread::sleep_for(std::chrono::microseconds(us));
+    clock::stop();
   } else if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type ==
     SDL_CONTROLLERBUTTONUP ||
     e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
@@ -115,7 +119,7 @@ bool Game::poll_events()
     std::this_thread::sleep_for(std::chrono::microseconds(us));
     clock::stop();
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F7) {
-    this->kill(characters[0]);
+    this->kill_character(characters[0]);
   } else if (e.type == SDL_WINDOWEVENT) {
     if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
       this->shutdown = true;
@@ -179,8 +183,15 @@ void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
 {
   auto character = Character::from_toml(game_path.from_root(event.path));
   character->guid_ = event.guid;
-  character->pos_.x = 0;
-  character->pos_.y = 0;
+
+
+  if (map) {
+    character->pos_.x = map->player_spawn.x;
+    character->pos_.y = map->player_spawn.y;
+  } else {
+    character->pos_.x = 0;
+    character->pos_.y = 0;
+  }
 
   if (character->is_scripted) {
     this->setup_lua_context(character->lua);
@@ -317,9 +328,21 @@ bool Game::process_engine_events()
       last_known_entity_pos[entity] = entity->position_abs();
     }
 
+    if (!entity->is_dead) {
+      auto tile_intersected = this->map->intersects(entity.get(), "Death");
+      if (tile_intersected) {
+        renderer->run_frame();
+        this->kill_entity(entity);
+      }
+    }
+
     if (new_point.y < -100) {
       entity->position_rel().y = 500;
     }
+  }
+
+  if (map) {
+    map->think(this_ptr);
   }
 
   current_events.clear();
@@ -344,7 +367,7 @@ bool Game::run()
 
 bool Game::intersect_world(Entity* entity, const Rect& bbox)
 {
-  return map->intersects(entity, bbox);
+  return map->intersects(entity, bbox) != nullptr;
 }
 
 bool Game::intersect_anything(Entity* entity, const Rect& bbox)
@@ -469,8 +492,14 @@ void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback cal
   ///this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
   this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
   {
-    character->position_rel().y = 50;
-    character->position_rel().x = 50;
+    if (map) {
+      character->position_rel().y = map->player_spawn.y;
+      character->position_rel().x = map->player_spawn.x;
+    } else {
+      character->position_rel().y = 32;
+      character->position_rel().x = 0;
+    }
+
     character->flashlight = true;
     character->attach_controller(controllers[controller_id]);
     character->gravity_ps2 = gravity_ps2;
@@ -519,10 +548,27 @@ void Game::spawn_trigger(const Rect& rect, TriggerSpawnEvent::Callback callback)
   this->add_event<TriggerSpawnEvent>(event);
 }
 
+void Game::show_collision_frames()
+{
+  for (auto& entity : entities) {
+    entity->show_collision_frame();
+  }
+  default_show_collision_frames = true;
+}
+
+void Game::hide_collision_frames()
+{
+  for (auto& entity : entities) {
+    entity->hide_collision_frame();
+  }
+  default_show_collision_frames = false;
+}
+
 bool Game::init()
 {
   shutdown = false;
   use_threaded_renderer = false;
+  default_show_collision_frames = false;
 
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
 
@@ -654,7 +700,7 @@ bool Game::init_controllers()
   return !controllers.empty();
 }
 
-void Game::kill(const std::shared_ptr<Character>& character)
+void Game::kill_character(const std::shared_ptr<Character>& character)
 {
   if (character->controller) {
     auto controller_id = character->controller->id();
@@ -669,6 +715,23 @@ void Game::kill(const std::shared_ptr<Character>& character)
   erase(characters, character);
 }
 
+void Game::kill_entity(const std::shared_ptr<Entity>& entity)
+{
+  if (entity->is_player()) {
+    return this->kill_character(std::dynamic_pointer_cast<Character>(entity));
+  }
+  entity->is_dead = true;
+}
+
+void Game::kill_by_guid(const std::array<unsigned char, 16>& guid)
+{
+  auto found = entity_lut.find(guid);
+  if (found == entity_lut.end()) {
+    return;
+  }
+  this->kill_entity(found->second);
+}
+
 void Game::spawn_now(const std::shared_ptr<Entity>& entity)
 {
   auto pos = entity->position_abs();
@@ -679,6 +742,12 @@ void Game::spawn_now(const std::shared_ptr<Entity>& entity)
 
   for (const auto& b : bounds) {
     rtree.Insert(b.min, b.max, entity.get());
+  }
+
+  if (default_show_collision_frames) {
+    entity->show_collision_frame();
+  } else {
+    entity->hide_collision_frame();
   }
 
   renderer->add_observable(entity);

@@ -174,12 +174,7 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   character->dash_speed_ps = V("character.dash_speed_kmh", 50.0) * kmh_to_ps;
   character->dash_length_usec = static_cast<int64_t>(V("character.dash_length_msec", 100) * 1e3);
   character->dash_time_usec = 0;
-
-  character->do_pixel_collision_test = false;
-  if (character->sprite->has_animation("Collision")) {
-    character->collision_frame = &character->sprite->animations["Collision"].frames[0];
-    character->do_pixel_collision_test = true;
-  }
+  character->do_pixel_collision_test = true;
 
   character->is_scripted = false;
   const auto script_path_value = v.find("script.path");
@@ -569,6 +564,11 @@ void Character::think(std::shared_ptr<Game>& game)
   auto& acc = this->acceleration_rel();
   auto& pos = this->position_rel();
 
+  if (is_dead) {
+    vel_exp.x = 0;
+    vel_exp.y = 0;
+  }
+
   if (jump_count) {
     jump_time_us += delta_us;
   }
@@ -643,7 +643,7 @@ void Character::think(std::shared_ptr<Game>& game)
   }
 
   if (is_dead && is_falling) {
-    friction = 0;
+    friction = 5;
   }
 
   if (std::fabs(vel_exp.x) < std::fabs(vel.x)) {
@@ -774,6 +774,7 @@ void Character::walk(float scale)
 
 void Character::kill()
 {
+  flashlight = false;
   is_dead = true;
   this->set_animation("Death");
   this->detach_controller();

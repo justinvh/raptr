@@ -89,6 +89,11 @@ void Entity::add_acceleration(double x_ms2, double y_ms2)
   acc_.y += y_ms2 * meters_to_pixels;
 }
 
+AnimationFrame* Entity::collision_frame() const
+{
+  return &sprite->current_collision->current_frame();
+}
+
 bool Entity::intersects(const Entity* other) const
 {
   if (other->guid() == this->guid()) {
@@ -162,8 +167,8 @@ bool Entity::intersect_slow(const Entity* other, const Rect& this_bbox) const
 
   auto this_pos = this->position_abs();
   const auto other_pos = other->position_abs();
-  auto& this_frame = this->collision_frame;
-  auto& other_frame = other->collision_frame;
+  auto this_frame = this->collision_frame();
+  auto other_frame = other->collision_frame();
 
   // Box 1
   double ax0 = this_bbox.x;
@@ -224,7 +229,7 @@ bool Entity::intersect_slow(const Rect& other_box) const
   const int32_t bpp = surface->format->BytesPerPixel;
 
   const auto pos = this->position_abs();
-  auto& frame = collision_frame;
+  auto frame = this->collision_frame();
 
   // x0 position
   const auto x0_min = static_cast<int32_t>(std::max(other_box.x, pos.x));
@@ -291,6 +296,16 @@ bool Entity::intersect_fast(const Rect& other_box) const
   return false;
 }
 
+void Entity::show_collision_frame()
+{
+  sprite->show_collision_frame = true;
+}
+
+void Entity::hide_collision_frame()
+{
+  sprite->show_collision_frame = false;
+}
+
 void Entity::setup_lua_context(sol::state& state)
 {
   state.new_usertype<Point>("Point",
@@ -309,7 +324,9 @@ void Entity::setup_lua_context(sol::state& state)
     "remove_child", &Entity::remove_child,
     "set_parent", &Entity::set_parent,
     "children", &Entity::children,
-    "parent", &Entity::parent
+    "parent", &Entity::parent,
+    "show_collision_frame", &Entity::show_collision_frame,
+    "hide_collision_frame", &Entity::hide_collision_frame
   );
 }
 

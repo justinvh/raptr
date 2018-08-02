@@ -160,7 +160,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
     auto from = p_int(tag, "from");
     auto to = p_int(tag, "to");
     auto direction = p_string(tag, "direction");
-
+    
     Animation animation;
     animation.name = tag_name;
     animation.frame = 0;
@@ -170,6 +170,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
     animation.hold_last_frame = false;
     animation.sound_effect_has_played = false;
     animation.sound_effect_loop = false;
+    animation.speed = 1.0f;
 
     logger->info("Adding animation {}", tag_name);
 
@@ -209,7 +210,49 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
     sprite->animations[tag_name] = animation;
   }
 
-  sprite->current_animation = &sprite->animations["Idle"];
+  Animation* default_collision = nullptr;
+  for (auto& anim : sprite->animations) {
+    const auto& tag_name = anim.first;
+    if (tag_name == "Collision-Default") {
+      default_collision = &sprite->animations[tag_name];
+      break;
+    }
+  }
+
+  if (default_collision) {
+    for (auto& anim : sprite->animations) {
+      const auto& tag_name = anim.first;
+      const auto find_it = tag_name.find("Collision-");
+      if (find_it != std::string::npos) {
+        continue;
+      }
+      logger->debug("Registered Default-Collision as collision for {}", tag_name);
+      sprite->collision_frame_lut[tag_name] = default_collision;
+    }
+  }
+
+  for (auto& anim : sprite->animations) {
+    const auto& tag_name = anim.first;
+    const auto find_it = tag_name.find("Collision-");
+    if (find_it == std::string::npos) {
+      continue;
+    }
+    auto ref_name = tag_name.substr(tag_name.find('-') + 1);
+    if (ref_name == "Default") {
+      continue;
+    }
+    auto found = sprite->animations.find(ref_name);
+    if (found == sprite->animations.end()) {
+      logger->error("Collision found for {}, but no such animation exist.", ref_name);
+      return nullptr;
+    }
+    auto found_animation = &sprite->animations[tag_name];
+    logger->debug("Registered {} as collision for {}", found_animation->name, ref_name);
+    sprite->collision_frame_lut[ref_name] = found_animation;
+  }
+
+  sprite->current_animation = nullptr;
+  sprite->show_collision_frame = false;
   sprite->last_frame_tick = clock::ticks();
   sprite->scale = 1.0;
   sprite->flip_x = false;
@@ -219,6 +262,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   sprite->blend_mode = SDL_BLENDMODE_BLEND;
   sprite->path = path;
   sprite->render_in_foreground = false;
+  sprite->set_animation("Idle");
 
   //std::shared_ptr<Sprite> cache(new Sprite(*sprite));
   //SPRITE_CACHE[path.file_relative] = cache;
@@ -239,9 +283,14 @@ void Sprite::render(Renderer* renderer)
     SDL_SetTextureBlendMode(texture.get(), blend_mode);
   }
 
-  const auto frame = current_animation->frames[current_animation->frame];
+  auto frame = current_animation->frames[current_animation->frame];
+  current_collision->next(last_frame_tick, speed);
   if (current_animation->next(last_frame_tick, speed)) {
     last_frame_tick = clock::ticks();
+  }
+
+  if (show_collision_frame) {
+    frame = current_collision->frames[current_collision->frame];
   }
 
   SDL_Rect src, dst;
@@ -266,9 +315,18 @@ bool Sprite::has_animation(const std::string& name)
   return animations.find(name) != animations.end();
 }
 
+Animation* Sprite::collision_animation(const std::string& name) const
+{
+  const auto found = collision_frame_lut.find(name);
+  if (found == collision_frame_lut.end()) {
+    return current_animation;
+  }
+  return found->second;
+}
+
 bool Sprite::set_animation(const std::string& name, bool hold_last_frame)
 {
-  if (current_animation->name == name) {
+  if (current_animation && current_animation->name == name) {
     return true;
   }
 
@@ -276,10 +334,16 @@ bool Sprite::set_animation(const std::string& name, bool hold_last_frame)
     return false;
   }
 
-  current_animation->sound_effect_has_played = false;
+  if (current_animation) {
+    current_animation->sound_effect_has_played = false;
+  }
+
   current_animation = &animations[name];
   current_animation->frame = 0;
   current_animation->hold_last_frame = hold_last_frame;
+  current_collision = this->collision_animation(name);
+  current_collision->frame = 0;
+  current_collision->hold_last_frame = hold_last_frame;
   return true;
 }
 

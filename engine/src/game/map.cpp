@@ -1,9 +1,11 @@
 #include <sstream>
-#include <raptr/game/map.hpp>
 #include <picojson.h>
-#include <raptr/common/logging.hpp>
 #include <SDL_image.h>
-#include "raptr/renderer/renderer.hpp"
+
+#include <raptr/game/map.hpp>
+#include <raptr/game/game.hpp>
+#include <raptr/common/logging.hpp>
+#include <raptr/renderer/renderer.hpp>
 
 namespace {
 auto logger = raptr::_get_logger(__FILE__);
@@ -197,6 +199,20 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
     if (layer.name == "Player") {
       is_foreground = false;
       player_layer_found = true;
+      auto layer_data = pico_layer.get("data").get<picojson::array>();
+      int32_t k = 0;
+      for (auto d : layer_data) {
+        auto tile_id = static_cast<uint32_t>(d.get<double>());
+        auto tilemap_idx = tile_id & CLEAR_FLIP;
+        if (tilemap_idx == 0) {
+          ++k;
+          continue;
+        }
+        map->player_spawn.x = (layer.x + (k % layer.width)) * map->tile_width;
+        map->player_spawn.y = layer.height * map->tile_height - (layer.y + k / layer.width + 1) * map->tile_height;
+        break;
+      }
+      continue;
     }
 
     layer.is_foreground = is_foreground;
@@ -241,6 +257,7 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
 
         l.tile = &map->tilemap[tilemap_idx];
         layer.renderable.emplace_back(l);
+        layer.layer_tile_lut[tile_offset] = l;
       }
     }
 
@@ -270,85 +287,189 @@ void Map::render_layer(Renderer* renderer, const Layer& layer)
   }
 }
 
-bool Map::intersects(const Entity* other) const
+LayerTile* Map::intersects(const Entity* other, const std::string& tile_type) 
 {
   if (!other->collidable) {
-    return false;
+    return nullptr;
   }
 
   if (other->do_pixel_collision_test) {
     for (auto& other_box : other->bbox()) {
-      if (this->intersect_slow(other, other_box)) {
-        return true;
+      auto result = this->intersect_slow(other, other_box, tile_type);
+      if (result) {
+        return result;
       }
     }
-    return false;
+    return nullptr;
   }
 
   for (auto& other_box : other->bbox()) {
-    if (this->intersects(other_box)) {
-      return true;
+    auto result = this->intersects(other_box, tile_type);
+    if (result) {
+      return result;
+    }
+  }
+
+  return nullptr;
+}
+
+LayerTile* Map::intersects(const Rect& bbox, const std::string& tile_type)
+{
+  return this->intersect_slow(bbox, tile_type);
+}
+
+LayerTile* Map::intersects(const Entity* other, const Rect& bbox, const std::string& tile_type)
+{
+  if (!other->collidable) {
+    return nullptr;
+  }
+
+  if (other->do_pixel_collision_test) {
+    return this->intersect_slow(other, bbox, tile_type);
+  }
+
+  return this->intersects(bbox, tile_type);
+}
+
+bool Map::intersect_precise(const LayerTile* layer_tile, const Layer& layer,
+                            int32_t check_x, int32_t check_y,
+                            const Entity* other, const Rect& bbox)
+{
+  auto& tile = layer_tile->tile;
+  const auto& this_surface = tile->surface;
+  const uint8_t* this_pixels = reinterpret_cast<uint8_t*>(this_surface->pixels);
+  const int32_t this_bpp = this_surface->format->BytesPerPixel;
+
+  auto& other_sprite = other->sprite;
+  const auto& other_surface = other_sprite->surface;
+  const uint8_t* other_pixels = reinterpret_cast<uint8_t*>(other_surface->pixels);
+  const int32_t other_bpp = other_surface->format->BytesPerPixel;
+
+  const auto other_pos = bbox;
+  auto other_frame = other->collision_frame();
+
+  int32_t tx = check_x * tile_width;
+  int32_t ty = check_y * tile_height;
+
+  // Bounding box of tile relative to the layer
+  double ax0 = tx;
+  double ax1 = tx + tile->surface->w - 1;
+  double ay0 = ty;
+  double ay1 = ty + tile->surface->h - 1;
+
+  // Bounding box of entity relative to the layer
+  double bx0 = other_pos.x;
+  double bx1 = other_pos.x + other_frame->w - 1;
+  double by0 = other_pos.y;
+  double by1 = other_pos.y + other_frame->h - 1;
+
+  // Overlap of the two relative to the layer
+  auto cx0 = std::max(ax0, bx0);
+  auto cx1 = std::min(ax1, bx1);
+  auto cy0 = std::max(ay0, by0);
+  auto cy1 = std::min(ay1, by1);
+
+  // This shouldn't happen
+  if (cx1 < cx0 || cy1 < cy0) {
+    return nullptr;
+  }
+
+  // Pixel range for tile
+  auto tx0 = static_cast<int32_t>(cx0 - ax0);
+  auto ty0 = static_cast<int32_t>(cy0 - ay0);
+
+  // Other pixel offsets
+  auto ox0 = static_cast<int32_t>(cx0 - bx0);
+  auto oy0 = static_cast<int32_t>(cy0 - by0);
+
+  auto th = static_cast<int32_t>(tile->surface->h - 1);
+  auto oh = static_cast<int32_t>(other_frame->h - 1);
+
+  auto w = static_cast<int32_t>(cx1 - cx0);
+  auto h = static_cast<int32_t>(cy1 - cy0);
+
+  int32_t this_scale = 1;
+  if (layer_tile->flip_y) {
+    th = 0;
+    this_scale = -1;
+  }
+
+  int32_t other_scale = 1;
+  if (other_sprite->flip_y) {
+    oh = 0;
+    other_scale = -1;
+  }
+
+  for (int32_t x = 0; x < w; ++x) {
+    for (int32_t y = 0; y < h; ++y) {
+      int32_t this_idx = (th - this_scale * (ty0 + y)) * this_surface->pitch + (tx0 + x + tx) * this_bpp;
+      int32_t other_idx = (other_frame->y + oh - other_scale * (oy0 + y)) * other_surface->pitch + (ox0 + x + other_frame->x) *
+        other_bpp;
+      const uint8_t* this_px = this_pixels + this_idx;
+      const uint8_t* other_px = other_pixels + other_idx;
+      if (*this_px > 0 && *other_px > 0) {
+        return true;
+      }
     }
   }
 
   return false;
 }
 
-bool Map::intersects(const Rect& bbox) const
-{
-  return this->intersect_slow(bbox);
-}
-
-bool Map::intersects(const Entity* other, const Rect& bbox) const
-{
-  if (!other->collidable) {
-    return false;
-  }
-
-  if (other->do_pixel_collision_test) {
-    return this->intersect_slow(other, bbox);
-  }
-
-  return this->intersects(bbox);
-}
-
-bool Map::intersect_slow(const Entity* other, const Rect& bbox) const
+LayerTile* Map::intersect_slow(const Entity* other, const Rect& bbox, const std::string& type)
 {
   // Is there a tile in this map that would occupy X/Y
   for (auto& layer : layers) {
-    const int32_t check_x1 = (bbox.x - (layer.x * tile_width)) / tile_width;
-    const int32_t check_x2 = ((bbox.x + bbox.w) - (layer.x * tile_width)) / tile_width;
-    const int32_t check_y1 = ((layer.height - layer.y) * tile_height - (bbox.y + bbox.h)) / tile_height;
-    const int32_t check_y2 = ((layer.height - layer.y) * tile_height - bbox.y) / tile_height;
+    const int32_t x_off = layer.x * tile_width;
+    const int32_t y_off = layer.y * tile_height;
+    int32_t left = (bbox.x - x_off + 1) / tile_width;
+    int32_t right = ((bbox.x + bbox.w + 1) - x_off) / tile_width;
+    int32_t bottom = (bbox.y - y_off + 1) / tile_height;
+    int32_t top = ((bbox.y + bbox.h + 1) - y_off) / tile_height;
 
-    if (check_x1 < 0 || check_x2 >= layer.width) {
-      continue;
+    Rect bbox_rel;
+    bbox_rel.x = (bbox.x - x_off + 1);
+    bbox_rel.y = (bbox.y - y_off + 1);
+    bbox_rel.w = bbox.w;
+    bbox_rel.h = bbox.h;
+
+    if (right < 0 || left >= layer.width ||
+        top < 0 || bottom >= layer.height) 
+    {
+      return nullptr;
     }
 
-    if (check_y1 < 0 || check_y2 >= layer.height) {
-      continue;
-    }
+    left = std::max(0, left);
+    right = std::min(static_cast<int32_t>(layer.width) - 1, right);
+    top = std::min(static_cast<int32_t>(layer.height) - 1, top);
+    bottom = std::max(0, bottom);
 
-    for (int32_t check_y = check_y1; check_y <= check_y2; ++check_y) {
-      for (int32_t check_x = check_x1; check_x <= check_x2; ++check_x) {
-        uint32_t idx = (check_y * layer.width + check_x);
+    for (int32_t y = bottom; y <= top; ++y) {
+      for (int32_t x = left; x <= right; ++x) {
+        uint32_t idx = ((layer.height - y - 1) * layer.width + x);
+
+        // There is no tile here
         if (layer.tile_table[idx] == 0) {
           continue;
         }
-        auto& tile = this->tilemap[layer.tile_table[idx]];
-        if (tile.type == "Collidable") {
-          return true;
+
+        // Check properties of tile type, instead of checking collision type
+        auto layer_tile = &layer.layer_tile_lut[idx];
+        if (layer_tile->tile->type == type) {
+          if (this->intersect_precise(layer_tile, layer, x, y, other, bbox_rel)) {
+            return layer_tile;
+          }
         }
       }
     }
   }
-  return false;
+  return nullptr;
 }
 
 
-bool Map::intersect_slow(const Rect& other_box) const
+LayerTile* Map::intersect_slow(const Rect& other_box, const std::string& tile_type)
 {
-  return false;
+  return nullptr;
 }
 
 
@@ -378,6 +499,10 @@ void Map::render(Renderer* renderer)
   for (const auto& layer : layers) {
     this->render_layer(renderer, layer);
   }
+}
+
+void Map::think(std::shared_ptr<Game>& game)
+{
 }
   
 }

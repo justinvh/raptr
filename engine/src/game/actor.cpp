@@ -81,8 +81,7 @@ std::shared_ptr<Actor> Actor::from_toml(const FileInfo& toml_path)
   actor->sprite->y = 0;
 
   actor->do_pixel_collision_test = false;
-  if (actor->sprite->has_animation("Collision")) {
-    actor->collision_frame = &actor->sprite->animations["Collision"].frames[0];
+  if (!actor->sprite->collision_frame_lut.empty()) {
     actor->do_pixel_collision_test = true;
   }
   
