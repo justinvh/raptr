@@ -1,0 +1,33 @@
+[background]
+name = "Jungle"
+
+# In our parallax background/nightsky, z=100 means it is as far as possible
+# and the least sensitive to height changes
+
+[[layer]]
+texture = "textures/background/jungle/l7_ground.png"
+z = 40
+
+[[layer]]
+texture = "textures/background/jungle/l6_fog.png"
+z = 45
+
+[[layer]]
+texture = "textures/background/jungle/l5_grass02.png"
+z = 50
+
+[[layer]]
+texture = "textures/background/jungle/l4_grass01.png"
+z = 55
+
+[[layer]]
+texture = "textures/background/jungle/l3_trees02.png"
+z = 60
+
+[[layer]]
+texture = "textures/background/jungle/l2_trees01.png"
+z = 70
+
+[[layer]]
+texture = "textures/background/jungle/l1_background.png"
+z = 90

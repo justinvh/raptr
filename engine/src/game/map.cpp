@@ -248,7 +248,7 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
         l.dst.h = tile.src.h;
         l.flip_x = false;
         l.flip_y = false;
-        //l.flip_x = tile_index & FLIPPED_HORIZONTALLY_FLAG;
+        l.flip_x = tile_index & FLIPPED_HORIZONTALLY_FLAG;
         l.flip_y = tile_index & FLIPPED_VERTICALLY_FLAG;
         l.rotation_deg = 0.0;
         if (tile_index & FLIPPED_DIAGONALLY_FLAG) {
@@ -337,7 +337,7 @@ bool Map::intersect_precise(const LayerTile* layer_tile, const Layer& layer,
 {
   auto& tile = layer_tile->tile;
   const auto& this_surface = tile->surface;
-  const uint8_t* this_pixels = reinterpret_cast<uint8_t*>(this_surface->pixels);
+  uint8_t* this_pixels = reinterpret_cast<uint8_t*>(this_surface->pixels);
   const int32_t this_bpp = this_surface->format->BytesPerPixel;
 
   auto& other_sprite = other->sprite;
@@ -383,29 +383,38 @@ bool Map::intersect_precise(const LayerTile* layer_tile, const Layer& layer,
   auto oy0 = static_cast<int32_t>(cy0 - by0);
 
   auto th = static_cast<int32_t>(tile->surface->h - 1);
+  auto tw = static_cast<int32_t>(tile->surface->w - 1);
   auto oh = static_cast<int32_t>(other_frame->h - 1);
+  auto ow = static_cast<int32_t>(other_frame->w - 1);
 
   auto w = static_cast<int32_t>(cx1 - cx0);
   auto h = static_cast<int32_t>(cy1 - cy0);
 
-  int32_t this_scale = 1;
-  if (layer_tile->flip_y) {
-    th = 0;
-    this_scale = -1;
-  }
+  for (int32_t y = 0; y < h; ++y) {
+    int32_t tile_y_px = th - (ty0 + y);
+    if (layer_tile->flip_y) {
+      tile_y_px = ty0 + y;
+    }
 
-  int32_t other_scale = 1;
-  if (other_sprite->flip_y) {
-    oh = 0;
-    other_scale = -1;
-  }
+    int32_t sprite_y_px = other_frame->y + oh - (oy0 + y);
+    if (other_sprite->flip_y) {
+      sprite_y_px = other_frame->y + oy0 + y;
+    }
 
-  for (int32_t x = 0; x < w; ++x) {
-    for (int32_t y = 0; y < h; ++y) {
-      int32_t this_idx = (th - this_scale * (ty0 + y)) * this_surface->pitch + (tx0 + x + tx) * this_bpp;
-      int32_t other_idx = (other_frame->y + oh - other_scale * (oy0 + y)) * other_surface->pitch + (ox0 + x + other_frame->x) *
-        other_bpp;
-      const uint8_t* this_px = this_pixels + this_idx;
+    for (int32_t x = 0; x < w; ++x) {
+      int32_t tile_x_px = tx0 + x;
+      if (layer_tile->flip_x) {
+        tile_x_px = tw - (tx0 + x);
+      }
+
+      int32_t sprite_x_px = other_frame->x + ox0 + x;
+      if (other_sprite->flip_x) {
+        sprite_x_px = other_frame->x + ow - (ox0 + x);
+      }
+
+      int32_t this_idx = tile_y_px * this_surface->pitch + tile_x_px * this_bpp;
+      int32_t other_idx = sprite_y_px * other_surface->pitch + sprite_x_px * other_bpp;
+      uint8_t* this_px = this_pixels + this_idx;
       const uint8_t* other_px = other_pixels + other_idx;
       if (*this_px > 0 && *other_px > 0) {
         return true;
@@ -428,8 +437,8 @@ LayerTile* Map::intersect_slow(const Entity* other, const Rect& bbox, const std:
     int32_t top = ((bbox.y + bbox.h + 1) - y_off) / tile_height;
 
     Rect bbox_rel;
-    bbox_rel.x = (bbox.x - x_off + 1);
-    bbox_rel.y = (bbox.y - y_off + 1);
+    bbox_rel.x = (bbox.x - x_off);
+    bbox_rel.y = (bbox.y - y_off);
     bbox_rel.w = bbox.w;
     bbox_rel.h = bbox.h;
 

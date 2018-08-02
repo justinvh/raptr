@@ -41,6 +41,7 @@ struct Camera
 {
   SDL_Point pos;
   int32_t left, right, top, bottom;
+  int32_t min_x, max_x;
 };
 
 struct ClipCamera

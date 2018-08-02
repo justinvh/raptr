@@ -119,6 +119,8 @@ bool Renderer::init(std::shared_ptr<Config>& config)
   sdl.renderer = SDL_CreateRenderer(sdl.window, -1, SDL_RENDERER_ACCELERATED);
   camera.pos.x = 0;
   camera.pos.y = 0;
+  camera.min_x = -10000;
+  camera.max_x = 10000;
 
   logical_size.x = 0;
   logical_size.y = 0;
@@ -215,8 +217,12 @@ void Renderer::run_frame(bool force_render)
       auto bbox = entity->bbox()[0];
 
       int32_t x = static_cast<int32_t>((pos.x + bbox.w / 2.0));
-      left = x - min_rect_hw;
-      right = x + min_rect_hw;
+      left = std::max(camera.min_x, x - min_rect_hw);
+      right = x + min_rect_hw + (left - (x - min_rect_hw));
+      if (right >= camera.max_x) {
+        left = camera.max_x - 2 * min_rect_hw;
+        right = camera.max_x;
+      }
       y_pos.push_back(static_cast<int32_t>(pos.y + bbox.h));
       top = 0;
       bottom = GAME_HEIGHT;

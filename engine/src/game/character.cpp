@@ -30,6 +30,7 @@ namespace raptr
 Character::Character()
   : Entity()
 {
+  is_crouched = false;
   think_frame = 0;
   fast_fall_scale = 1.0;
   jump_perfect_scale = 1.0;
@@ -384,6 +385,8 @@ void Character::move_to_rel(double x, double y, float scale)
 
 void Character::jump()
 {
+  is_crouched = false;
+
   if (jump_count >= jumps_allowed) {
     return;
   }
@@ -408,6 +411,8 @@ void Character::turn_around()
 
 void Character::dash()
 {
+  is_crouched = false;
+
   auto& vel = this->velocity_rel();
   if (dash_time_usec != 0) {
     return;
@@ -452,6 +457,11 @@ bool Character::on_left_joy(const ControllerState& state)
   auto& vel = this->velocity_rel();
   float mag_x = std::fabs(state.x);
 
+  if (state.y > 0.80 && !is_falling) {
+    this->crouch();
+    return false;
+  }
+
   if (mag_x < 0.01f) {
     this->stop();
   } else if (mag_x < 0.75f) {
@@ -485,6 +495,7 @@ void Character::render(Renderer* renderer)
 
 void Character::run(float scale)
 {
+  is_crouched = false;
   moving = true;
   auto& vel = this->velocity_rel();
 
@@ -542,6 +553,7 @@ void Character::serialize(std::vector<NetField>& list)
 
 void Character::stop()
 {
+  is_crouched = false;
   moving = false;
   auto& vel = this->velocity_rel();
   dash_time_usec = 0;
@@ -642,6 +654,10 @@ void Character::think(std::shared_ptr<Game>& game)
     friction /= 2;
   }
 
+  if (is_crouched) {
+    friction = 1000;
+  }
+
   if (is_dead && is_falling) {
     friction = 5;
   }
@@ -733,6 +749,8 @@ void Character::think(std::shared_ptr<Game>& game)
 
   if (in_dash) {
     this->set_animation("Dash");
+  } else if (is_crouched) {
+    this->set_animation("Crouch");
   } else if (hitting_wall) {
     this->set_animation("Idle");
   } else if (is_falling) {
@@ -759,6 +777,7 @@ void Character::think(std::shared_ptr<Game>& game)
 
 void Character::walk(float scale)
 {
+  is_crouched = false;
   moving = true;
   auto& vel = this->velocity_rel();
   if (std::fabs(scale * run_speed_ps) > std::fabs(vel.x)) {
@@ -772,9 +791,19 @@ void Character::walk(float scale)
   }
 }
 
+void Character::crouch()
+{
+  vel_exp.x = 0;
+  vel_exp.y = 0;
+  dash_time_usec = 0;
+  is_crouched = true;
+  this->set_animation("Crouch");
+}
+
 void Character::kill()
 {
   flashlight = false;
+  is_crouched = false;
   is_dead = true;
   this->set_animation("Death");
   this->detach_controller();

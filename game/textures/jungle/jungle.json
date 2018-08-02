@@ -8,8 +8,24 @@
  "margin":0,
  "name":"Jungle",
  "spacing":0,
- "tilecount":14,
- "tileheight":32,
+ "tilecount":27,
+ "tileheight":64,
+ "tileproperties":
+    {
+     "30":
+        {
+         "animation":"Fast",
+         "name":"textures\/spike-updown.json"
+        }
+    },
+ "tilepropertytypes":
+    {
+     "30":
+        {
+         "animation":"string",
+         "name":"string"
+        }
+    },
  "tiles":
     {
      "1":
@@ -68,12 +84,96 @@
          "imagewidth":32,
          "type":"Death"
         },
+     "22":
+        {
+         "image":"vine-medium.png",
+         "imageheight":64,
+         "imagewidth":32,
+         "type":"Non-Collidable"
+        },
+     "23":
+        {
+         "image":"platform.png",
+         "imageheight":32,
+         "imagewidth":64,
+         "type":"Collidable"
+        },
+     "24":
+        {
+         "image":"dirt-rounded.png",
+         "imageheight":32,
+         "imagewidth":32
+        },
+     "25":
+        {
+         "image":"grass-rounded.png",
+         "imageheight":32,
+         "imagewidth":32
+        },
+     "26":
+        {
+         "image":"dirt-rounded-left.png",
+         "imageheight":32,
+         "imagewidth":32
+        },
+     "27":
+        {
+         "image":"dirt-rounded-right.png",
+         "imageheight":32,
+         "imagewidth":32
+        },
+     "28":
+        {
+         "image":"grass-rounded-left.png",
+         "imageheight":32,
+         "imagewidth":32
+        },
+     "29":
+        {
+         "image":"grass-rounded-rightt.png",
+         "imageheight":32,
+         "imagewidth":32
+        },
      "3":
         {
          "image":"grass.png",
          "imageheight":32,
          "imagewidth":32,
          "type":"Collidable"
+        },
+     "30":
+        {
+         "image":"spike-updown.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Sprite"
+        },
+     "31":
+        {
+         "image":"spike-left.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Death"
+        },
+     "32":
+        {
+         "image":"spike-right.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Death"
+        },
+     "33":
+        {
+         "image":"spike-top.png",
+         "imageheight":32,
+         "imagewidth":32,
+         "type":"Death"
+        },
+     "34":
+        {
+         "image":"egg.png",
+         "imageheight":32,
+         "imagewidth":32
         },
      "4":
         {
@@ -111,6 +211,6 @@
          "type":"Collidable"
         }
     },
- "tilewidth":60,
+ "tilewidth":64,
  "type":"tileset"
 }

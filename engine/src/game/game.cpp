@@ -120,6 +120,12 @@ bool Game::poll_events()
     clock::stop();
   } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F7) {
     this->kill_character(characters[0]);
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F8) {
+    if (this->default_show_collision_frames) {
+      this->hide_collision_frames();
+    } else {
+      this->show_collision_frames();
+    }
   } else if (e.type == SDL_WINDOWEVENT) {
     if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
       this->shutdown = true;
@@ -174,6 +180,8 @@ void Game::handle_load_map_event(const LoadMapEvent& event)
 
   map->name = event.name;
   renderer->add_observable(map);
+  renderer->camera.min_x = 0;
+  renderer->camera.max_x = map->width * map->tile_width;
   if (event.callback) {
     event.callback(map);
   }

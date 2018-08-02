@@ -64,6 +64,10 @@ public:
     /return An instance of the character if found
   */
   static std::shared_ptr<Character> from_toml(const FileInfo& path);
+  /*!
+    Crouch, reducing friction
+   */
+  virtual void crouch();
 
   /*! Stop all movement and return back to an idle position and animation */
   virtual void stop();
@@ -170,6 +174,8 @@ public:
 
   //! If the think() determines the character is falling down, then this will be set
   bool is_falling;
+
+  bool is_crouched;
 
   //! If true, then a multiplier is put against the acceleration downwards
   bool fast_fall;
