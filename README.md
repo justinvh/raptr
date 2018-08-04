@@ -11,11 +11,11 @@ Additional developer insight and blog can be found at
 
 ![Our Dinosaur Warrior][raptr-idle]
 
-## Installing and Running v0.1-alpha.9
+## Installing and Running v0.1-alpha.10
 
-It's pretty dang simple under 64-bit Windows right now. Raptr is currently in pure engine development.
+It's pretty dang simple under 64-bit Windows right now. Raptr is currently in pure engine development. Though, a beta is soon here!
 
-1. [Download the 0.1-alpha.9 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.9/raptr-0.1.0-alpha.9-Release-win64.zip)
+1. [Download the 0.1-alpha.10 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.9/raptr-0.1.0-alpha.10-Release-win64.zip)
 2. Extract that anywhere your heart desires.
 3. Plug in a 360, GameCube, or Steam controller.
 4. Go into the bin/ folder and run `raptr-client.exe`
@@ -23,9 +23,9 @@ It's pretty dang simple under 64-bit Windows right now. Raptr is currently in pu
 
 If you get a complaint about redistributables missing, then try downloading the [Visual C++ Redistributable for Visual Studio 2017 - x64](https://aka.ms/vs/15/release/vc_redist.x64.exe)
 
-## Current State: v0.1-alpha.9 - [Check out the development Imgur album](https://imgur.com/a/pnREFi5)
+## Current State: v0.1-alpha.10 - [Check out the development Imgur album](https://imgur.com/a/pnREFi5)
 
-![Feature Mash][raptr-0.1-alpha.9]
+![Feature Mash][raptr-0.1-alpha.10]
 
 ## Features with some Hyperbole
 
@@ -38,6 +38,8 @@ If you get a complaint about redistributables missing, then try downloading the 
 - A flexible mapping system that makes modding a painless process
 - Music that will cut you to your core
 - Parallax backgrounds of untold depth
+- Easy map and character development with Tiled and TOML
+- A sophisticated tracking camera system
 
 ## Building and Running Raptr with CMake
 
@@ -78,7 +80,6 @@ To be added
 * [musescore](https://musescore.com/) - Create, play, and print beautiful sheet music
 * [picojson](https://github.com/kazuho/picojson) - A header-file-only, JSON parser serializer in C++
 * [SDL2](https://www.libsdl.org/index.php) - Simple DirectMedia Layer software development library
-* [SDL2](https://www.libsdl.org/index.php) - Simple DirectMedia Layer software development library
 * [SDL2_image](https://www.libsdl.org/projects/SDL_image/) - Image file loading library extensions to SDL2
 * [SDL2_TTF](https://www.libsdl.org/projects/SDL_ttf/docs/SDL_ttf.html) - TTF Support in SDL
 * [SDL2_net](https://www.libsdl.org/projects/SDL_net) - SDL Networking
@@ -89,4 +90,4 @@ To be added
 * [vcpkg](https://github.com/Microsoft/vcpkg) - C++ Library Manager for Windows, Linux, and MacOS
 
 [raptr-idle]: https://i.imgur.com/sqVdbnN.gif
-[raptr-0.1-alpha.9]: https://thumbs.gfycat.com/ShrillFilthyIslandcanary-size_restricted.gif
+[raptr-0.1-alpha.10]: https://i.imgur.com/JtXN0Ku.gif
