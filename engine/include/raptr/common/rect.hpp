@@ -53,6 +53,11 @@ struct Rect
 
   double x, y, w, h;
 
+  Rect operator-(const Point& other) const
+  {
+    return Rect(x - other.x, y - other.y, w, h);
+  }
+
   bool operator==(const Rect& other) const
   {
     return std::fabs(other.x - x) < 1e-5 &&
@@ -66,6 +71,14 @@ struct Rect
 //! A bounds object
 struct Bounds
 {
+  Bounds() = default;
+
+  Bounds(double x1, double x2, double y1, double y2)
+  {
+    min[0] = x1; min[1] = y1;
+    max[0] = x2; max[1] = y2;
+  }
+
   double min[2];
   double max[2];
 };
