@@ -67,10 +67,7 @@ public:
     std::vector<Bounds> all_bounds;
 
     for (const auto& bbox : bboxes) {
-      Bounds bounds = {
-        {bbox.x, bbox.y},
-        {bbox.x + bbox.w, bbox.y + bbox.h}
-      };
+      Bounds bounds(bbox.x, bbox.x + bbox.w, bbox.y, bbox.y + bbox.h);
       all_bounds.push_back(bounds);
     }
 
