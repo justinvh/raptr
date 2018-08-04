@@ -27,6 +27,7 @@ set(RAPTR_CPP
     src/network/snapshot.cpp
 
     # Renderer sources
+    src/renderer/camera.cpp
     src/renderer/parallax.cpp
     src/renderer/renderer.cpp
     src/renderer/sprite.cpp
@@ -66,6 +67,7 @@ set(RAPTR_HPP
     include/raptr/network/snapshot.hpp
 
     # Renderer headers
+    include/raptr/renderer/camera.hpp
     include/raptr/renderer/parallax.hpp
     include/raptr/renderer/renderer.hpp
     include/raptr/renderer/sprite.hpp

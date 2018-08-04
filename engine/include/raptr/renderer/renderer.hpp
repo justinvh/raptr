@@ -13,6 +13,7 @@
 
 #include <sol.hpp>
 #include <raptr/common/filesystem.hpp>
+#include <raptr/renderer/camera.hpp>
 
 #include <vector>
 #include <memory>
@@ -37,18 +38,12 @@ class Renderer;
 class Text;
 class Map;
 
-struct Camera
+struct CameraBasic
 {
   SDL_Point pos;
   int32_t left, right, top, bottom;
   int32_t min_x, max_x;
-};
-
-struct ClipCamera
-{
-  SDL_Rect clip, viewport;
-  int32_t left_offset;
-  std::vector<std::shared_ptr<Entity>> contains;
+  int32_t min_y, max_y;
 };
 
 class RenderInterface
@@ -62,7 +57,7 @@ class Renderable
 {
 public:
   virtual ~Renderable() = default;
-  virtual void render(Renderer* renderer, const ClipCamera& camera) = 0;
+  virtual bool render(Renderer* renderer, const CameraClip& camera) = 0;
   bool absolute_positioning;
 };
 
@@ -73,7 +68,7 @@ public:
   SDL_Color color;
 
 public:
-  void render(Renderer* renderer, const ClipCamera& camera) override;
+  bool render(Renderer* renderer, const CameraClip& camera) override;
 };
 
 /*!
@@ -122,7 +117,7 @@ public:
     return out;
   }
 
-  void render(Renderer* renderer, const ClipCamera& camera) override;
+  bool render(Renderer* renderer, const CameraClip& camera) override;
 };
 
 /*!
@@ -167,6 +162,10 @@ public:
   }
 
   void add_rect(SDL_Rect dst, SDL_Color color, 
+                bool absolute_positioning = false, 
+                bool render_in_foreground = false);
+
+  void add_rect(Rect dst, SDL_Color color,
                 bool absolute_positioning = false, 
                 bool render_in_foreground = false);
 
@@ -233,7 +232,7 @@ public:
 
   //! The configuration that was used to create this Renderer
   std::shared_ptr<Config> config;
-  std::shared_ptr<Text> fps_text;
+  std::shared_ptr<Text> fps_text, num_obj_rendered_text;
 
   //! How many frames have been rendered
   uint64_t total_frames_rendered;
@@ -241,6 +240,7 @@ public:
   uint64_t last_render_time_us;
 
   //! Camera position
+  CameraBasic camera_basic;
   Camera camera;
 
   /*!

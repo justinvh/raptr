@@ -117,10 +117,12 @@ bool Renderer::init(std::shared_ptr<Config>& config)
 
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
   sdl.renderer = SDL_CreateRenderer(sdl.window, -1, SDL_RENDERER_ACCELERATED);
-  camera.pos.x = 0;
-  camera.pos.y = 0;
-  camera.min_x = -10000;
-  camera.max_x = 10000;
+  camera_basic.pos.x = 0;
+  camera_basic.pos.y = 0;
+  camera_basic.min_x = -10000;
+  camera_basic.max_x = 10000;
+
+  camera = Camera({GAME_WIDTH / 2, GAME_HEIGHT / 2}, GAME_WIDTH, GAME_HEIGHT);
 
   logical_size.x = 0;
   logical_size.y = 0;
@@ -155,159 +157,44 @@ void Renderer::run_frame(bool force_render)
   }
 
   render_err_us = static_cast<int64_t>((render_delta_us + render_err_us) - 1e6 / fps);
-
   last_render_time_us = clock::ticks();
-  if (std::fabs(current_ratio - desired_ratio) > 1e-5) {
-    const auto delta_ratio_ms = ratio_per_second / 1000.0 * render_delta_ms;
-    current_ratio += delta_ratio_ms;
-    if (delta_ratio_ms > 0 && current_ratio > desired_ratio ||
-      delta_ratio_ms < 0 && current_ratio < desired_ratio) {
-      current_ratio = desired_ratio;
-      logical_size = desired_size;
-    } else {
-      const auto w = static_cast<int32_t>(GAME_WIDTH * current_ratio);
-      const auto h = static_cast<int32_t>(GAME_HEIGHT * current_ratio);
-      logical_size.w = w;
-      logical_size.h = h;
-    }
-    SDL_RenderSetLogicalSize(sdl.renderer, logical_size.w, logical_size.h);
-  }
 
-  SDL_RenderClear(sdl.renderer);
-  const auto num_entities = entities_followed.size();
-  size_t index = 0;
-
-  // Determine the cameras
-  std::vector<ClipCamera> hclippings;
-
-  // Sort the entities being followed left to right to figure
-  // out how we're going to clip them
-  std::sort(entities_followed.begin(),
-            entities_followed.end(),
-            [](const auto& lhs, const auto& rhs)
-            {
-              auto& p1 = lhs->position_abs();
-              auto& p2 = rhs->position_abs();
-              return p1.x < p2.x;
-            });
-
-  int32_t min_rect_w, min_rect_h;
-  if (num_entities == 0) {
-    min_rect_w = logical_size.w;
-    min_rect_h = logical_size.h;
-  } else {
-    min_rect_w = static_cast<int32_t>((logical_size.w / num_entities));
-  }
-
-  int32_t min_rect_hw = min_rect_w / 2;
-
-  int32_t current_entity_index = 0;
-  int32_t num_clips = 1;
-  int32_t last_left = 0;
-  int32_t last_center_offset = 0;
-  std::vector<int32_t> y_pos;
-  while (current_entity_index < num_entities) {
-    int32_t left, right, top, bottom;
-    ClipCamera clip_cam;
-
-    // Setup the initial camera where we are going to try and merge players together
-    {
-      const auto& entity = entities_followed[current_entity_index];
-      auto pos = entity->position_abs();
-      auto bbox = entity->bbox()[0];
-
-      int32_t x = static_cast<int32_t>((pos.x + bbox.w / 2.0));
-      left = std::max(camera.min_x, x - min_rect_hw);
-      right = x + min_rect_hw + (left - (x - min_rect_hw));
-      if (right >= camera.max_x) {
-        left = camera.max_x - 2 * min_rect_hw;
-        right = camera.max_x;
-      }
-      y_pos.push_back(static_cast<int32_t>(pos.y + bbox.h));
-      top = 0;
-      bottom = GAME_HEIGHT;
-      clip_cam.contains.push_back(entity);
-    }
-
-    int32_t t_right = right;
-    while (++current_entity_index < num_entities) {
-      const auto& entity = entities_followed[current_entity_index];
-      auto pos = entity->position_abs();
-      auto bbox = entity->bbox()[0];
-      int32_t x = static_cast<int32_t>(pos.x + bbox.w / 2.0);
-      t_right += min_rect_hw;
-      if (x <= t_right) {
-        clip_cam.contains.push_back(entity);
-        y_pos.push_back(static_cast<int32_t>(pos.y + bbox.h));
-        right += min_rect_w;
-        t_right = right;
-      } else {
-        break;
-      }
-    }
-
-    int32_t min_player = *std::max_element(y_pos.begin(), y_pos.end());
-    clip_cam.clip.x = left;
-    clip_cam.clip.y = 0;
-    clip_cam.clip.y = 0;
-    clip_cam.clip.w = right - left;
-    clip_cam.clip.h = logical_size.h;
-    clip_cam.left_offset = last_center_offset;
-
-    clip_cam.viewport.x = last_left;
-    clip_cam.viewport.y = 0;
-    clip_cam.viewport.w = clip_cam.clip.w - 1;
-    clip_cam.viewport.h = clip_cam.clip.h;
-
-    last_left += clip_cam.clip.w;
-    last_center_offset += clip_cam.viewport.w;
-
-    hclippings.push_back(clip_cam);
-    ++num_clips;
-  }
-
-  std::vector<ClipCamera> clippings = hclippings;
-
-  if (clippings.empty()) {
-    ClipCamera clip_cam;
-    clip_cam.clip.x = 0;
-    clip_cam.left_offset = 0;
-    clip_cam.clip.y = 0;
-    clip_cam.clip.w = logical_size.w;
-    clip_cam.clip.h = logical_size.h;
-
-    clip_cam.viewport.x = 0;
-    clip_cam.viewport.y = 0;
-    clip_cam.viewport.w = clip_cam.clip.w - 1;
-    clip_cam.viewport.h = GAME_HEIGHT;
-    clippings.push_back(clip_cam);
-  }
+  camera.think(this, render_delta_us);
 
   for (auto& e : observing) {
     e->render(this);
   }
 
-  for (const auto& clip_cam : clippings) {
+  int32_t num_objects_rendered = 0;
+
+  for (const auto& clip_cam : camera.clips) {
     SDL_RenderSetViewport(sdl.renderer, &clip_cam.viewport);
+
+    camera.render(this, clip_cam);
 
     auto bg_clip = clip_cam.clip;
     bg_clip.x -= clip_cam.left_offset;
     for (auto& background : backgrounds) {
       background->render(this, bg_clip, clip_cam.left_offset);
+      ++num_objects_rendered;
     }
 
     for (const auto& w : will_render_middle) {
-      w->render(this, clip_cam);
+      if (w->render(this, clip_cam)) {
+        ++num_objects_rendered;
+      }
     }
 
     for (auto& foreground : foregrounds) {
       foreground->render(this, bg_clip, clip_cam.left_offset);
+      ++num_objects_rendered;
     }
 
     for (const auto& w : will_render_foreground) {
-      w->render(this, clip_cam);
+      if (w->render(this, clip_cam)) {
+        ++num_objects_rendered;
+      }
     }
-    ++index;
   }
 
   SDL_RenderPresent(sdl.renderer);
@@ -323,14 +210,23 @@ void Renderer::run_frame(bool force_render)
       const auto secs = (clock::ticks() - frame_counter_time_start) / 1e6;
       const auto current_fps = static_cast<int32_t>(frame_counter / secs);
       ss << current_fps << " FPS";
-      fps_text = this->add_text({0, 0}, ss.str(), 20);
+      fps_text = this->add_text({5, 0}, ss.str(), 20);
+
+      ss = std::stringstream();
+      ss << num_objects_rendered << " objects rendered";
+      num_obj_rendered_text = this->add_text({5, 20}, ss.str(), 20);
+
       frame_counter_time_start = clock::ticks();
       frame_fps = static_cast<float>(frame_counter / secs);
       frame_counter = 1;
     }
 
     if (fps_text) {
-      fps_text->render(this, {0, 0});
+      fps_text->render(this, {5, 0});
+    }
+
+    if (num_obj_rendered_text) {
+      num_obj_rendered_text->render(this, {5, 20});
     }
   }
 }
@@ -352,12 +248,12 @@ bool Renderer::toggle_fullscreen()
 
 void Renderer::camera_follow(std::vector<std::shared_ptr<Entity>> entities)
 {
-  entities_followed = entities;
+  camera.tracking = entities;
 }
 
 void Renderer::camera_follow(std::shared_ptr<Entity> entity)
 {
-  entities_followed.push_back(entity);
+  camera.tracking.push_back(entity);
 }
 
 SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) const
@@ -395,6 +291,14 @@ void Renderer::add_texture(std::shared_ptr<SDL_Texture>& texture,
   }
 }
 
+void Renderer::add_rect(Rect rect, SDL_Color color,
+                        bool absolute_positioning,
+                        bool render_in_foreground)
+{
+  const SDL_Rect s_rect = {rect.x, rect.y, rect.w, rect.h};
+  return this->add_rect(s_rect, color, absolute_positioning, render_in_foreground);
+}
+
 void Renderer::add_rect(SDL_Rect rect, SDL_Color color,
                         bool absolute_positioning,
                         bool render_in_foreground)
@@ -429,11 +333,16 @@ void Renderer::add_foreground(std::shared_ptr<Parallax> foreground)
   foregrounds.push_back(foreground);
 }
 
-void RenderableTexture::render(Renderer* renderer, const ClipCamera& camera)
+bool RenderableTexture::render(Renderer* renderer, const CameraClip& camera)
 {
   auto transformed_dst = dst;
 
   transformed_dst.y = GAME_HEIGHT - (transformed_dst.y + transformed_dst.h);
+
+  if (!absolute_positioning && 
+     (transformed_dst.x + 64) < camera.clip.x || (transformed_dst.x - 64) >(camera.clip.x + camera.clip.w)) {
+    return false;
+  }
 
   if (!absolute_positioning) {
     transformed_dst.x -= camera.clip.x;
@@ -443,13 +352,18 @@ void RenderableTexture::render(Renderer* renderer, const ClipCamera& camera)
   SDL_RenderCopyEx(renderer->sdl.renderer, texture.get(), &src, 
                    &transformed_dst, angle, nullptr, 
                    static_cast<SDL_RendererFlip>(flip_mask()));
+  return true;
 }
 
-void RenderableRect::render(Renderer* renderer, const ClipCamera& camera)
+bool RenderableRect::render(Renderer* renderer, const CameraClip& camera)
 {
   auto transformed_dst = rect;
 
   transformed_dst.y = GAME_HEIGHT - (transformed_dst.y + transformed_dst.h);
+
+  if (!absolute_positioning && transformed_dst.x < camera.clip.x || transformed_dst.x >(camera.clip.x + camera.clip.w)) {
+    return false;
+  }
 
   if (!absolute_positioning) {
     transformed_dst.x -= camera.clip.x;
@@ -459,6 +373,7 @@ void RenderableRect::render(Renderer* renderer, const ClipCamera& camera)
   const auto sdl_rend = renderer->sdl.renderer;
   SDL_SetRenderDrawColor(sdl_rend, color.r, color.g, color.b, color.a);
   SDL_RenderDrawRect(sdl_rend, &transformed_dst);
+  return true;
 }
 
 void Renderer::setup_lua_context(sol::state& state)
