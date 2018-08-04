@@ -15,7 +15,7 @@ Additional developer insight and blog can be found at
 
 It's pretty dang simple under 64-bit Windows right now. Raptr is currently in pure engine development. Though, a beta is soon here!
 
-1. [Download the 0.1-alpha.10 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.9/raptr-0.1.0-alpha.10-Release-win64.zip)
+1. [Download the 0.1-alpha.10 Windows 64-bit Release](https://github.com/justinvh/raptr/releases/download/v0.1-alpha.10/raptr-0.1.0-alpha.10-Release-win64.zip)
 2. Extract that anywhere your heart desires.
 3. Plug in a 360, GameCube, or Steam controller.
 4. Go into the bin/ folder and run `raptr-client.exe`
