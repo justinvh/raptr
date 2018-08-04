@@ -80,13 +80,7 @@ bool Game::poll_events()
     return false;
   }
 
-  if (e.type == SDL_CONTROLLERBUTTONDOWN && e.cbutton.button == SDL_CONTROLLER_BUTTON_START) {
-    const auto us = static_cast<int64_t>(1.0 / renderer->fps * 1e6);
-    logger->debug("Stepping by {}ms", us / 1e3);
-    clock::start();
-    std::this_thread::sleep_for(std::chrono::microseconds(us));
-    clock::stop();
-  } else if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type ==
+  if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type ==
     SDL_CONTROLLERBUTTONUP ||
     e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
     const int32_t controller_id = e.jdevice.which;
@@ -150,7 +144,9 @@ void Game::handle_controller_event(const ControllerEvent& controller_event)
 
   // Is this a new character?
   if (e.type == SDL_CONTROLLERBUTTONDOWN &&
-    controller_to_character.find(controller_id) == controller_to_character.end()) {
+    e.cbutton.button == SDL_CONTROLLER_BUTTON_START &&
+    controller_to_character.find(controller_id) == controller_to_character.end()) 
+  {
     controllers_active.push_back(controllers[controller_id]);
     this->spawn_player(controller_id);
     return;
@@ -180,10 +176,20 @@ void Game::handle_load_map_event(const LoadMapEvent& event)
 
   map->name = event.name;
   renderer->add_observable(map);
-  renderer->camera.min_x = 0;
-  renderer->camera.max_x = map->width * map->tile_width;
+  renderer->camera_basic.min_x = 0;
+  renderer->camera_basic.min_y = 0;
+  renderer->camera_basic.max_x = map->width * map->tile_width;
+  renderer->camera_basic.max_y = map->height * map->tile_width;
   if (event.callback) {
     event.callback(map);
+  }
+}
+
+void Game::set_gravity(double m_s2)
+{
+  gravity_ps2 = m_s2 * meters_to_pixels;
+  for (auto& entity : entities) {
+    entity->gravity_ps2 = gravity_ps2;
   }
 }
 
@@ -217,14 +223,14 @@ void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
   characters.push_back(character);
 
   std::vector<std::shared_ptr<Entity>> to_erase;
-  for (auto& entity : renderer->entities_followed) {
+  for (auto& entity : renderer->camera.tracking) {
     if (entity->is_dead) {
       to_erase.push_back(entity);
     }
   }
 
   for (auto& e : to_erase) {
-    erase(renderer->entities_followed, e);
+    erase(renderer->camera.tracking, e);
   }
 }
 
@@ -588,7 +594,7 @@ bool Game::init()
   }
 
   config.reset(new Config());
-  gravity_ps2 = -9.8 * meters_to_pixels;
+  gravity_ps2 = -18.0 * meters_to_pixels;
 
 
   if (!this->init_controllers()) {
@@ -699,6 +705,8 @@ bool Game::init_controllers()
     logger->error("Well, that's the most I can do. No controllers detected.");
     return false;
   }
+
+  using std::placeholders::_1;
 
   for (int32_t i = 0; i < SDL_NumJoysticks(); ++i) {
     const auto controller = Controller::open(game_path, i);
@@ -826,10 +834,10 @@ bool Game::init_renderer()
 {
   renderer.reset(new Renderer(is_headless));
   renderer->init(config);
-  renderer->camera.left = 0;
-  renderer->camera.right = 2000;
-  renderer->camera.top = -270;
-  renderer->camera.bottom = 270;
+  renderer->camera_basic.left = 0;
+  renderer->camera_basic.right = 2000;
+  renderer->camera_basic.top = -270;
+  renderer->camera_basic.bottom = 270;
   renderer->last_render_time_us = 0;
   renderer->game_root = game_path;
 
@@ -898,7 +906,7 @@ bool Game::remove_entity(std::shared_ptr<Entity> entity)
     entity->parent->remove_child(entity);
   }
 
-  erase(renderer->entities_followed, entity);
+  erase(renderer->camera.tracking, entity);
   erase(renderer->observing, entity);
 
   entity.reset();

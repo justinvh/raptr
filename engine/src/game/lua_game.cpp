@@ -93,6 +93,7 @@ void Game::setup_lua_context(sol::state& state)
     "remove_entity", &Game::remove_entity,
     "show_collision_frames", &Game::show_collision_frames,
     "hide_collision_frames", &Game::hide_collision_frames,
+    "set_gravity", &Game::set_gravity,
     "load_map", &Game::load_map,
     "kill", &Game::kill_entity,
     "reload_map", [&](Game& game)

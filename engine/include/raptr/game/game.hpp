@@ -142,6 +142,8 @@ public:
     IntersectCharacterFilter post_filter = [](const Character*) -> bool { return true; },
     size_t limit = 0);
 
+  void set_gravity(double m_s2);
+
   void spawn_now(const std::shared_ptr<Entity>& entity);
 
   /*!
@@ -282,8 +284,6 @@ public:
   //! A map to find what the last known location of an entity was
   std::map<std::shared_ptr<Entity>, Point> last_known_entity_pos;
   std::map<std::shared_ptr<Entity>, std::vector<Bounds>> last_known_entity_bounds;
-
-  
 
   //! The r-tree is used as a secondary test for bounding box interactions
   RTree<Entity*, double, 2> rtree;
