@@ -6,15 +6,15 @@ name = "Jungle"
 
 [[layer]]
 texture = "textures/background/jungle/l7_ground.png"
-z = 40
+z = 20
 
 [[layer]]
 texture = "textures/background/jungle/l6_fog.png"
-z = 45
+z = 30
 
 [[layer]]
 texture = "textures/background/jungle/l5_grass02.png"
-z = 50
+z = 35
 
 [[layer]]
 texture = "textures/background/jungle/l4_grass01.png"

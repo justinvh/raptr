@@ -128,6 +128,11 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
       auto source_tile_params = source_tile.second;
       auto source_tile_image = source_json.from_current_dir(S("image", source_tile_params));
 
+      if (tile_off + key > max_tile_id) {
+        logger->debug("Ignoring tile {} because it is not used", source_tile_image);
+        continue;
+      }
+
       std::string source_tile_type = "Non-Collidable";
       if (source_tile_params.contains("type")) {
         source_tile_type = S("type", source_tile_params);
@@ -139,6 +144,9 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
         logger->error("Tileset at {} could not load {}", source_json, source_tile_image);
         return nullptr;
       }
+
+      
+
       auto& tilemap = map->tilemap[tile_off + key];
       tilemap.surface.reset(surface, SDLDeleter());
       tilemap.type = source_tile_type;
