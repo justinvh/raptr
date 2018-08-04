@@ -184,7 +184,7 @@ public:
   double fast_fall_scale;
 
   //! How long the character has been jumping
-  int64_t jump_time_us;
+  int64_t jump_time_current_us;
 
   int64_t dash_length_usec;
 
@@ -192,14 +192,17 @@ public:
 
   double dash_speed_ps;
 
+  Point jump_point;
+
+  double jump_height_px;
+  uint32_t jump_time_ms;
+  double rise_fall_vel_px;
+
   //! Current jump count
   uint32_t jump_count;
 
   //! If the player is in a double jump
   uint32_t jumps_allowed;
-
-  //! Perfect jump scale
-  double jump_perfect_scale;
 
   //! The walk speed in pixels/sec
   double walk_speed_ps;

@@ -33,7 +33,6 @@ Character::Character()
   is_crouched = false;
   think_frame = 0;
   fast_fall_scale = 1.0;
-  jump_perfect_scale = 1.0;
   walk_speed_ps = 100;
   run_speed_ps = 100;
   jump_vel_ps = 100;
@@ -106,10 +105,11 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
     "character.jump_vel_ms",
     "character.mass_kg",
     "character.jumps_allowed",
-    "character.jump_perfect_scale",
     "character.fast_fall_scale",
     "character.dash_speed_kmh",
     "character.dash_length_msec",
+    "character.jump_time_ms",
+    "character.jump_height_m",
     "sprite.path",
     "sprite.scale",
     "script.path",
@@ -163,17 +163,20 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   character->set_animation("Idle");
   character->walk_speed_ps = V("character.walk_speed_kmh", 10.0) * kmh_to_ps;
   character->run_speed_ps = V("character.run_speed_kmh", 20.0) * kmh_to_ps;
-  character->jump_vel_ps = V("character.jump_vel_ms", 25.0) * ms_to_ps;
   character->mass_kg = V("character.mass_kg", 100.0);
-
-  character->jumps_allowed = V("character.jumps_allowed", 1);
-  character->jump_perfect_scale = V("character.jump_perfect_scale", 1.25);
   character->fast_fall_scale = V("character.fast_fall_scale", 1.25);
   character->sprite->x = 0;
   character->sprite->y = 0;
-  character->jump_count = 0;
   character->dash_speed_ps = V("character.dash_speed_kmh", 50.0) * kmh_to_ps;
   character->dash_length_usec = static_cast<int64_t>(V("character.dash_length_msec", 100) * 1e3);
+
+  character->jump_count = 0;
+  character->jumps_allowed = V("character.jumps_allowed", 1);
+  character->jump_height_px = V("character.jump_height_m", 1.0) * meters_to_pixels;
+  character->jump_time_ms = V("character.jump_time_ms", 1000);
+  character->jump_vel_ps = character->jump_height_px / (character->jump_time_ms / 1000.0);
+  character->jump_vel_ps = V("character.jump_vel_ms", 25.0) * ms_to_ps;
+
   character->dash_time_usec = 0;
   character->do_pixel_collision_test = true;
 
@@ -271,6 +274,7 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
   auto& pos = character->position_rel();
   auto& vel = character->velocity_rel();
   auto& acc = character->acceleration_rel();
+
   pos.x = 0;
   pos.y = 0;
   vel.x = 0;
@@ -393,15 +397,16 @@ void Character::jump()
 
   auto& vel = this->velocity_rel();
   if (gravity_ps2 < 0) {
-    vel.y += jump_vel_ps;
+    vel.y = jump_vel_ps;
   } else {
-    vel.y -= jump_vel_ps;
+    vel.y = -jump_vel_ps;
   }
-  jump_time_us = clock::ticks();
+  jump_time_current_us = 0;
   this->set_animation("Jump");
   sprite->current_animation->sound_effect_has_played = false;
   dash_time_usec = 0;
   ++jump_count;
+  jump_point = position_rel();
 }
 
 void Character::turn_around()
@@ -534,10 +539,9 @@ void Character::serialize(std::vector<NetField>& list)
     CNF(is_falling),
     CNF(fast_fall),
     CNF(fast_fall_scale),
-    CNF(jump_time_us),
+    CNF(jump_time_current_us),
     CNF(jump_count),
     CNF(jumps_allowed),
-    CNF(jump_perfect_scale),
     CNF(walk_speed_ps),
     CNF(run_speed_ps),
     CNF(jump_vel_ps),
@@ -582,7 +586,7 @@ void Character::think(std::shared_ptr<Game>& game)
   }
 
   if (jump_count) {
-    jump_time_us += delta_us;
+    jump_time_current_us += delta_us;
   }
 
   bool in_dash = false;
@@ -624,7 +628,7 @@ void Character::think(std::shared_ptr<Game>& game)
   } else if (!in_dash) {
     if (is_falling) {
       jump_count = 0;
-      jump_time_us = 0;
+      jump_time_current_us = 0;
       fast_fall = false;
       //logger->debug("Fell for {}s. Final velocity was {}m/s", fall_time_us / 1e6, vel.y * pixels_to_meters);
       vel.y = 0;
@@ -659,7 +663,7 @@ void Character::think(std::shared_ptr<Game>& game)
   }
 
   if (is_dead && is_falling) {
-    friction = 5;
+    friction = 200;
   }
 
   if (std::fabs(vel_exp.x) < std::fabs(vel.x)) {
@@ -715,7 +719,11 @@ void Character::think(std::shared_ptr<Game>& game)
   } else {
     hitting_wall = true;
     dash_time_usec = 0;
-    this->set_animation("Idle");
+    vel.x = 0;
+    vel_exp.y = 0;
+    if (!is_falling) {
+      this->set_animation("Idle");
+    }
   }
 
   const auto steps_y = static_cast<int32_t>(std::abs(pos.y - want_y.y) / 4 + 1);
@@ -816,9 +824,10 @@ void Character::set_animation(const std::string& name)
     return;
   } else if (is_dead) {
     return;
-  } else {
-    sprite->set_animation(name);
   }
+
+  // We may need to change
+  sprite->set_animation(name);
 }
 
 void Character::setup_lua_context(sol::state& state)
