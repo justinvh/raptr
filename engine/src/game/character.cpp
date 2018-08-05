@@ -430,7 +430,7 @@ void Character::dash()
     vel.x -= dash_speed_ps;
   }
 
-  vel.y = 0;
+  vel.y = 0.01;
   this->set_animation("Dash");
 }
 

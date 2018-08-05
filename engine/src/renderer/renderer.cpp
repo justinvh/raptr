@@ -240,7 +240,7 @@ void Renderer::run_frame(bool force_render)
 
 bool Renderer::toggle_fullscreen() 
 {
-  //std::scoped_lock<add_object_mutex> lck();
+  std::scoped_lock<std::mutex> lck(mutex);
   if (is_headless) {
     return false;
   }
@@ -255,11 +255,13 @@ bool Renderer::toggle_fullscreen()
 
 void Renderer::camera_follow(std::vector<std::shared_ptr<Entity>> entities)
 {
+  std::scoped_lock<std::mutex> lck(mutex);
   camera.tracking = entities;
 }
 
 void Renderer::camera_follow(std::shared_ptr<Entity> entity)
 {
+  std::scoped_lock<std::mutex> lck(mutex);
   camera.tracking.push_back(entity);
 }
 

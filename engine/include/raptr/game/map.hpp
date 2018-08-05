@@ -30,6 +30,7 @@ struct Tile
   bool loaded;
   std::shared_ptr<SDL_Surface> surface;
   std::shared_ptr<SDL_Texture> texture;
+  std::shared_ptr<Sprite> sprite;
   std::string type;
   SDL_Rect src;
 };
@@ -37,10 +38,12 @@ struct Tile
 struct LayerTile
 {
   Tile* tile;
+  std::shared_ptr<Sprite> sprite;
   SDL_Rect dst;
   bool flip_x;
   bool flip_y;
   float rotation_deg;
+  uint32_t index;
 };
 
 struct Layer
@@ -67,7 +70,8 @@ public:
   LayerTile* intersects(const Rect& bbox, const std::string& tile_type = "Collidable");
   bool intersect_precise(const LayerTile* tile, const Layer& layer,
                          int32_t check_x, int32_t check_y,
-                         const Entity* other, const Rect& this_bbox);
+                         const Entity* other, const Rect& this_bbox,
+                         bool use_entity_collision_frame);
   LayerTile* intersect_slow(const Entity* other, const Rect& this_bbox, const std::string& tile_type = "Collidable");
   LayerTile* intersect_slow(const Rect& this_bbox, const std::string& tile_type = "Collidable");
 

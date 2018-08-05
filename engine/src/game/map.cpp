@@ -123,6 +123,7 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
 
     *source_input >> source_doc;
     auto source_tiles = source_doc.get("tiles").get<picojson::object>();
+    auto tile_properties = source_doc.get("tileproperties").get<picojson::object>();
     for (auto& source_tile : source_tiles) {
       auto key = std::stoi(source_tile.first);
       auto source_tile_params = source_tile.second;
@@ -138,22 +139,39 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
         source_tile_type = S("type", source_tile_params);
       }
 
-      auto source_tile_image_path = source_tile_image.file_path.string();
-      SDL_Surface* surface = IMG_Load(source_tile_image_path.c_str());
-      if (!surface) {
-        logger->error("Tileset at {} could not load {}", source_json, source_tile_image);
-        return nullptr;
-      }
-
-      
-
       auto& tilemap = map->tilemap[tile_off + key];
-      tilemap.surface.reset(surface, SDLDeleter());
       tilemap.type = source_tile_type;
       tilemap.src.x = 0;
       tilemap.src.y = 0;
-      tilemap.src.w = surface->w;
-      tilemap.src.h = surface->h;
+      tilemap.src.w = 0;
+      tilemap.src.h = 0;
+
+      std::shared_ptr<Sprite> sprite = nullptr;
+      auto has_properties = tile_properties.find(source_tile.first);
+      if (has_properties != tile_properties.end()) {
+        auto properties = has_properties->second.get<picojson::object>();
+        auto has_animation = properties.find("animation");
+        if (has_animation != properties.end()) {
+          const auto animation = has_animation->second.get<std::string>();
+          const auto animation_path = folder.from_root(animation);
+          sprite = Sprite::from_json(animation_path);
+          if (!sprite) {
+            logger->error("Failed to load sprite: {}", animation_path);
+            return nullptr;
+          }
+        }
+        tilemap.sprite = sprite;
+      } else {
+        auto source_tile_image_path = source_tile_image.file_path.string();
+        SDL_Surface* surface = IMG_Load(source_tile_image_path.c_str());
+        if (!surface) {
+          logger->error("Tileset at {} could not load {}", source_json, source_tile_image);
+          return nullptr;
+        }
+        tilemap.surface.reset(surface, SDLDeleter());
+        tilemap.src.w = surface->w;
+        tilemap.src.h = surface->h;
+      }
     }
   }
 
@@ -244,12 +262,13 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
         uint32_t tilemap_idx = tile_index & CLEAR_FLIP;
 
         auto& tile = map->tilemap[tilemap_idx];
-        if (!tile.surface) {
+        if (!tile.surface && !tile.sprite) {
           logger->error("Tile surface was not allocated!");
           DebugBreak();
         }
 
         LayerTile l;
+        l.index = tile_index;
         l.dst.x = (layer.x + x) * map->tile_width;
         l.dst.y = (layer.height - y - layer.y - 1) * map->tile_height;
         l.dst.w = tile.src.w;
@@ -264,6 +283,16 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
         }
 
         l.tile = &map->tilemap[tilemap_idx];
+
+        if (l.tile->sprite) {
+          l.sprite = l.tile->sprite->clone();
+          l.sprite->flip_x = l.flip_x;
+          l.sprite->flip_y = l.flip_y;
+          l.sprite->rotation_deg = l.rotation_deg;
+          l.sprite->x = l.dst.x;
+          l.sprite->y = l.dst.y;
+        }
+
         layer.renderable.emplace_back(l);
         layer.layer_tile_lut[tile_offset] = l;
       }
@@ -285,10 +314,12 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
 void Map::render_layer(Renderer* renderer, const Layer& layer)
 {
   for (auto& l : layer.renderable) {
-    Tile* tile = l.tile;
-    if (!tile->texture) {
+    if (l.sprite) {
+      l.sprite->render(renderer);
       continue;
     }
+
+    Tile* tile = l.tile;
     auto texture = tile->texture;
     renderer->add_texture(texture, tile->src, l.dst, l.rotation_deg, l.flip_x, l.flip_y, false, layer.is_foreground);
   }
@@ -338,10 +369,28 @@ LayerTile* Map::intersects(const Entity* other, const Rect& bbox, const std::str
 
 bool Map::intersect_precise(const LayerTile* layer_tile, const Layer& layer,
                             int32_t check_x, int32_t check_y,
-                            const Entity* other, const Rect& bbox)
+                            const Entity* other, const Rect& bbox,
+                            bool use_entity_collision_frame)
 {
   auto& tile = layer_tile->tile;
-  const auto& this_surface = tile->surface;
+  std::shared_ptr<SDL_Surface> this_surface = nullptr;
+
+  SDL_Rect this_offset = {0, 0, 0, 0};
+  if (layer_tile->sprite) {
+    this_surface = layer_tile->sprite->surface;
+    const auto& this_frame = layer_tile->sprite->current_collision->current_frame();
+    this_offset.x = this_frame.x;
+    this_offset.y = this_frame.y;
+    this_offset.w = this_frame.w;
+    this_offset.h = this_frame.h;
+  } else {
+    this_surface = tile->surface;
+    this_offset.x = 0;
+    this_offset.y = 0;
+    this_offset.w = this_surface->w;
+    this_offset.h = this_surface->h;
+  }
+
   uint8_t* this_pixels = reinterpret_cast<uint8_t*>(this_surface->pixels);
   const int32_t this_bpp = this_surface->format->BytesPerPixel;
 
@@ -349,24 +398,36 @@ bool Map::intersect_precise(const LayerTile* layer_tile, const Layer& layer,
   const auto& other_surface = other_sprite->surface;
   const uint8_t* other_pixels = reinterpret_cast<uint8_t*>(other_surface->pixels);
   const int32_t other_bpp = other_surface->format->BytesPerPixel;
-
+  
   const auto other_pos = bbox;
-  auto other_frame = other->collision_frame();
+  AnimationFrame* other_frame = nullptr;
+  if (use_entity_collision_frame) {
+    other_frame = other->collision_frame();
+  } else {
+    other_frame = &other_sprite->current_animation->current_frame();
+  }
+
+  SDL_Rect other_offset = {
+    other_frame->x,
+    other_frame->y,
+    other_frame->w,
+    other_frame->h
+  };
 
   int32_t tx = check_x * tile_width;
   int32_t ty = check_y * tile_height;
 
   // Bounding box of tile relative to the layer
   double ax0 = tx;
-  double ax1 = tx + tile->surface->w - 1;
+  double ax1 = tx + this_offset.w - 1;
   double ay0 = ty;
-  double ay1 = ty + tile->surface->h - 1;
+  double ay1 = ty + this_offset.h - 1;
 
   // Bounding box of entity relative to the layer
   double bx0 = other_pos.x;
-  double bx1 = other_pos.x + other_frame->w - 1;
+  double bx1 = other_pos.x + other_offset.w - 1;
   double by0 = other_pos.y;
-  double by1 = other_pos.y + other_frame->h - 1;
+  double by1 = other_pos.y + other_offset.h - 1;
 
   // Overlap of the two relative to the layer
   auto cx0 = std::max(ax0, bx0);
@@ -387,34 +448,34 @@ bool Map::intersect_precise(const LayerTile* layer_tile, const Layer& layer,
   auto ox0 = static_cast<int32_t>(cx0 - bx0);
   auto oy0 = static_cast<int32_t>(cy0 - by0);
 
-  auto th = static_cast<int32_t>(tile->surface->h - 1);
-  auto tw = static_cast<int32_t>(tile->surface->w - 1);
-  auto oh = static_cast<int32_t>(other_frame->h - 1);
-  auto ow = static_cast<int32_t>(other_frame->w - 1);
+  auto th = static_cast<int32_t>(this_offset.h - 1);
+  auto tw = static_cast<int32_t>(this_offset.w - 1);
+  auto oh = static_cast<int32_t>(other_offset.h - 1);
+  auto ow = static_cast<int32_t>(other_offset.w - 1);
 
   auto w = static_cast<int32_t>(cx1 - cx0);
   auto h = static_cast<int32_t>(cy1 - cy0);
 
   for (int32_t y = 0; y < h; ++y) {
-    int32_t tile_y_px = th - (ty0 + y);
+    int32_t tile_y_px = this_offset.y + th - (ty0 + y);
     if (layer_tile->flip_y) {
-      tile_y_px = ty0 + y;
+      tile_y_px = this_offset.y + ty0 + y;
     }
 
-    int32_t sprite_y_px = other_frame->y + oh - (oy0 + y);
+    int32_t sprite_y_px = other_offset.y + oh - (oy0 + y);
     if (other_sprite->flip_y) {
-      sprite_y_px = other_frame->y + oy0 + y;
+      sprite_y_px = other_offset.y + oy0 + y;
     }
 
     for (int32_t x = 0; x < w; ++x) {
-      int32_t tile_x_px = tx0 + x;
+      int32_t tile_x_px = this_offset.x + tx0 + x;
       if (layer_tile->flip_x) {
-        tile_x_px = tw - (tx0 + x);
+        tile_x_px = this_offset.x + tw - (tx0 + x);
       }
 
-      int32_t sprite_x_px = other_frame->x + ox0 + x;
+      int32_t sprite_x_px = other_offset.x + ox0 + x;
       if (other_sprite->flip_x) {
-        sprite_x_px = other_frame->x + ow - (ox0 + x);
+        sprite_x_px = other_offset.x + ow - (ox0 + x);
       }
 
       int32_t this_idx = tile_y_px * this_surface->pitch + tile_x_px * this_bpp;
@@ -432,6 +493,7 @@ bool Map::intersect_precise(const LayerTile* layer_tile, const Layer& layer,
 
 LayerTile* Map::intersect_slow(const Entity* other, const Rect& bbox, const std::string& type)
 {
+  bool use_collision = (type != "Death");
   // Is there a tile in this map that would occupy X/Y
   for (auto& layer : layers) {
     const int32_t x_off = layer.x * tile_width;
@@ -470,7 +532,7 @@ LayerTile* Map::intersect_slow(const Entity* other, const Rect& bbox, const std:
         // Check properties of tile type, instead of checking collision type
         auto layer_tile = &layer.layer_tile_lut[idx];
         if (layer_tile->tile->type == type) {
-          if (this->intersect_precise(layer_tile, layer, x, y, other, bbox_rel)) {
+          if (this->intersect_precise(layer_tile, layer, x, y, other, bbox_rel, use_collision)) {
             return layer_tile;
           }
         }

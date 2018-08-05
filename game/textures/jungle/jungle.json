@@ -14,16 +14,22 @@
     {
      "30":
         {
-         "animation":"Fast",
-         "name":"textures\/spike-updown.json"
+         "animation":"textures\/spike-updown.json"
+        },
+     "34":
+        {
+         "animation":"textures\/egg.json"
         }
     },
  "tilepropertytypes":
     {
      "30":
         {
-         "animation":"string",
-         "name":"string"
+         "animation":"string"
+        },
+     "34":
+        {
+         "animation":"string"
         }
     },
  "tiles":
@@ -146,7 +152,7 @@
          "image":"spike-updown.png",
          "imageheight":32,
          "imagewidth":32,
-         "type":"Sprite"
+         "type":"Death"
         },
      "31":
         {
@@ -173,7 +179,8 @@
         {
          "image":"egg.png",
          "imageheight":32,
-         "imagewidth":32
+         "imagewidth":32,
+         "type":"Non-Collidable"
         },
      "4":
         {

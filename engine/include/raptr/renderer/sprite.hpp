@@ -131,6 +131,8 @@ public:
   */
   static std::shared_ptr<Sprite> from_json(const FileInfo& path);
 
+  std::shared_ptr<Sprite> clone();
+
   /*!
     Render this sprite to a provided renderer
     /param renderer - The Renderer that this sprite should render to
@@ -180,7 +182,7 @@ public:
   Animation* current_animation;
 
   //! The rotation angle of the sprite
-  float angle;
+  float rotation_deg;
 
   //! Whether the sprite should  be flipped along an axis
   bool flip_x, flip_y;

@@ -1,54 +1,53 @@
 { "frames": [
    {
-    "filename": "spike-updown 0.aseprite",
+    "filename": "egg 0.aseprite",
     "frame": { "x": 0, "y": 0, "w": 32, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
     "sourceSize": { "w": 32, "h": 32 },
-    "duration": 100
+    "duration": 500
    },
    {
-    "filename": "spike-updown 1.aseprite",
+    "filename": "egg 1.aseprite",
     "frame": { "x": 32, "y": 0, "w": 32, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
     "sourceSize": { "w": 32, "h": 32 },
-    "duration": 2000
+    "duration": 500
    },
    {
-    "filename": "spike-updown 2.aseprite",
+    "filename": "egg 2.aseprite",
     "frame": { "x": 0, "y": 32, "w": 32, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
     "sourceSize": { "w": 32, "h": 32 },
-    "duration": 250
+    "duration": 500
    },
    {
-    "filename": "spike-updown 3.aseprite",
+    "filename": "egg 3.aseprite",
     "frame": { "x": 32, "y": 32, "w": 32, "h": 32 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
     "sourceSize": { "w": 32, "h": 32 },
-    "duration": 800
+    "duration": 500
    }
  ],
  "meta": {
   "app": "http://www.aseprite.org/",
   "version": "1.2.9-x64",
-  "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\textures\\spike-updown.png",
+  "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\textures\\egg.png",
   "format": "RGBA8888",
   "size": { "w": 64, "h": 64 },
   "scale": "1",
   "frameTags": [
-   { "name": "Preview", "from": 0, "to": 0, "direction": "forward" },
-   { "name": "Idle", "from": 1, "to": 3, "direction": "pingpong" }
+   { "name": "Idle", "from": 0, "to": 3, "direction": "forward" }
   ],
   "layers": [
-   { "name": "Sprite Sheet", "opacity": 255, "blendMode": "normal" }
+   { "name": "Layer", "opacity": 255, "blendMode": "normal" }
   ],
   "slices": [
   ]

@@ -257,7 +257,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   sprite->scale = 1.0;
   sprite->flip_x = false;
   sprite->flip_y = false;
-  sprite->angle = 0.0;
+  sprite->rotation_deg = 0.0;
   sprite->absolute_positioning = false;
   sprite->blend_mode = SDL_BLENDMODE_BLEND;
   sprite->path = path;
@@ -283,11 +283,15 @@ void Sprite::render(Renderer* renderer)
     SDL_SetTextureBlendMode(texture.get(), blend_mode);
   }
 
-  auto frame = current_animation->frames[current_animation->frame];
-  current_collision->next(last_frame_tick, speed);
+  if (current_collision->name != current_animation->name) {
+    current_collision->next(last_frame_tick, speed);
+  }
+
   if (current_animation->next(last_frame_tick, speed)) {
     last_frame_tick = clock::ticks();
   }
+
+  auto frame = current_animation->frames[current_animation->frame];
 
   if (show_collision_frame) {
     frame = current_collision->frames[current_collision->frame];
@@ -307,7 +311,7 @@ void Sprite::render(Renderer* renderer)
   dst.x = static_cast<int32_t>(x);
   dst.y = static_cast<int32_t>(y); // H - (y + dst.h));
 
-  renderer->add_texture(texture, src, dst, angle, flip_x, flip_y, absolute_positioning, render_in_foreground);
+  renderer->add_texture(texture, src, dst, rotation_deg, flip_x, flip_y, absolute_positioning, render_in_foreground);
 }
 
 bool Sprite::has_animation(const std::string& name)
@@ -345,6 +349,11 @@ bool Sprite::set_animation(const std::string& name, bool hold_last_frame)
   current_collision->frame = 0;
   current_collision->hold_last_frame = hold_last_frame;
   return true;
+}
+
+std::shared_ptr<Sprite> Sprite::clone()
+{
+  return Sprite::from_json(path);
 }
 
 bool Sprite::register_sound_effect(const std::string& name, int32_t frame, const FileInfo& wav, bool loop)

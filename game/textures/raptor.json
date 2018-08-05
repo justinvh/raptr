@@ -96,7 +96,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
-    "duration": 200
+    "duration": 1000
    },
    {
     "filename": "raptr 11.aseprite",
@@ -123,7 +123,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
-    "duration": 500
+    "duration": 200
    },
    {
     "filename": "raptr 14.aseprite",
@@ -150,7 +150,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
-    "duration": 200
+    "duration": 500
    },
    {
     "filename": "raptr 17.aseprite",
@@ -159,7 +159,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
-    "duration": 125
+    "duration": 200
    },
    {
     "filename": "raptr 18.aseprite",
@@ -222,7 +222,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
-    "duration": 100
+    "duration": 125
    },
    {
     "filename": "raptr 25.aseprite",
@@ -258,7 +258,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
-    "duration": 125
+    "duration": 100
    },
    {
     "filename": "raptr 29.aseprite",
@@ -267,7 +267,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
-    "duration": 200
+    "duration": 125
    },
    {
     "filename": "raptr 30.aseprite",
@@ -303,7 +303,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
-    "duration": 1000
+    "duration": 200
    },
    {
     "filename": "raptr 34.aseprite",
@@ -331,6 +331,15 @@
     "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
     "sourceSize": { "w": 60, "h": 30 },
     "duration": 1000
+   },
+   {
+    "filename": "raptr 37.aseprite",
+    "frame": { "x": 300, "y": 120, "w": 60, "h": 30 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 60, "h": 30 },
+    "sourceSize": { "w": 60, "h": 30 },
+    "duration": 1000
    }
  ],
  "meta": {
@@ -343,20 +352,20 @@
   "frameTags": [
    { "name": "Collision-Default", "from": 0, "to": 0, "direction": "forward" },
    { "name": "Idle", "from": 1, "to": 3, "direction": "pingpong" },
-   { "name": "Death", "from": 4, "to": 8, "direction": "forward" },
-   { "name": "Collision-Death", "from": 9, "to": 9, "direction": "forward" },
-   { "name": "Walk", "from": 10, "to": 12, "direction": "pingpong" },
-   { "name": "Crouch", "from": 13, "to": 14, "direction": "pingpong" },
-   { "name": "Collision-Crouch", "from": 15, "to": 15, "direction": "forward" },
-   { "name": "Jump", "from": 16, "to": 16, "direction": "forward" },
-   { "name": "Run", "from": 17, "to": 19, "direction": "pingpong" },
-   { "name": "Climb", "from": 20, "to": 23, "direction": "forward" },
-   { "name": "Dash", "from": 24, "to": 26, "direction": "forward" },
-   { "name": "Collision-Dash", "from": 27, "to": 27, "direction": "forward" },
-   { "name": "Happy", "from": 29, "to": 30, "direction": "pingpong" },
-   { "name": "Angry", "from": 31, "to": 32, "direction": "forward" },
-   { "name": "Sad", "from": 33, "to": 34, "direction": "forward" },
-   { "name": "Afraid", "from": 35, "to": 36, "direction": "forward" }
+   { "name": "Death", "from": 4, "to": 9, "direction": "forward" },
+   { "name": "Collision-Death", "from": 10, "to": 10, "direction": "forward" },
+   { "name": "Walk", "from": 11, "to": 13, "direction": "pingpong" },
+   { "name": "Crouch", "from": 14, "to": 15, "direction": "pingpong" },
+   { "name": "Collision-Crouch", "from": 16, "to": 16, "direction": "forward" },
+   { "name": "Jump", "from": 17, "to": 17, "direction": "forward" },
+   { "name": "Run", "from": 18, "to": 20, "direction": "pingpong" },
+   { "name": "Climb", "from": 21, "to": 24, "direction": "forward" },
+   { "name": "Dash", "from": 25, "to": 27, "direction": "forward" },
+   { "name": "Collision-Dash", "from": 28, "to": 28, "direction": "forward" },
+   { "name": "Happy", "from": 30, "to": 31, "direction": "pingpong" },
+   { "name": "Angry", "from": 32, "to": 33, "direction": "forward" },
+   { "name": "Sad", "from": 34, "to": 35, "direction": "forward" },
+   { "name": "Afraid", "from": 36, "to": 37, "direction": "forward" }
   ],
   "layers": [
    { "name": "Layer 4", "opacity": 255, "blendMode": "normal" },
