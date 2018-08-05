@@ -32,11 +32,21 @@ void erase(T& container, Y& v)
   auto it = std::remove(container.begin(), container.end(), v);
   container.erase(it, container.end());
 };
-
 }
 
 namespace raptr
 {
+
+Game::~Game()
+{
+  //SDL_Quit();
+}
+
+/*
+  Initializing the game is based entirely around a relative or
+  absolute path pointing to the game resources. This method should
+  be called if the client wants a renderer to be invoked.
+*/
 std::shared_ptr<Game> Game::create(const fs::path& game_root)
 {
   const auto full_path = fs::absolute(game_root);
@@ -52,6 +62,10 @@ std::shared_ptr<Game> Game::create(const fs::path& game_root)
   return game;
 }
 
+/*
+  A headless game functionally is the same as a regular game. However,
+  the renderer will not be invoked.
+*/
 std::shared_ptr<Game> Game::create_headless(const fs::path& game_root)
 {
   auto const full_path = fs::absolute(game_root);
@@ -68,68 +82,71 @@ std::shared_ptr<Game> Game::create_headless(const fs::path& game_root)
   return game;
 }
 
-Game::~Game()
+bool Game::deserialize(const std::vector<NetField>& fields)
 {
-  //SDL_Quit();
-}
-
-bool Game::poll_events()
-{
-  SDL_Event e;
-  input_received_us = clock::ticks();
-  if (!SDL_PollEvent(&e)) {
-    return false;
-  }
-
-
-  if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type ==
-    SDL_CONTROLLERBUTTONUP ||
-    e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
-    const int32_t controller_id = e.jdevice.which;
-    auto controller_event = new ControllerEvent();
-    controller_event->controller_id = controller_id;
-    controller_event->sdl_event = e;
-    this->add_event(controller_event);
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F1) {
-    renderer->toggle_fullscreen();
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F2) {
-    auto controller = controllers.begin();
-    ++controller;
-    auto x = characters[0]->pos_.x;
-    this->spawn_character("characters/raptr.toml", [&](auto& character)
-    {
-      character->attach_controller(controller->second);
-      character->pos_.x = x;
-      renderer->camera_follow(character);
-    });
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F3) {
-    renderer->scale(static_cast<float>(renderer->current_ratio / 2.0f));
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F4) {
-    renderer->scale(1.0f);
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F5) {
-    clock::toggle();
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F6) {
-    const auto us = static_cast<int64_t>(1.0 / renderer->fps * 1e6);
-    logger->debug("Stepping by {}ms", us / 1e3);
-    clock::start();
-    std::this_thread::sleep_for(std::chrono::microseconds(us));
-    clock::stop();
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F7) {
-    this->kill_character(characters[0]);
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F8) {
-    if (this->default_show_collision_frames) {
-      this->hide_collision_frames();
-    } else {
-      this->show_collision_frames();
-    }
-  } else if (e.type == SDL_WINDOWEVENT) {
-    if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
-      this->shutdown = true;
-    }
-  }
   return true;
 }
 
+/*
+  Game is an event-driven process. Any action that will impact the
+  overall state of the game and can not be immediately diffed, such 
+  as spawning a player, changing maps, etc. will have events tied to them.
+  This allows a server and client to communicate events before handling them
+  directly.  This function will dispath and call the appropriately handlers.
+*/
+void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
+{
+  switch (event->type) {
+    // The user has decided to load a new map
+    case EngineEventType::LoadMap: {
+      const auto map_event = reinterpret_cast<LoadMapEvent*>(event->data);
+      this->handle_load_map_event(*map_event);
+      delete map_event;
+      break;
+    }
+
+    // There is a controller event that has occured in the system
+    case EngineEventType::ControllerEvent: {
+      const auto controller_event = reinterpret_cast<ControllerEvent*>(event->data);
+      this->handle_controller_event(*controller_event);
+      delete controller_event;
+      break;
+    }
+
+    // A new character is being spawned into the game
+    case EngineEventType::SpawnCharacter: {
+      const auto character_event = reinterpret_cast<CharacterSpawnEvent*>(event->data);
+      this->handle_character_spawn_event(*character_event);
+      delete character_event;
+      break;
+    }
+
+    // A new actor is being spawned into the game
+    case EngineEventType::SpawnActor: {
+      const auto staticmesh_event = reinterpret_cast<ActorSpawnEvent*>(event->data);
+      this->handle_actor_spawn_event(*staticmesh_event);
+      delete staticmesh_event;
+      break;
+    }
+
+    // A trigger is being spawned into the game
+    case EngineEventType::SpawnTrigger: {
+      const auto trigger_event = reinterpret_cast<TriggerSpawnEvent*>(event->data);
+      this->handle_trigger_spawn_event(*trigger_event);
+      delete trigger_event;
+      break;
+    }
+
+    default: {
+      logger->info("Unhandled event type: {}", static_cast<int32_t>(event->type));
+    }
+  }
+}
+
+/*
+  A headless game will not poll for user input. Otherwise, we need to
+  check if a device has a pending action that needs to be dispatched.
+*/
 bool Game::gather_engine_events()
 {
   if (!is_headless) {
@@ -137,6 +154,80 @@ bool Game::gather_engine_events()
   }
 
   return true;
+}
+
+/*
+  Once a SpawnActor event has been dispatched it will call this method
+  where the actor will be loaded from a TOML file and a Lua script will
+  be evaluated (if possible) at this point all the clients have received
+  the same event.
+*/
+void Game::handle_actor_spawn_event(const ActorSpawnEvent& event)
+{
+  auto actor = Actor::from_toml(game_path.from_root(event.path));
+  actor->guid_ = event.guid;
+  actor->pos_.x = 0;
+  actor->pos_.y = 0;
+
+  // A scripted actor will get the full aresenal of objects to
+  // interact with, that is why we pass the lua context from the actor
+  // through the setup_lua_context of the game
+  if (actor->is_scripted) {
+    this->setup_lua_context(actor->lua);
+    actor->lua["instance"] = actor;
+    actor->lua["__filename__"] = actor->lua_script_fileinfo.file_relative.string();
+    actor->lua.safe_script(actor->lua_script);
+  }
+
+  this->spawn_now(actor);
+  event.callback(actor);
+
+  // Once the actor is entirely initialized in the engine, then the
+  // lua scripts can do what they please
+  if (actor->is_scripted) {
+    actor->lua["init"]();
+  }
+}
+
+void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
+{
+  auto character = Character::from_toml(game_path.from_root(event.path));
+  character->guid_ = event.guid;
+
+
+  if (map) {
+    character->pos_.x = map->player_spawn.x;
+    character->pos_.y = map->player_spawn.y;
+  } else {
+    character->pos_.x = 0;
+    character->pos_.y = 0;
+  }
+
+  if (character->is_scripted) {
+    this->setup_lua_context(character->lua);
+    character->lua["instance"] = character;
+    character->lua["__filename__"] = character->lua_script_fileinfo.file_relative.string();
+    character->lua.safe_script(character->lua_script);
+  }
+
+  this->spawn_now(character);
+  event.callback(character);
+  if (character->is_scripted) {
+    character->lua["init"]();
+  }
+
+  characters.push_back(character);
+
+  std::vector<std::shared_ptr<Entity>> to_erase;
+  for (auto& entity : renderer->camera.tracking) {
+    if (entity->is_dead) {
+      to_erase.push_back(entity);
+    }
+  }
+
+  for (auto& e : to_erase) {
+    erase(renderer->camera.tracking, e);
+  }
 }
 
 void Game::handle_controller_event(const ControllerEvent& controller_event)
@@ -193,75 +284,6 @@ void Game::handle_load_map_event(const LoadMapEvent& event)
   }
 }
 
-void Game::set_gravity(double m_s2)
-{
-  gravity_ps2 = m_s2 * meters_to_pixels;
-  for (auto& entity : entities) {
-    entity->gravity_ps2 = gravity_ps2;
-  }
-}
-
-void Game::handle_character_spawn_event(const CharacterSpawnEvent& event)
-{
-  auto character = Character::from_toml(game_path.from_root(event.path));
-  character->guid_ = event.guid;
-
-
-  if (map) {
-    character->pos_.x = map->player_spawn.x;
-    character->pos_.y = map->player_spawn.y;
-  } else {
-    character->pos_.x = 0;
-    character->pos_.y = 0;
-  }
-
-  if (character->is_scripted) {
-    this->setup_lua_context(character->lua);
-    character->lua["instance"] = character;
-    character->lua["__filename__"] = character->lua_script_fileinfo.file_relative.string();
-    character->lua.safe_script(character->lua_script);
-  }
-
-  this->spawn_now(character);
-  event.callback(character);
-  if (character->is_scripted) {
-    character->lua["init"]();
-  }
-
-  characters.push_back(character);
-
-  std::vector<std::shared_ptr<Entity>> to_erase;
-  for (auto& entity : renderer->camera.tracking) {
-    if (entity->is_dead) {
-      to_erase.push_back(entity);
-    }
-  }
-
-  for (auto& e : to_erase) {
-    erase(renderer->camera.tracking, e);
-  }
-}
-
-void Game::handle_actor_spawn_event(const ActorSpawnEvent& event)
-{
-  auto actor = Actor::from_toml(game_path.from_root(event.path));
-  actor->guid_ = event.guid;
-  actor->pos_.x = 0;
-  actor->pos_.y = 0;
-  if (actor->is_scripted) {
-    this->setup_lua_context(actor->lua);
-    actor->lua["instance"] = actor;
-    actor->lua["__filename__"] = actor->lua_script_fileinfo.file_relative.string();
-    actor->lua.safe_script(actor->lua_script);
-  }
-
-  this->spawn_now(actor);
-  event.callback(actor);
-  if (actor->is_scripted) {
-    actor->lua["init"]();
-  }
-}
-
 void Game::handle_trigger_spawn_event(const TriggerSpawnEvent& event)
 {
   auto trigger = Trigger::from_params(event.rect);
@@ -270,121 +292,12 @@ void Game::handle_trigger_spawn_event(const TriggerSpawnEvent& event)
   event.callback(trigger);
 }
 
-void Game::dispatch_event(const std::shared_ptr<EngineEvent>& event)
+void Game::hide_collision_frames()
 {
-  switch (event->type) {
-    case EngineEventType::LoadMap: {
-      const auto map_event = reinterpret_cast<LoadMapEvent*>(event->data);
-      this->handle_load_map_event(*map_event);
-      delete map_event;
-      break;
-    }
-    case EngineEventType::ControllerEvent: {
-      const auto controller_event = reinterpret_cast<ControllerEvent*>(event->data);
-      this->handle_controller_event(*controller_event);
-      delete controller_event;
-      break;
-    }
-    case EngineEventType::SpawnCharacter: {
-      const auto character_event = reinterpret_cast<CharacterSpawnEvent*>(event->data);
-      this->handle_character_spawn_event(*character_event);
-      delete character_event;
-      break;
-    }
-    case EngineEventType::SpawnActor: {
-      const auto staticmesh_event = reinterpret_cast<ActorSpawnEvent*>(event->data);
-      this->handle_actor_spawn_event(*staticmesh_event);
-      delete staticmesh_event;
-      break;
-    }
-    case EngineEventType::SpawnTrigger: {
-      const auto trigger_event = reinterpret_cast<TriggerSpawnEvent*>(event->data);
-      this->handle_trigger_spawn_event(*trigger_event);
-      delete trigger_event;
-      break;
-    }
-    default: {
-      logger->info("Unhandled event type: {}", static_cast<int32_t>(event->type));
-    }
-  }
-}
-
-void Game::load_map(const std::string& map_name, LoadMapEvent::Callback callback)
-{
-  auto event = new LoadMapEvent();
-  event->name = map_name;
-  event->callback = callback;
-  this->add_event<LoadMapEvent>(event);
-}
-
-bool Game::process_engine_events()
-{
-  const auto current_time_us = clock::ticks();
-
-  frame_delta_us = current_time_us - frame_last_time;
-
-  frame_last_time = clock::ticks();
-
-  auto& current_events = this->engine_events_buffers[this->engine_event_index];
-  this->engine_event_index = (this->engine_event_index + 1) % 2;
-  for (auto& engine_event : current_events) {
-    this->dispatch_event(engine_event);
-  }
-
-  auto this_ptr = this->shared_from_this();
   for (auto& entity : entities) {
-    entity->think(this_ptr);
-
-    const Point& old_point = last_known_entity_pos[entity];
-    Point new_point = entity->position_abs();
-
-    if (std::fabs(old_point.x - new_point.x) > 0.5 ||
-      std::fabs(old_point.y - new_point.y) > 0.5) {
-      auto& lb = last_known_entity_bounds[entity];
-      rtree.Remove(lb.min, lb.max, entity.get());
-      auto nb = entity->bounds();
-      last_known_entity_bounds[entity] = nb;
-      rtree.Insert(nb.min, nb.max, entity.get());
-      last_known_entity_pos[entity] = entity->position_abs();
-    }
-
-    if (!entity->is_dead) {
-      auto tile_intersected = this->map->intersects(entity.get(), "Death");
-      if (tile_intersected) {
-        if (!use_threaded_renderer) {
-          renderer->run_frame();
-        }
-        this->kill_entity(entity);
-      }
-    }
-
-    if (new_point.y < -100) {
-      entity->position_rel().y = 500;
-    }
+    entity->hide_collision_frame();
   }
-
-  if (map) {
-    map->think(this_ptr);
-  }
-
-  current_events.clear();
-
-  if (!use_threaded_renderer) {
-    renderer->run_frame();
-  }
-
-  return true;
-}
-
-bool Game::run()
-{
-  while (!shutdown) {
-    if (!this->gather_engine_events()) {
-      return false;
-    }
-    this->process_engine_events();
-  }
-  return true;
+  default_show_collision_frames = false;
 }
 
 bool Game::intersect_world(Entity* entity, const Rect& bbox)
@@ -467,7 +380,8 @@ std::vector<std::shared_ptr<Entity>> Game::intersect_entities(
   return {};
 }
 
-std::shared_ptr<Entity> Game::intersect_entity(Entity* entity, const Rect& bbox, IntersectEntityFilter post_filter)
+std::shared_ptr<Entity> Game::intersect_entity(
+  Entity* entity, const Rect& bbox, IntersectEntityFilter post_filter)
 {
   auto found = this->intersect_entities(entity, bbox, post_filter, 1);
   if (found.empty()) {
@@ -509,82 +423,6 @@ std::shared_ptr<Character> Game::intersect_character(
   return found[0];
 }
 
-void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback callback)
-{
-  ///this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
-  this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
-  {
-    if (map) {
-      character->position_rel().y = map->player_spawn.y;
-      character->position_rel().x = map->player_spawn.x;
-    } else {
-      character->position_rel().y = 32;
-      character->position_rel().x = 0;
-    }
-
-    character->flashlight = true;
-    character->attach_controller(controllers[controller_id]);
-    character->gravity_ps2 = gravity_ps2;
-    renderer->camera_follow(character);
-    controller_to_character[controller_id].push_back(character);
-    callback(character);
-  });
-}
-
-/*!
-Spawn an entity to the world
-*/
-void Game::spawn_actor(const std::string& path, ActorSpawnEvent::Callback callback)
-{
-  auto event = new ActorSpawnEvent();
-  auto g = xg::newGuid();
-  event->guid = g.bytes();
-  event->path = path;
-  event->callback = callback;
-  this->add_event<ActorSpawnEvent>(event);
-}
-
-/*!
-Spawn an entity to the world
-*/
-void Game::spawn_character(const std::string& path, CharacterSpawnEvent::Callback callback)
-{
-  auto event = new CharacterSpawnEvent();
-  auto g = xg::newGuid();
-  event->guid = g.bytes();
-  event->path = path;
-  event->callback = callback;
-  this->add_event<CharacterSpawnEvent>(event);
-}
-
-/*!
-Spawn a trigger to the world
-*/
-void Game::spawn_trigger(const Rect& rect, TriggerSpawnEvent::Callback callback)
-{
-  auto event = new TriggerSpawnEvent();
-  auto g = xg::newGuid();
-  event->guid = g.bytes();
-  event->rect = rect;
-  event->callback = callback;
-  this->add_event<TriggerSpawnEvent>(event);
-}
-
-void Game::show_collision_frames()
-{
-  for (auto& entity : entities) {
-    entity->show_collision_frame();
-  }
-  default_show_collision_frames = true;
-}
-
-void Game::hide_collision_frames()
-{
-  for (auto& entity : entities) {
-    entity->hide_collision_frame();
-  }
-  default_show_collision_frames = false;
-}
 
 bool Game::init()
 {
@@ -724,61 +562,6 @@ bool Game::init_controllers()
   return !controllers.empty();
 }
 
-void Game::kill_character(const std::shared_ptr<Character>& character)
-{
-  std::scoped_lock<std::mutex> lck(renderer->mutex);
-  if (character->controller) {
-    auto controller_id = character->controller->id();
-    auto potential_characters = controller_to_character[controller_id];
-    erase(potential_characters, character);
-    if (potential_characters.empty()) {
-      controller_to_character.erase(controller_id);
-    }
-  }
-
-  character->kill();
-  erase(characters, character);
-}
-
-void Game::kill_entity(const std::shared_ptr<Entity>& entity)
-{
-  if (entity->is_player()) {
-    return this->kill_character(std::dynamic_pointer_cast<Character>(entity));
-  }
-  entity->is_dead = true;
-}
-
-void Game::kill_by_guid(const std::array<unsigned char, 16>& guid)
-{
-  auto found = entity_lut.find(guid);
-  if (found == entity_lut.end()) {
-    return;
-  }
-  this->kill_entity(found->second);
-}
-
-void Game::spawn_now(const std::shared_ptr<Entity>& entity)
-{
-  std::scoped_lock<std::mutex> lck(renderer->mutex);
-  auto pos = entity->position_abs();
-
-  auto b = entity->bounds();
-  last_known_entity_pos[entity] = entity->position_abs();
-  last_known_entity_bounds[entity] = b;
-
-  rtree.Insert(b.min, b.max, entity.get());
-
-  if (default_show_collision_frames) {
-    entity->show_collision_frame();
-  } else {
-    entity->hide_collision_frame();
-  }
-
-  renderer->add_observable(entity);
-  entities.push_back(entity);
-  entity_lut[entity->guid()] = entity;
-}
-
 bool Game::init_demo()
 {
   // background test
@@ -838,6 +621,39 @@ bool Game::init_demo()
   return true;
 }
 
+bool Game::init_filesystem()
+{
+  logger->info("Registering the game root as {}", game_root);
+
+  if (!fs::exists(game_root)) {
+    logger->error("{} does not exist!", game_root);
+    return false;
+  }
+
+  game_path.game_root = game_root;
+  return true;
+}
+
+bool Game::init_lua()
+{
+  logger->info("Initializing Lua. Lua, what does a fox say?");
+  lua.open_libraries(sol::lib::base, sol::lib::coroutine, sol::lib::string, sol::lib::io);
+  auto handler = [](lua_State*, sol::protected_function_result result)
+  {
+    return result;
+  };
+
+  auto result = lua.script("print('Ring-ding-ding-ding-dingeringeding!')", handler);
+  if (result.valid()) {
+    logger->info("Good job, Lua!");
+    return true;
+  }
+
+  sol::error err = result;
+  logger->error("Lua failed to initialize: {}", err.what());
+  return false;
+}
+
 bool Game::init_renderer()
 {
   renderer.reset(new Renderer(is_headless));
@@ -859,6 +675,186 @@ bool Game::init_renderer()
     });
   }
 
+  return true;
+}
+
+bool Game::init_sound()
+{
+  if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
+    logger->error("Failed to initialize SDL_mixer: {}", Mix_GetError());
+    return false;
+  }
+
+  Mix_AllocateChannels(64);
+
+  return true;
+}
+
+void Game::kill_character(const std::shared_ptr<Character>& character)
+{
+  std::scoped_lock<std::mutex> lck(renderer->mutex);
+  if (character->controller) {
+    auto controller_id = character->controller->id();
+    auto potential_characters = controller_to_character[controller_id];
+    erase(potential_characters, character);
+    if (potential_characters.empty()) {
+      controller_to_character.erase(controller_id);
+    }
+  }
+
+  character->kill();
+  erase(characters, character);
+}
+
+void Game::kill_entity(const std::shared_ptr<Entity>& entity)
+{
+  if (entity->is_player()) {
+    return this->kill_character(std::dynamic_pointer_cast<Character>(entity));
+  }
+  entity->is_dead = true;
+}
+
+void Game::kill_by_guid(const std::array<unsigned char, 16>& guid)
+{
+  auto found = entity_lut.find(guid);
+  if (found == entity_lut.end()) {
+    return;
+  }
+  this->kill_entity(found->second);
+}
+
+void Game::load_map(const std::string& map_name, LoadMapEvent::Callback callback)
+{
+  auto event = new LoadMapEvent();
+  event->name = map_name;
+  event->callback = callback;
+  this->add_event<LoadMapEvent>(event);
+}
+
+bool Game::poll_events()
+{
+  SDL_Event e;
+  input_received_us = clock::ticks();
+  if (!SDL_PollEvent(&e)) {
+    return false;
+  }
+
+
+  if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type ==
+    SDL_CONTROLLERBUTTONUP ||
+    e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
+    const int32_t controller_id = e.jdevice.which;
+    auto controller_event = new ControllerEvent();
+    controller_event->controller_id = controller_id;
+    controller_event->sdl_event = e;
+    this->add_event(controller_event);
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F1) {
+    renderer->toggle_fullscreen();
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F2) {
+    auto controller = controllers.begin();
+    ++controller;
+    auto x = characters[0]->pos_.x;
+    this->spawn_character("characters/raptr.toml", [&](auto& character)
+    {
+      character->attach_controller(controller->second);
+      character->pos_.x = x;
+      renderer->camera_follow(character);
+    });
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F3) {
+    renderer->scale(static_cast<float>(renderer->current_ratio / 2.0f));
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F4) {
+    renderer->scale(1.0f);
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F5) {
+    clock::toggle();
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F6) {
+    const auto us = static_cast<int64_t>(1.0 / renderer->fps * 1e6);
+    logger->debug("Stepping by {}ms", us / 1e3);
+    clock::start();
+    std::this_thread::sleep_for(std::chrono::microseconds(us));
+    clock::stop();
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F7) {
+    this->kill_character(characters[0]);
+  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F8) {
+    if (this->default_show_collision_frames) {
+      this->hide_collision_frames();
+    } else {
+      this->show_collision_frames();
+    }
+  } else if (e.type == SDL_WINDOWEVENT) {
+    if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
+      this->shutdown = true;
+    }
+  }
+  return true;
+}
+
+bool Game::process_engine_events()
+{
+  const auto current_time_us = clock::ticks();
+
+  frame_delta_us = current_time_us - frame_last_time;
+
+  frame_last_time = clock::ticks();
+
+  auto& current_events = this->engine_events_buffers[this->engine_event_index];
+  this->engine_event_index = (this->engine_event_index + 1) % 2;
+  for (auto& engine_event : current_events) {
+    this->dispatch_event(engine_event);
+  }
+
+  auto this_ptr = this->shared_from_this();
+  for (auto& entity : entities) {
+    entity->think(this_ptr);
+
+    const Point& old_point = last_known_entity_pos[entity];
+    Point new_point = entity->position_abs();
+
+    if (std::fabs(old_point.x - new_point.x) > 0.5 ||
+      std::fabs(old_point.y - new_point.y) > 0.5) {
+      auto& lb = last_known_entity_bounds[entity];
+      rtree.Remove(lb.min, lb.max, entity.get());
+      auto nb = entity->bounds();
+      last_known_entity_bounds[entity] = nb;
+      rtree.Insert(nb.min, nb.max, entity.get());
+      last_known_entity_pos[entity] = entity->position_abs();
+    }
+
+    if (!entity->is_dead) {
+      auto tile_intersected = this->map->intersects(entity.get(), "Death");
+      if (tile_intersected) {
+        if (!use_threaded_renderer) {
+          renderer->run_frame();
+        }
+        this->kill_entity(entity);
+      }
+    }
+
+    if (new_point.y < -100) {
+      entity->position_rel().y = 500;
+    }
+  }
+
+  if (map) {
+    map->think(this_ptr);
+  }
+
+  current_events.clear();
+
+  if (!use_threaded_renderer) {
+    renderer->run_frame();
+  }
+
+  return true;
+}
+
+bool Game::run()
+{
+  while (!shutdown) {
+    if (!this->gather_engine_events()) {
+      return false;
+    }
+    this->process_engine_events();
+  }
   return true;
 }
 
@@ -920,51 +916,6 @@ bool Game::remove_entity(std::shared_ptr<Entity> entity)
   return true;
 }
 
-bool Game::init_sound()
-{
-  if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
-    logger->error("Failed to initialize SDL_mixer: {}", Mix_GetError());
-    return false;
-  }
-
-  Mix_AllocateChannels(64);
-
-  return true;
-}
-
-bool Game::init_filesystem()
-{
-  logger->info("Registering the game root as {}", game_root);
-
-  if (!fs::exists(game_root)) {
-    logger->error("{} does not exist!", game_root);
-    return false;
-  }
-
-  game_path.game_root = game_root;
-  return true;
-}
-
-bool Game::init_lua()
-{
-  logger->info("Initializing Lua. Lua, what does a fox say?");
-  lua.open_libraries(sol::lib::base, sol::lib::coroutine, sol::lib::string, sol::lib::io);
-  auto handler = [](lua_State*, sol::protected_function_result result)
-  {
-    return result;
-  };
-
-  auto result = lua.script("print('Ring-ding-ding-ding-dingeringeding!')", handler);
-  if (result.valid()) {
-    logger->info("Good job, Lua!");
-    return true;
-  }
-
-  sol::error err = result;
-  logger->error("Lua failed to initialize: {}", err.what());
-  return false;
-}
-
 void Game::serialize(std::vector<NetField>& list)
 {
   for (size_t i = 0; i < entities.size(); ++i) {
@@ -977,8 +928,103 @@ void Game::serialize(std::vector<NetField>& list)
   }
 }
 
-bool Game::deserialize(const std::vector<NetField>& fields)
+void Game::set_gravity(double m_s2)
 {
-  return true;
+  gravity_ps2 = m_s2 * meters_to_pixels;
+  for (auto& entity : entities) {
+    entity->gravity_ps2 = gravity_ps2;
+  }
 }
+
+void Game::show_collision_frames()
+{
+  for (auto& entity : entities) {
+    entity->show_collision_frame();
+  }
+  default_show_collision_frames = true;
+}
+
+void Game::spawn_player(int32_t controller_id, CharacterSpawnEvent::Callback callback)
+{
+  ///this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
+  this->spawn_character("characters/raptr.toml", [&, controller_id, callback](auto& character)
+  {
+    if (map) {
+      character->position_rel().y = map->player_spawn.y;
+      character->position_rel().x = map->player_spawn.x;
+    } else {
+      character->position_rel().y = 32;
+      character->position_rel().x = 0;
+    }
+
+    character->flashlight = true;
+    character->attach_controller(controllers[controller_id]);
+    character->gravity_ps2 = gravity_ps2;
+    renderer->camera_follow(character);
+    controller_to_character[controller_id].push_back(character);
+    callback(character);
+  });
+}
+
+/*!
+Spawn an entity to the world
+*/
+void Game::spawn_actor(const std::string& path, ActorSpawnEvent::Callback callback)
+{
+  auto event = new ActorSpawnEvent();
+  auto g = xg::newGuid();
+  event->guid = g.bytes();
+  event->path = path;
+  event->callback = callback;
+  this->add_event<ActorSpawnEvent>(event);
+}
+
+/*!
+Spawn an entity to the world
+*/
+void Game::spawn_character(const std::string& path, CharacterSpawnEvent::Callback callback)
+{
+  auto event = new CharacterSpawnEvent();
+  auto g = xg::newGuid();
+  event->guid = g.bytes();
+  event->path = path;
+  event->callback = callback;
+  this->add_event<CharacterSpawnEvent>(event);
+}
+
+/*!
+Spawn a trigger to the world
+*/
+void Game::spawn_trigger(const Rect& rect, TriggerSpawnEvent::Callback callback)
+{
+  auto event = new TriggerSpawnEvent();
+  auto g = xg::newGuid();
+  event->guid = g.bytes();
+  event->rect = rect;
+  event->callback = callback;
+  this->add_event<TriggerSpawnEvent>(event);
+}
+
+void Game::spawn_now(const std::shared_ptr<Entity>& entity)
+{
+  std::scoped_lock<std::mutex> lck(renderer->mutex);
+  auto pos = entity->position_abs();
+
+  auto b = entity->bounds();
+  last_known_entity_pos[entity] = entity->position_abs();
+  last_known_entity_bounds[entity] = b;
+
+  rtree.Insert(b.min, b.max, entity.get());
+
+  if (default_show_collision_frames) {
+    entity->show_collision_frame();
+  } else {
+    entity->hide_collision_frame();
+  }
+
+  renderer->add_observable(entity);
+  entities.push_back(entity);
+  entity_lut[entity->guid()] = entity;
+}
+
 } // namespace raptr
