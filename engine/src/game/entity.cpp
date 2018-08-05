@@ -38,7 +38,7 @@ std::string Entity::guid_str() const
   return g;
 }
 
-std::vector<Rect> Entity::want_position_x(int64_t delta_us)
+Rect Entity::want_position_x(int64_t delta_us)
 {
   const double dt = delta_us / 1e6;
   Point pos = this->position_rel();
@@ -46,16 +46,14 @@ std::vector<Rect> Entity::want_position_x(int64_t delta_us)
   pos.x += vel.x * dt;
 
   // Need a transformation matrix for this sort of stuff
-  std::vector<Rect> rects = this->bbox();
-  for (auto& r : rects) {
-    r.x = pos.x;
-    r.y = pos.y;
-  }
+  auto bbox = this->bbox();
+  bbox.x = pos.x;
+  bbox.y = pos.y;
 
-  return rects;
+  return bbox;
 }
 
-std::vector<Rect> Entity::want_position_y(int64_t delta_us)
+Rect Entity::want_position_y(int64_t delta_us)
 {
   const auto delta_sec = delta_us / 1e6;
   Point pos = this->position_rel();
@@ -64,12 +62,10 @@ std::vector<Rect> Entity::want_position_y(int64_t delta_us)
   const auto delta_vel = delta_sec * acc.y;
   pos.y += vel.y * delta_sec + delta_vel / 2.0 * delta_sec;
 
-  std::vector<Rect> rects = this->bbox();
-  for (auto& r : rects) {
-    r.x = pos.x;
-    r.y = pos.y;
-  }
-  return rects;
+  auto bbox = this->bbox();
+  bbox.x = pos.x;
+  bbox.y = pos.y;
+  return bbox;
 }
 
 bool Entity::is_player() const
@@ -105,20 +101,17 @@ bool Entity::intersects(const Entity* other) const
   }
 
   if (other->do_pixel_collision_test && do_pixel_collision_test) {
-    for (auto& other_box : other->bbox()) {
-      if (this->intersect_slow(other, other_box)) {
-        return true;
-      }
+    auto other_box = other->bbox();
+    if (this->intersect_slow(other, other_box)) {
+      return true;
     }
     return false;
   }
 
-  for (auto& self_box : this->bbox()) {
-    for (auto& other_box : other->bbox()) {
-      if (other->intersects(self_box) && this->intersects(other_box)) {
-        return true;
-      }
-    }
+  auto self_box = this->bbox();
+  auto other_box = other->bbox();
+  if (other->intersects(self_box) && this->intersects(other_box)) {
+    return true;
   }
 
   return false;
@@ -285,12 +278,9 @@ bool Entity::intersect_fast(const Rect& other_box) const
     return false;
   }
 
-  const auto& self_boxes = this->bbox();
-
-  for (const auto& self_box : self_boxes) {
-    if (SDL_HasIntersection(&self_box, &other_box)) {
+  auto self_box = this->bbox();
+  if (SDL_HasIntersection(&self_box, &other_box)) {
       return true;
-    }
   }
 
   return false;

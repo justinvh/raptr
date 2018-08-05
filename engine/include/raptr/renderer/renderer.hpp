@@ -134,7 +134,7 @@ public:
   {
   }
 
-  Renderer(const Renderer&) = default;
+  Renderer(const Renderer&) = delete;
   Renderer(Renderer&&) = default;
   ~Renderer();
   
@@ -149,7 +149,7 @@ public:
     /param flip_x - Flip the texture along the X-axis, after the src has been cropped out
     /param flip_y - Flip the texture along the Y-axis, after the sr has been cropped out
   */
-  void add_texture(std::shared_ptr<SDL_Texture>& texture,
+  void add_texture(std::shared_ptr<SDL_Texture> texture,
            SDL_Rect src, SDL_Rect dst,
            float angle, bool flip_x, bool flip_y,
            bool absolute_positioning = false,
@@ -198,7 +198,7 @@ public:
     /param surface - A shared pointer to a created SDL_Surface (see Sprite for an example)
     /return A freshly allocated texture created from the surface
   */
-  SDL_Texture* create_texture(std::shared_ptr<SDL_Surface>& surface) const;
+  SDL_Texture* create_texture(std::shared_ptr<SDL_Surface>& surface);
 
   /*!
     Initialize the renderer from a Configuration file
@@ -217,7 +217,6 @@ public:
   void scale_to_height(const int32_t height);
 
   void scale_to_width(const int32_t width);
-
 
   static void setup_lua_context(sol::state& state);
 
@@ -270,6 +269,8 @@ public:
   std::vector<std::shared_ptr<Parallax>> foregrounds;
 
   int64_t render_err_us;
+
+  std::mutex mutex;
 
   bool show_fps;
   FileInfo game_root;

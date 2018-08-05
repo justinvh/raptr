@@ -261,8 +261,8 @@ void Server::update_game_state()
 
     if (doff > 1) {
       out->data[0] = 0xAA;
-      out->len = doff;
-      out->maxlen = doff;
+      out->len = static_cast<int32_t>(doff);
+      out->maxlen = static_cast<int32_t>(doff);
       SDLNet_UDP_Send(sock, 0, out.get());
     }
 

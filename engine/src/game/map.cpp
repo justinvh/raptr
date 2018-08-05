@@ -286,12 +286,11 @@ void Map::render_layer(Renderer* renderer, const Layer& layer)
 {
   for (auto& l : layer.renderable) {
     Tile* tile = l.tile;
-    SDL_Rect dst = l.dst;
-    auto texture = tile->texture;
-    if (!texture) {
-      DebugBreak();
+    if (!tile->texture) {
+      continue;
     }
-    renderer->add_texture(texture, tile->src, dst, l.rotation_deg, l.flip_x, l.flip_y, false, layer.is_foreground);
+    auto texture = tile->texture;
+    renderer->add_texture(texture, tile->src, l.dst, l.rotation_deg, l.flip_x, l.flip_y, false, layer.is_foreground);
   }
 }
 
@@ -301,21 +300,19 @@ LayerTile* Map::intersects(const Entity* other, const std::string& tile_type)
     return nullptr;
   }
 
+  auto other_box = other->bbox();
+
   if (other->do_pixel_collision_test) {
-    for (auto& other_box : other->bbox()) {
-      auto result = this->intersect_slow(other, other_box, tile_type);
-      if (result) {
-        return result;
-      }
+    auto result = this->intersect_slow(other, other_box, tile_type);
+    if (result) {
+      return result;
     }
     return nullptr;
   }
 
-  for (auto& other_box : other->bbox()) {
-    auto result = this->intersects(other_box, tile_type);
-    if (result) {
-      return result;
-    }
+  auto result = this->intersects(other_box, tile_type);
+  if (result) {
+    return result;
   }
 
   return nullptr;

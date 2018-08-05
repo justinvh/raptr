@@ -106,6 +106,8 @@ target_include_directories(raptr-engine
 
 target_link_libraries(raptr-engine PRIVATE RaptrDependencies)
 
+target_compile_definitions(raptr-engine PUBLIC -D_ITERATOR_DEBUG_LEVEL=0 -D_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH)
+
 # Add compiler requirements
 target_compile_features(raptr-engine
     PUBLIC cxx_std_17

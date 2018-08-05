@@ -64,7 +64,7 @@ void Character::detach_controller()
 }
 
 
-std::vector<Rect> Character::bbox() const
+Rect Character::bbox() const
 {
   Rect box;
   auto pos = this->position_abs();
@@ -73,7 +73,7 @@ std::vector<Rect> Character::bbox() const
   box.y = pos.y;
   box.w = current_frame.w * sprite->scale;
   box.h = current_frame.h * sprite->scale;
-  return {box};
+  return box;
 }
 
 bool Character::deserialize(const std::vector<NetField>& fields)
@@ -412,6 +412,7 @@ void Character::jump()
 void Character::turn_around()
 {
   sprite->flip_x = !sprite->flip_x;
+  this->stop();
 }
 
 void Character::dash()
@@ -562,13 +563,10 @@ void Character::stop()
   auto& vel = this->velocity_rel();
   dash_time_usec = 0;
   vel_exp.x = 0;
+  vel.x /= 2;
   sprite->speed = 1.0;
-  if (!is_falling) {
+  if (!(is_crouched || is_falling)) {
     this->set_animation("Idle");
-  }
-
-  if (is_falling) {
-    vel.x = 0;
   }
 }
 
@@ -607,7 +605,7 @@ void Character::think(std::shared_ptr<Game>& game)
   }
 
   // External forces, like gravity
-  Rect fall_check = this->want_position_y(delta_us)[0];
+  Rect fall_check = this->want_position_y(delta_us);
   if (gravity_ps2 <= 0) {
     fall_check.y -= 0.05;
     this->sprite->flip_y = false;
@@ -682,8 +680,8 @@ void Character::think(std::shared_ptr<Game>& game)
 
   const auto mag_x = std::fabs(vel.x);
 
-  Rect want_x = this->want_position_x(delta_us)[0];
-  Rect want_y = this->want_position_y(delta_us)[0];
+  Rect want_x = this->want_position_x(delta_us);
+  Rect want_y = this->want_position_y(delta_us);
 
   const auto steps_x = static_cast<int32_t>(std::abs(pos.x - want_x.x) / 4 + 1);
   const auto delta_x = (pos.x - want_x.x) / double(steps_x);
@@ -707,10 +705,10 @@ void Character::think(std::shared_ptr<Game>& game)
     }
 
     // Is there something above us?
-    Rect above_check = this->want_position_y(delta_us)[0];
+    Rect above_check = this->want_position_y(delta_us);
     above_check.y += 1;
     auto intersected = game->intersect_entity(this, above_check);
-    Character* character = dynamic_cast<Character*>(intersected.get());
+    auto character = dynamic_cast<Character*>(intersected.get());
     if (character && !character->moving) {
       auto& ov = intersected->velocity_rel();
       ov.x = vel.x;

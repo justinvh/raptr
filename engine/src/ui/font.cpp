@@ -84,7 +84,7 @@ bool load_registry(const FileInfo& game_root)
   return true;
 }
 
-bool Text::allocate(const Renderer& renderer)
+bool Text::allocate(Renderer& renderer)
 {
   if (texture) {
     return false;

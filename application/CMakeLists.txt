@@ -23,6 +23,8 @@ install(TARGETS raptr-server EXPORT RaptrConfig
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)
 
+target_compile_definitions(raptr-server PUBLIC -D_ITERATOR_DEBUG_LEVEL=0 -D_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH)
+
 add_executable(raptr-client ${RAPTR_CLIENT_CPP})
 set_property(TARGET raptr-client PROPERTY PROJECT_LABEL "Raptr Main (Client)")
 set_target_properties(raptr-client PROPERTIES FOLDER "Application")
@@ -32,3 +34,5 @@ install(TARGETS raptr-client EXPORT RaptrConfig
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)
+
+target_compile_definitions(raptr-client PUBLIC -D_ITERATOR_DEBUG_LEVEL=0 -D_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH)

@@ -56,7 +56,7 @@ public:
     Returns the bounding box for this character
     \return An rectangle containing the character
   */
-  std::vector<Rect> bbox() const override;
+  Rect bbox() const override;
 
   /*!
     Generates a Character object from a TOML configuration file

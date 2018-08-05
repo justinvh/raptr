@@ -76,9 +76,11 @@ Game::~Game()
 bool Game::poll_events()
 {
   SDL_Event e;
+  input_received_us = clock::ticks();
   if (!SDL_PollEvent(&e)) {
     return false;
   }
+
 
   if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type ==
     SDL_CONTROLLERBUTTONUP ||
@@ -142,6 +144,9 @@ void Game::handle_controller_event(const ControllerEvent& controller_event)
   const auto& e = controller_event.sdl_event;
   const auto controller_id = controller_event.controller_id;
 
+  int64_t delta_us = clock::ticks() - input_received_us;
+  //logger->debug("Input took {}us to dispatch", delta_us);
+
   // Is this a new character?
   if (e.type == SDL_CONTROLLERBUTTONDOWN &&
     e.cbutton.button == SDL_CONTROLLER_BUTTON_START &&
@@ -160,6 +165,9 @@ void Game::handle_controller_event(const ControllerEvent& controller_event)
       controller->process_event(e);
     }
   }
+
+  delta_us = clock::ticks() - input_received_us;
+  //logger->debug("Input took {}us to complete", delta_us);
 }
 
 void Game::handle_load_map_event(const LoadMapEvent& event)
@@ -332,20 +340,20 @@ bool Game::process_engine_events()
 
     if (std::fabs(old_point.x - new_point.x) > 0.5 ||
       std::fabs(old_point.y - new_point.y) > 0.5) {
-      for (auto& b : last_known_entity_bounds[entity]) {
-        rtree.Remove(b.min, b.max, entity.get());
-      }
-      last_known_entity_bounds[entity] = entity->bounds();
-      for (auto& b : entity->bounds()) {
-        rtree.Insert(b.min, b.max, entity.get());
-      }
+      auto& lb = last_known_entity_bounds[entity];
+      rtree.Remove(lb.min, lb.max, entity.get());
+      auto nb = entity->bounds();
+      last_known_entity_bounds[entity] = nb;
+      rtree.Insert(nb.min, nb.max, entity.get());
       last_known_entity_pos[entity] = entity->position_abs();
     }
 
     if (!entity->is_dead) {
       auto tile_intersected = this->map->intersects(entity.get(), "Death");
       if (tile_intersected) {
-        renderer->run_frame();
+        if (!use_threaded_renderer) {
+          renderer->run_frame();
+        }
         this->kill_entity(entity);
       }
     }
@@ -581,7 +589,7 @@ void Game::hide_collision_frames()
 bool Game::init()
 {
   shutdown = false;
-  use_threaded_renderer = false;
+  use_threaded_renderer = true;
   default_show_collision_frames = false;
 
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
@@ -718,6 +726,7 @@ bool Game::init_controllers()
 
 void Game::kill_character(const std::shared_ptr<Character>& character)
 {
+  std::scoped_lock<std::mutex> lck(renderer->mutex);
   if (character->controller) {
     auto controller_id = character->controller->id();
     auto potential_characters = controller_to_character[controller_id];
@@ -750,15 +759,14 @@ void Game::kill_by_guid(const std::array<unsigned char, 16>& guid)
 
 void Game::spawn_now(const std::shared_ptr<Entity>& entity)
 {
+  std::scoped_lock<std::mutex> lck(renderer->mutex);
   auto pos = entity->position_abs();
 
-  const auto& bounds = entity->bounds();
+  auto b = entity->bounds();
   last_known_entity_pos[entity] = entity->position_abs();
-  last_known_entity_bounds[entity] = bounds;
+  last_known_entity_bounds[entity] = b;
 
-  for (const auto& b : bounds) {
-    rtree.Insert(b.min, b.max, entity.get());
-  }
+  rtree.Insert(b.min, b.max, entity.get());
 
   if (default_show_collision_frames) {
     entity->show_collision_frame();
@@ -846,6 +854,7 @@ bool Game::init_renderer()
     {
       while (!shutdown) {
         renderer->run_frame();
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
       }
     });
   }
@@ -864,7 +873,7 @@ bool Game::remove_entity_by_key(const std::string key)
 
 bool Game::remove_entity(std::shared_ptr<Entity> entity)
 {
-  
+  std::scoped_lock<std::mutex> lck(renderer->mutex);
 
   for (auto& child : entity->children) {
     this->remove_entity(child);
@@ -874,10 +883,8 @@ bool Game::remove_entity(std::shared_ptr<Entity> entity)
 
   last_known_entity_pos.erase(entity);
 
-  for (auto& b : last_known_entity_bounds[entity]) {
-    rtree.Remove(b.min, b.max, entity.get());
-  }
-
+  auto b = last_known_entity_bounds[entity];
+  rtree.Remove(b.min, b.max, entity.get());
   last_known_entity_bounds.erase(entity);
   erase(entities, entity);
 

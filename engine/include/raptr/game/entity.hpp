@@ -56,22 +56,15 @@ public:
     Returns the bounding box for this entity
     \return An rectangle containing the entity
   */
-  virtual std::vector<Rect> bbox() const = 0;
+  virtual Rect bbox() const = 0;
 
   /*!
     Returns the bounds of the entity
     */
-  virtual std::vector<Bounds> bounds() const
+  virtual Bounds bounds() const
   {
-    std::vector<Rect> bboxes = this->bbox();
-    std::vector<Bounds> all_bounds;
-
-    for (const auto& bbox : bboxes) {
-      Bounds bounds(bbox.x, bbox.x + bbox.w, bbox.y, bbox.y + bbox.h);
-      all_bounds.push_back(bounds);
-    }
-
-    return all_bounds;
+    const auto& bbox = this->bbox();
+    return {bbox.x, bbox.x + bbox.w, bbox.y, bbox.y + bbox.h};
   }
 
   virtual void add_child(std::shared_ptr<Entity> child);
@@ -127,13 +120,13 @@ public:
     Given the current position, velocity, and acceleration, where does this entity *want* to go in X
     \return The rectangle this entity *wants* to occupy in the X direction
   */
-  virtual std::vector<Rect> want_position_x(int64_t delta_us);
+  virtual Rect want_position_x(int64_t delta_us);
 
   /*!
     Given the current position, velocity, and acceleration, where does this entity *want* to go in Y
     \return The rectangle this entity *wants* to occupy in the Y direction
   */
-  virtual std::vector<Rect> want_position_y(int64_t delta_us);
+  virtual Rect want_position_y(int64_t delta_us);
 
   /*!
     Return the current position of the entity

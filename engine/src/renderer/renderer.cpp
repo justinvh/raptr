@@ -79,7 +79,7 @@ bool Renderer::init(std::shared_ptr<Config>& config)
 {
   this->config = config;
 
-  fps = 120;
+  fps = 60;
   show_fps = false;
   last_render_time_us = clock::ticks();
 
@@ -116,6 +116,7 @@ bool Renderer::init(std::shared_ptr<Config>& config)
   */
 
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+  SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
   sdl.renderer = SDL_CreateRenderer(sdl.window, -1, SDL_RENDERER_ACCELERATED);
   camera_basic.pos.x = 0;
   camera_basic.pos.y = 0;
@@ -140,21 +141,28 @@ bool Renderer::init(std::shared_ptr<Config>& config)
   SDL_RenderSetLogicalSize(sdl.renderer, logical_size.w, logical_size.h);
   SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, 255);
   SDL_SetRenderDrawBlendMode(sdl.renderer, SDL_BLENDMODE_BLEND);
+  SDL_RenderSetViewport(sdl.renderer, &logical_size);
   return true;
 }
 
 void Renderer::run_frame(bool force_render)
 {
+  std::scoped_lock<std::mutex> lck(mutex);
+
   if (is_headless) {
     return;
   }
 
+  SDL_RenderClear(sdl.renderer);
+
   const auto render_delta_us = (clock::ticks() - last_render_time_us);
   const auto render_delta_ms = render_delta_us * 1e3;
 
+  /*
   if (render_delta_us + render_err_us < 1e6 / fps) {
     return;
   }
+  */
 
   render_err_us = static_cast<int64_t>((render_delta_us + render_err_us) - 1e6 / fps);
   last_render_time_us = clock::ticks();
@@ -168,7 +176,6 @@ void Renderer::run_frame(bool force_render)
   int32_t num_objects_rendered = 0;
 
   for (const auto& clip_cam : camera.clips) {
-    SDL_RenderSetViewport(sdl.renderer, &clip_cam.viewport);
 
     camera.render(this, clip_cam);
 
@@ -256,7 +263,7 @@ void Renderer::camera_follow(std::shared_ptr<Entity> entity)
   camera.tracking.push_back(entity);
 }
 
-SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) const
+SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) 
 {
   if (is_headless) {
     return nullptr;
@@ -265,7 +272,7 @@ SDL_Texture* Renderer::create_texture(std::shared_ptr<SDL_Surface>& surface) con
   return SDL_CreateTextureFromSurface(sdl.renderer, surface.get());
 }
 
-void Renderer::add_texture(std::shared_ptr<SDL_Texture>& texture,
+void Renderer::add_texture(std::shared_ptr<SDL_Texture> texture,
                    SDL_Rect src, SDL_Rect dst,
                    float angle, bool flip_x, bool flip_y,
                    bool absolute_positioning,
@@ -275,8 +282,9 @@ void Renderer::add_texture(std::shared_ptr<SDL_Texture>& texture,
     return;
   }
 
-  std::shared_ptr<RenderableTexture> renderable(new RenderableTexture);
-  renderable->texture = texture;
+  //auto renderable = std::make_shared<RenderableTexture>();
+  auto renderable = std::shared_ptr<RenderableTexture>(new RenderableTexture);
+  renderable->texture = std::move(texture);
   renderable->src = src;
   renderable->dst = dst;
   renderable->angle = angle;
@@ -285,9 +293,9 @@ void Renderer::add_texture(std::shared_ptr<SDL_Texture>& texture,
   renderable->absolute_positioning = absolute_positioning;
 
   if (render_in_foreground) {
-    will_render_foreground.push_back(renderable);
+    will_render_foreground.push_back(std::move(renderable));
   } else {
-    will_render_middle.push_back(renderable);
+    will_render_middle.push_back(std::move(renderable));
   }
 }
 
@@ -303,7 +311,7 @@ void Renderer::add_rect(SDL_Rect rect, SDL_Color color,
                         bool absolute_positioning,
                         bool render_in_foreground)
 {
-  std::shared_ptr<RenderableRect> renderable(new RenderableRect);
+  auto renderable = std::make_shared<RenderableRect>();
   renderable->rect = rect;
   renderable->color = color;
   renderable->absolute_positioning = absolute_positioning;
@@ -349,9 +357,14 @@ bool RenderableTexture::render(Renderer* renderer, const CameraClip& camera)
     transformed_dst.y -= camera.clip.y;
   }
 
-  SDL_RenderCopyEx(renderer->sdl.renderer, texture.get(), &src, 
-                   &transformed_dst, angle, nullptr, 
-                   static_cast<SDL_RendererFlip>(flip_mask()));
+  if (flip_x || flip_y || angle) {
+    SDL_RenderCopyEx(renderer->sdl.renderer, texture.get(), &src,
+      &transformed_dst, angle, nullptr,
+      static_cast<SDL_RendererFlip>(flip_mask()));
+  } else {
+    SDL_RenderCopy(renderer->sdl.renderer, texture.get(), &src, &transformed_dst);
+  }
+
   return true;
 }
 
@@ -361,7 +374,9 @@ bool RenderableRect::render(Renderer* renderer, const CameraClip& camera)
 
   transformed_dst.y = GAME_HEIGHT - (transformed_dst.y + transformed_dst.h);
 
-  if (!absolute_positioning && transformed_dst.x < camera.clip.x || transformed_dst.x >(camera.clip.x + camera.clip.w)) {
+  if (!absolute_positioning && transformed_dst.x < camera.clip.x || 
+      transformed_dst.x >(camera.clip.x + camera.clip.w)) 
+  {
     return false;
   }
 

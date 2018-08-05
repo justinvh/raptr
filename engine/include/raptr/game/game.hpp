@@ -283,7 +283,7 @@ public:
 
   //! A map to find what the last known location of an entity was
   std::map<std::shared_ptr<Entity>, Point> last_known_entity_pos;
-  std::map<std::shared_ptr<Entity>, std::vector<Bounds>> last_known_entity_bounds;
+  std::map<std::shared_ptr<Entity>, Bounds> last_known_entity_bounds;
 
   //! The r-tree is used as a secondary test for bounding box interactions
   RTree<Entity*, double, 2> rtree;
@@ -293,6 +293,8 @@ public:
 
   //! The gravity of the world
   double gravity_ps2;
+
+  int64_t input_received_us;
 
   //! The number of ms since the last frame
   int64_t frame_delta_us;

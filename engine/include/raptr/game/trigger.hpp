@@ -35,7 +35,7 @@ public:
   Returns the bounding box for this static mesh based on its sprite
   \return An rectangle containing the static mesh
   */
-  std::vector<Rect> bbox() const override;
+  Rect bbox() const override;
 
   /*!
   The static mesh just needs to render. It is a simple function.

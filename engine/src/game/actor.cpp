@@ -138,9 +138,8 @@ void Actor::setup_lua_context(sol::state& state)
   );
 }
 
-std::vector<Rect> Actor::bbox() const
+Rect Actor::bbox() const
 {
-  std::vector<Rect> boxes;
   Rect box;
   auto& current_frame = sprite->current_animation->current_frame();
   auto pos = this->position_abs();
@@ -148,8 +147,7 @@ std::vector<Rect> Actor::bbox() const
   box.y = pos.y;
   box.w = current_frame.w * sprite->scale;
   box.h = current_frame.h * sprite->scale;
-  boxes.push_back(box);
-  return boxes;
+  return box;
 }
 
 void Actor::think(std::shared_ptr<Game>& game)

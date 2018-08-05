@@ -84,44 +84,40 @@ void Trigger::think(std::shared_ptr<Game>& game)
   tracking = temp_tracking;
 }
 
-std::vector<Rect> Trigger::bbox() const
+Rect Trigger::bbox() const
 {
   Rect rect;
   rect.w = shape.w;
   rect.h = shape.h;
   rect.x = this->position_abs().x;
   rect.y = this->position_abs().y;
-  return {rect};
+  return rect;
 }
 
 bool Trigger::intersects(const Entity* other) const
 {
-  for (auto& self_box : this->bbox()) {
-    for (auto& other_box : other->bbox()) {
-      if (SDL_HasIntersection(&self_box, &other_box)) {
-        return true;
-      }
-    }
+  auto self_box = this->bbox();
+  auto other_box = other->bbox();
+  if (SDL_HasIntersection(&self_box, &other_box)) {
+    return true;
   }
   return false;
 }
 
 bool Trigger::intersects(const Entity* other, const Rect& other_bbox) const
 {
-  for (auto& self_box : this->bbox()) {
-    if (SDL_HasIntersection(&self_box, &other_bbox)) {
-      return true;
-    }
+  auto self_box = this->bbox();
+  if (SDL_HasIntersection(&self_box, &other_bbox)) {
+    return true;
   }
   return false;
 }
 
 bool Trigger::intersects(const Rect& bbox) const
 {
-  for (auto& self_box : this->bbox()) {
-    if (SDL_HasIntersection(&self_box, &bbox)) {
-      return true;
-    }
+  auto self_box = this->bbox();
+  if (SDL_HasIntersection(&self_box, &bbox)) {
+    return true;
   }
   return false;
 }

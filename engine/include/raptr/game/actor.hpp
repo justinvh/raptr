@@ -1,4 +1,4 @@
-/*!
+  /*!
   /file actor.hpp
   An actor is a simple Entity that is rather dumb, but it serves a purpose:
   something that the player can hit and attach to in some way or another.
@@ -39,7 +39,7 @@ public:
     Returns the bounding box for this static mesh based on its sprite
     \return An rectangle containing the static mesh
   */
-  std::vector<Rect> bbox() const override;
+  Rect bbox() const override;
 
   /*!
     Generates a MeshStatic object from a TOML configuration file

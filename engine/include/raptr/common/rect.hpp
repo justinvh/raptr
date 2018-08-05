@@ -3,6 +3,8 @@
   This module provides overloads to SDL_Rect functions for double Rect and Point objects
  */
 
+#pragma warning(disable: 4244)
+
 #pragma once
 
 namespace raptr

@@ -41,8 +41,7 @@ void Camera::think(Renderer* renderer, uint64_t delta_us)
   int32_t w = b.max[0] - b.min[0];
   int32_t h = b.max[1] - b.min[1];
 
-  SDL_RenderSetLogicalSize(sdl.renderer, w, h);
-  SDL_RenderClear(sdl.renderer);
+  //SDL_RenderSetLogicalSize(sdl.renderer, w, h);
 
   clips.clear();
 
@@ -59,7 +58,7 @@ void Camera::think(Renderer* renderer, uint64_t delta_us)
     Point avg = {0, 0};
     bool wait = false;
     for (auto& entity : tracking) {
-      auto b = entity->bbox()[0];
+      auto b = entity->bbox();
       auto p = entity->position_abs();
       auto& v = entity->velocity_rel();
       avg.x += p.x + b.w / 2.0;

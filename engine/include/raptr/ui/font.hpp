@@ -15,7 +15,7 @@ public:
   std::shared_ptr<SDL_Surface> surface;
   std::shared_ptr<SDL_Texture> texture;
   SDL_Rect bbox;
-  bool allocate(const Renderer& renderer);
+  bool allocate(Renderer& renderer);
   void render(Renderer* renderer, const SDL_Point& position);
 
 public:
