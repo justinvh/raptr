@@ -49,8 +49,15 @@ Game::~Game()
 */
 std::shared_ptr<Game> Game::create(const fs::path& game_root)
 {
+  struct DirtyBoy : public Game {
+    DirtyBoy(fs::path path)
+      : Game(path)
+    {
+    }
+  };
+
   const auto full_path = fs::absolute(game_root);
-  auto game = std::shared_ptr<Game>(new Game(full_path));
+  auto game = std::make_shared<DirtyBoy>(full_path);
   game->is_headless = false;
   if (!game->is_init) {
     if (!game->init()) {
@@ -68,8 +75,15 @@ std::shared_ptr<Game> Game::create(const fs::path& game_root)
 */
 std::shared_ptr<Game> Game::create_headless(const fs::path& game_root)
 {
+  struct GameSharedEnabler : public Game {
+    GameSharedEnabler(fs::path path)
+      : Game(path)
+    {
+    }
+  };
+
   auto const full_path = fs::absolute(game_root);
-  auto game = std::shared_ptr<Game>(new Game(full_path));
+  auto game = std::make_shared<GameSharedEnabler>(full_path);
   game->is_headless = true;
   if (!game->is_init) {
     if (!game->init()) {
@@ -439,7 +453,7 @@ bool Game::init()
     return false;
   }
 
-  config.reset(new Config());
+  config = std::make_shared<Config>();
   gravity_ps2 = -18.0 * meters_to_pixels;
 
 
@@ -656,7 +670,7 @@ bool Game::init_lua()
 
 bool Game::init_renderer()
 {
-  renderer.reset(new Renderer(is_headless));
+  renderer = std::make_shared<Renderer>(is_headless);
   renderer->init(config);
   renderer->camera_basic.left = 0;
   renderer->camera_basic.right = 2000;

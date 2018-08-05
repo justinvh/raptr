@@ -94,7 +94,7 @@ struct EngineEvent
   template <class T>
   static std::shared_ptr<EngineEvent> create(T* data_)
   {
-    std::shared_ptr<EngineEvent> event(new EngineEvent());
+    auto event = std::make_shared<EngineEvent>();
     event->data = (void*) (data_);
     event->type = T::event_type;
     event->time = clock::ticks();

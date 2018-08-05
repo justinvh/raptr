@@ -97,7 +97,8 @@ bool Renderer::init(std::shared_ptr<Config>& config)
   */
 
   // Initialize SDL with some basics
-  sdl.window = SDL_CreateWindow("RAPTR", 10, 10, 960, 540, SDL_WINDOW_SHOWN);
+  sdl.window = SDL_CreateWindow("RAPTR", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 960, 540, SDL_WINDOW_SHOWN);
+  SDL_SetWindowFullscreen(sdl.window, SDL_FALSE);
 
   //sdl.gl = SDL_GL_CreateContext(sdl.window);
 
@@ -245,11 +246,13 @@ bool Renderer::toggle_fullscreen()
     return false;
   }
 
-  if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN_DESKTOP) {
-    SDL_SetWindowFullscreen(sdl.window, 0);
+  auto flags = SDL_GetWindowFlags(sdl.window);
+  flags ^= SDL_WINDOW_FULLSCREEN_DESKTOP;
+  if (SDL_SetWindowFullscreen(sdl.window, flags) < 0) {
+    logger->error("Failed to set fullscreen with {}", SDL_GetError());
     return false;
   }
-  SDL_SetWindowFullscreen(sdl.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+
   return true;
 }
 
@@ -285,7 +288,7 @@ void Renderer::add_texture(std::shared_ptr<SDL_Texture> texture,
   }
 
   //auto renderable = std::make_shared<RenderableTexture>();
-  auto renderable = std::shared_ptr<RenderableTexture>(new RenderableTexture);
+  auto renderable = std::make_shared<RenderableTexture>();
   renderable->texture = std::move(texture);
   renderable->src = src;
   renderable->dst = dst;

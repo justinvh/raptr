@@ -48,7 +48,7 @@ std::shared_ptr<Parallax> Parallax::from_toml(const FileInfo& toml_path)
     dict[key] = value;
   }
 
-  std::shared_ptr<Parallax> bg(new Parallax());
+  auto bg = std::make_shared<Parallax>();
 
   bg->is_foreground = false;
   if (dict.find("foreground.name") != dict.end()) {

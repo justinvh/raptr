@@ -74,7 +74,7 @@ Server::~Server()
 void Server::attach(std::shared_ptr<Game> game_)
 {
   game = game_;
-  console.reset(new Console());
+  console = std::make_shared<Console>();
   game->setup_lua_context(console->lua);
 }
 
@@ -168,7 +168,7 @@ size_t Server::build_packet(size_t out_byte_off,
   GUID guid_array;
   memcpy(&guid_array[0], np.guid, sizeof(unsigned char) * 16);
   auto& prev_snapshot = prev_snapshots[guid_array];
-  std::shared_ptr<Snapshot> next_snapshot(new Snapshot());
+  auto next_snapshot = std::make_shared<Snapshot>();
 
   if (prev_snapshot) {
     memcpy(&next_snapshot->buffer[0], &prev_snapshot->buffer[0], MAX_SNAPSHOT_BUFFER_SIZE);

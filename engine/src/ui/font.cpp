@@ -124,7 +124,7 @@ std::shared_ptr<Text> Text::create(const FileInfo& game_root,
     return nullptr;
   }
 
-  std::shared_ptr<Text> text_obj(new Text);
+  auto text_obj = std::make_shared<Text>();
   const auto renderable = TTF_RenderText_Solid(
     ttf->second.get(),
     text.c_str(),

@@ -25,9 +25,9 @@ Trigger::Trigger()
   
 }
 
-std::shared_ptr<Trigger> Trigger::from_params(const Rect& shape)
+std::shared_ptr<Trigger> Trigger::from_params(Rect shape)
 {
-  std::shared_ptr<Trigger> trigger(new Trigger);
+  auto trigger = std::make_shared<Trigger>();
   trigger->shape = shape;
   trigger->pos_.x = shape.x;
   trigger->pos_.y = shape.y;

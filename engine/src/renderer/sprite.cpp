@@ -116,7 +116,7 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   }
   */
 
-  std::shared_ptr<Sprite> sprite(new Sprite);
+  auto sprite = std::make_shared<Sprite>();
   auto input = path.open();
 
   if (!input) {

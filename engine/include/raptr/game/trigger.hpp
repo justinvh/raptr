@@ -29,7 +29,7 @@ public:
 
   static void setup_lua_context(sol::state& state);
 
-  static std::shared_ptr<Trigger> from_params(const Rect& area);
+  static std::shared_ptr<Trigger> from_params(Rect area);
 
   /*!
   Returns the bounding box for this static mesh based on its sprite

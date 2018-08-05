@@ -7,10 +7,9 @@ namespace
 auto logger = raptr::_get_logger(__FILE__);
 };
 
-namespace raptr
+namespace raptr::clock
 {
-namespace clock
-{
+
 namespace
 {
 auto clock_last = Time::now();
@@ -55,6 +54,5 @@ bool toggle()
   }
 
   return paused;
-}
 }
 }

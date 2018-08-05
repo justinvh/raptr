@@ -147,7 +147,7 @@ std::shared_ptr<Character> Character::from_toml(const FileInfo& toml_path)
     return found->second->as<decltype(default_value)>();
   };
 
-  std::shared_ptr<Character> character(new Character());
+  auto character = std::make_shared<Character>();
 
   FileInfo sprite_file;
   sprite_file.game_root = toml_path.game_root;

@@ -283,7 +283,7 @@ std::shared_ptr<Controller> Controller::open(const FileInfo& game_root, int cont
     }
     SDL_free(mapping);
 
-    std::shared_ptr<Controller> controller(new Controller());
+    auto controller = std::make_shared<Controller>();
     controller->sdl.controller = sdl_controller;
     controller->sdl.joystick = SDL_GameControllerGetJoystick(sdl_controller);
     controller->sdl.controller_id = SDL_JoystickGetDeviceInstanceID(controller_id);
@@ -295,7 +295,7 @@ std::shared_ptr<Controller> Controller::open(const FileInfo& game_root, int cont
 
     return controller;
   }
-  std::shared_ptr<Controller> controller(new Controller());
+  auto controller = std::make_shared<Controller>();
   controller->sdl.controller = nullptr;
   controller->sdl.joystick = SDL_JoystickOpen(controller_id);
   controller->sdl.controller_id = SDL_JoystickGetDeviceInstanceID(controller_id);

@@ -73,7 +73,7 @@ std::shared_ptr<Actor> Actor::from_toml(const FileInfo& toml_path)
   sprite_file.file_relative = sprite_path;
   sprite_file.file_dir = sprite_file.file_path.parent_path();
 
-  std::shared_ptr<Actor> actor(new Actor());
+  auto actor = std::make_shared<Actor>();
   actor->sprite = Sprite::from_json(sprite_file);
   actor->sprite->scale = dict["sprite.scale"]->as<double>();
   actor->sprite->set_animation("Idle");

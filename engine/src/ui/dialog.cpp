@@ -82,7 +82,7 @@ std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path)
 
   const toml::Value& v = pr.value;
 
-  std::shared_ptr<Dialog> dialog(new Dialog());
+  auto dialog = std::make_shared<Dialog>();
   dialog->toml_path = toml_path;
   dialog->parse_error = false;
   dialog->active_prompt = nullptr;
