@@ -118,6 +118,8 @@ public:
     sol::protected_function lua_on_exit);
 
 public:
+  bool interact_with_world(Entity* entity);
+
   bool intersect_world(Entity* entity, const Rect& bbox);
 
   bool intersect_anything(Entity* entity, const Rect& bbox);

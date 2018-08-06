@@ -12,8 +12,7 @@
 #include <raptr/common/logging.hpp>
 #include <raptr/ui/font.hpp>
 
-constexpr int32_t GAME_WIDTH = 720;
-constexpr int32_t GAME_HEIGHT = 405;
+
 
 namespace
 {
@@ -33,6 +32,10 @@ void SDLDeleter::operator()(SDL_Surface* p) const
 
 namespace raptr
 {
+
+int32_t GAME_WIDTH = 720;
+int32_t GAME_HEIGHT = 405;
+
 Renderer::~Renderer()
 {
   if (sdl.renderer) {
@@ -79,8 +82,8 @@ bool Renderer::init(std::shared_ptr<Config>& config)
 {
   this->config = config;
 
-  fps = 60;
-  show_fps = false;
+  fps = 144;
+  show_fps = true;
   last_render_time_us = clock::ticks();
 
   if (is_headless) {
@@ -124,7 +127,7 @@ bool Renderer::init(std::shared_ptr<Config>& config)
   camera_basic.min_x = -10000;
   camera_basic.max_x = 10000;
 
-  camera = Camera({GAME_WIDTH / 2, GAME_HEIGHT / 2}, GAME_WIDTH, GAME_HEIGHT);
+  camera = Camera({GAME_WIDTH / 2.0, GAME_HEIGHT / 2.0}, GAME_WIDTH, GAME_HEIGHT);
 
   logical_size.x = 0;
   logical_size.y = 0;
@@ -159,11 +162,9 @@ void Renderer::run_frame(bool force_render)
   const auto render_delta_us = (clock::ticks() - last_render_time_us);
   const auto render_delta_ms = render_delta_us * 1e3;
 
-  /*
   if (render_delta_us + render_err_us < 1e6 / fps) {
     return;
   }
-  */
 
   render_err_us = static_cast<int64_t>((render_delta_us + render_err_us) - 1e6 / fps);
   last_render_time_us = clock::ticks();
@@ -217,12 +218,18 @@ void Renderer::run_frame(bool force_render)
       std::stringstream ss;
       const auto secs = (clock::ticks() - frame_counter_time_start) / 1e6;
       const auto current_fps = static_cast<int32_t>(frame_counter / secs);
-      ss << current_fps << " FPS";
+      ss << current_fps << " FPS (Target " << fps << ")";
       fps_text = this->add_text({5, 0}, ss.str(), 20);
 
       ss = std::stringstream();
       ss << num_objects_rendered << " objects rendered";
       num_obj_rendered_text = this->add_text({5, 20}, ss.str(), 20);
+
+      ss = std::stringstream();
+      ss << std::round(texture_mem_pool.off / float(MemoryPool::size) * 100.0) << "% ("
+         << (texture_mem_pool.off / 1024.0) << "KB / "
+         << std::ceil(texture_mem_pool.off / 1024.0 / 1024.0) << "MB) mempool full";
+      mempool_text = this->add_text({5, 40}, ss.str(), 20);
 
       frame_counter_time_start = clock::ticks();
       frame_fps = static_cast<float>(frame_counter / secs);
@@ -236,7 +243,14 @@ void Renderer::run_frame(bool force_render)
     if (num_obj_rendered_text) {
       num_obj_rendered_text->render(this, {5, 20});
     }
+
+    if (mempool_text) {
+      mempool_text->render(this, {5, 40});
+    }
   }
+
+  texture_mem_pool.ptr = texture_mem_pool.mem;
+  texture_mem_pool.off = 0;
 }
 
 bool Renderer::toggle_fullscreen() 
@@ -288,8 +302,8 @@ void Renderer::add_texture(std::shared_ptr<SDL_Texture> texture,
   }
 
   //auto renderable = std::make_shared<RenderableTexture>();
-  auto renderable = std::make_shared<RenderableTexture>();
-  renderable->texture = std::move(texture);
+  auto renderable = new(texture_mem_pool.allocate(sizeof(RenderableTexture))) RenderableTexture;
+  renderable->texture = texture.get();
   renderable->src = src;
   renderable->dst = dst;
   renderable->angle = angle;
@@ -298,9 +312,9 @@ void Renderer::add_texture(std::shared_ptr<SDL_Texture> texture,
   renderable->absolute_positioning = absolute_positioning;
 
   if (render_in_foreground) {
-    will_render_foreground.push_back(std::move(renderable));
+    will_render_foreground.push_back(renderable);
   } else {
-    will_render_middle.push_back(std::move(renderable));
+    will_render_middle.push_back(renderable);
   }
 }
 
@@ -316,7 +330,7 @@ void Renderer::add_rect(SDL_Rect rect, SDL_Color color,
                         bool absolute_positioning,
                         bool render_in_foreground)
 {
-  auto renderable = std::make_shared<RenderableRect>();
+  auto renderable = new(texture_mem_pool.allocate(sizeof(RenderableRect))) RenderableRect;
   renderable->rect = rect;
   renderable->color = color;
   renderable->absolute_positioning = absolute_positioning;
@@ -363,11 +377,11 @@ bool RenderableTexture::render(Renderer* renderer, const CameraClip& camera)
   }
 
   if (flip_x || flip_y || angle) {
-    SDL_RenderCopyEx(renderer->sdl.renderer, texture.get(), &src,
+    SDL_RenderCopyEx(renderer->sdl.renderer, texture, &src,
       &transformed_dst, angle, nullptr,
       static_cast<SDL_RendererFlip>(flip_mask()));
   } else {
-    SDL_RenderCopy(renderer->sdl.renderer, texture.get(), &src, &transformed_dst);
+    SDL_RenderCopy(renderer->sdl.renderer, texture, &src, &transformed_dst);
   }
 
   return true;

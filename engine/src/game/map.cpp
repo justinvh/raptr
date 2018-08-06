@@ -2,12 +2,15 @@
 #include <picojson.h>
 #include <SDL_image.h>
 
+#include <raptr/game/character.hpp>
 #include <raptr/game/map.hpp>
 #include <raptr/game/game.hpp>
 #include <raptr/common/logging.hpp>
 #include <raptr/renderer/renderer.hpp>
+#include <raptr/ui/dialog.hpp>
 
-namespace {
+namespace 
+{
 auto logger = raptr::_get_logger(__FILE__);
 const uint32_t FLIPPED_HORIZONTALLY_FLAG = 1 << 31;
 const uint32_t FLIPPED_VERTICALLY_FLAG = 1 << 30;
@@ -16,63 +19,48 @@ const uint32_t CLEAR_FLIP = ~(FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLA
 };
 
 
+
+
 namespace raptr
 {
 
-std::shared_ptr<Map> Map::load(const FileInfo& folder)
+namespace parser {
+
+auto check_ref = [&](const std::string& name, const picojson::value& ref) -> void
 {
-  auto map_json = folder / "map.json";
-  auto input = map_json.open();
-
-  if (!input) {
-    return nullptr;
+  if (!ref.contains(name)) {
+    std::stringstream ss;
+    ss << "Expected '" << name << "', but it was not found.";
+    throw std::runtime_error(ss.str());
   }
+};
 
-  picojson::value doc;
-  *input >> doc;
+auto U = [&](const std::string& name, const picojson::value& ref) -> uint32_t
+{
+  check_ref(name, ref);
+  return static_cast<uint32_t>(ref.get(name).get<double>());
+};
 
-  auto check_ref = [&](const std::string& name, picojson::value& ref) -> void
-  {
-    if (!ref.contains(name)) {
-      std::stringstream ss;
-      ss << "Expected '" << name << "', but it was not found.";
-      throw std::runtime_error(ss.str());
-    }
-  };
+auto I = [&](const std::string& name, const picojson::value& ref) -> int32_t
+{
+  check_ref(name, ref);
+  return static_cast<int32_t>(ref.get(name).get<double>());
+};
 
-  auto U = [&](const std::string& name, picojson::value& ref) -> uint32_t
-  {
-    check_ref(name, ref);
-    return static_cast<uint32_t>(ref.get(name).get<double>());
-  };
+auto S = [&](const std::string& name, const picojson::value& ref) -> std::string
+{
+  check_ref(name, ref);
+  return ref.get(name).get<std::string>();
+};
 
-  auto I = [&](const std::string& name, picojson::value& ref) -> int32_t
-  {
-    check_ref(name, ref);
-    return static_cast<int32_t>(ref.get(name).get<double>());
-  };
+auto B = [&](const std::string& name, const picojson::value& ref) -> bool
+{
+  check_ref(name, ref);
+  return ref.get(name).get<bool>();
+};
 
-  auto S = [&](const std::string& name, picojson::value& ref) -> std::string
-  {
-    check_ref(name, ref);
-    return ref.get(name).get<std::string>();
-  };
-
-  auto B = [&](const std::string& name, picojson::value& ref) -> bool
-  {
-    check_ref(name, ref);
-    return ref.get(name).get<bool>();
-  };
-
-  const auto map = std::make_shared<Map>();
-  map->height = U("height", doc);
-  map->width = U("width", doc);
-  map->tile_height = U("tileheight", doc);
-  map->tile_width = U("tilewidth", doc);
-
-  auto player_layer_found = false;
-  auto layers = doc.get("layers").get<picojson::array>();
-
+uint32_t find_max_tile_id(const picojson::array& layers)
+{
   uint32_t max_tile_id = 0;
   for (auto& pico_layer : layers) {
     auto layer_type = S("type", pico_layer);
@@ -102,79 +90,320 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
       }
     }
   }
-  map->tilemap.resize(max_tile_id + 1);
+  return max_tile_id;
+}
 
-  auto tileset_data = doc.get("tilesets").get<picojson::array>();
-  for (auto& tileset : tileset_data) {
-    auto tile_off = U("firstgid", tileset);
-    auto source_json = folder / S("source", tileset);
-    if (tile_off > max_tile_id) {
-      logger->warn("Tileset {} is being excluded because there are no tiles used from it.", source_json);
+bool load_tileset(const picojson::value& tileset,
+                  const FileInfo& folder,
+                  const std::shared_ptr<Map>& map,
+                  uint32_t max_tile_id)
+
+{
+  auto tile_off = U("firstgid", tileset);
+  auto source_json = folder / S("source", tileset);
+  if (tile_off > max_tile_id) {
+    logger->warn("Tileset {} is being excluded because there are no tiles used from it.", source_json);
+    return true;
+  }
+
+  picojson::value source_doc;
+  auto source_input = source_json.open();
+
+  if (!source_input) {
+    logger->error("Tileset at {} does not exist", source_json);
+    return false;
+  }
+
+  *source_input >> source_doc;
+  auto source_tiles = source_doc.get("tiles").get<picojson::object>();
+  auto tile_properties = source_doc.get("tileproperties").get<picojson::object>();
+  for (auto& source_tile : source_tiles) {
+    auto key = std::stoi(source_tile.first);
+    auto source_tile_params = source_tile.second;
+    auto source_tile_image = source_json.from_current_dir(S("image", source_tile_params));
+
+    if (tile_off + key > max_tile_id) {
+      logger->debug("Ignoring tile {} because it is not used", source_tile_image);
       continue;
     }
 
-    picojson::value source_doc;
-    auto source_input = source_json.open();
-
-    if (!source_input) {
-      logger->error("Tileset at {} does not exist", source_json);
-      return nullptr;
+    std::string source_tile_type = "Non-Collidable";
+    if (source_tile_params.contains("type")) {
+      source_tile_type = S("type", source_tile_params);
     }
 
-    *source_input >> source_doc;
-    auto source_tiles = source_doc.get("tiles").get<picojson::object>();
-    auto tile_properties = source_doc.get("tileproperties").get<picojson::object>();
-    for (auto& source_tile : source_tiles) {
-      auto key = std::stoi(source_tile.first);
-      auto source_tile_params = source_tile.second;
-      auto source_tile_image = source_json.from_current_dir(S("image", source_tile_params));
+    auto& tilemap = map->tilemap[tile_off + key];
+    tilemap.type = source_tile_type;
+    tilemap.src.x = 0;
+    tilemap.src.y = 0;
+    tilemap.src.w = 0;
+    tilemap.src.h = 0;
 
-      if (tile_off + key > max_tile_id) {
-        logger->debug("Ignoring tile {} because it is not used", source_tile_image);
+    std::shared_ptr<Sprite> sprite = nullptr;
+    auto has_properties = tile_properties.find(source_tile.first);
+    if (has_properties != tile_properties.end()) {
+      auto properties = has_properties->second.get<picojson::object>();
+      auto has_animation = properties.find("animation");
+      if (has_animation != properties.end()) {
+        const auto animation = has_animation->second.get<std::string>();
+        const auto animation_path = folder.from_root(animation);
+        sprite = Sprite::from_json(animation_path);
+        if (!sprite) {
+          logger->error("Failed to load sprite: {}", animation_path);
+          return false;
+        }
+      }
+      tilemap.sprite = sprite;
+    } else {
+      auto source_tile_image_path = source_tile_image.file_path.string();
+      SDL_Surface* surface = IMG_Load(source_tile_image_path.c_str());
+      if (!surface) {
+        logger->error("Tileset at {} could not load {}", source_json, source_tile_image);
+        return false;
+      }
+      tilemap.surface.reset(surface, SDLDeleter());
+      tilemap.src.w = surface->w;
+      tilemap.src.h = surface->h;
+    }
+  }
+  return true;
+}
+
+bool load_parallax(const picojson::value& object, 
+                   const FileInfo& folder,
+                   const std::shared_ptr<Map>& map)
+{
+  auto properties = object.get("properties");
+  auto script_raw = S("script", properties);
+  auto script_path = folder.from_root(script_raw);
+  auto is_background = B("is_background", properties);
+  auto parallax = Parallax::from_toml(script_path);
+  auto width = U("width", object);
+  auto height = U("height", object);
+  auto x = U("x", object);
+  auto y = U("y", object);
+  if (!parallax) {
+    logger->error("Parallax at {} could not be loaded", script_raw);
+    return false;
+  }
+  parallax->dst.x = x;
+  parallax->dst.y = y;
+  parallax->dst.w = width;
+  parallax->dst.h = height;
+  if (is_background) {
+    map->parallax_bg.push_back(parallax);
+  } else {
+    map->parallax_fg.push_back(parallax);
+  }
+  return true;
+}
+
+bool load_dialog(const picojson::value& layer,
+                 const picojson::value& object, 
+                 const FileInfo& folder,
+                 const std::shared_ptr<Map>& map)
+{
+  auto properties = object.get("properties");
+  auto sprite_path = folder.from_root(S("sprite", properties));
+  auto speaker = S("speaker", properties);
+  auto expression = S("expression", properties);
+  auto name = S("name", properties);
+  auto text = S("text", properties);
+
+  auto sprite = Sprite::from_json(sprite_path);
+  if (!sprite) {
+    return false;
+  }
+
+  auto dialog = Dialog::from_easy_params(folder, speaker, expression, name, text);
+
+  if (!dialog) {
+    logger->error("Dialog could not be loaded!");
+    return false;
+  }
+
+  LayerTile obj;
+  obj.sprite = sprite;
+  obj.dialog = dialog;
+  obj.type = "Interactive";
+
+  auto width = U("width", object);
+  auto height = U("height", object);
+  auto x = U("x", object);
+  auto y = U("y", object);
+
+  obj.dst.x = x;
+  obj.dst.y = (map->height * map->tile_height - y);
+  obj.sprite->x = obj.dst.x;
+  obj.sprite->y = obj.dst.y;
+  obj.dst.w = width;
+  obj.dst.h = height;
+  obj.flip_x = false;
+  obj.flip_y = false;
+
+  map->objects.push_back(std::move(obj));
+  return true;
+}
+
+bool load_object(const picojson::value& layer, const picojson::value& object, const FileInfo& folder,
+                 const std::shared_ptr<Map>& map)
+{
+  auto type = S("type", object);
+  if (type == "Parallax") {
+    return load_parallax(object, folder, map);
+  } else if (type == "Dialog") {
+    return load_dialog(layer, object, folder, map);
+  }
+
+  logger->warn("Unrecognized object type in map: {}", type);
+  return true;
+}
+
+bool load_tile(uint32_t tilemap_idx, uint32_t tile_index, uint32_t tile_offset,
+               int32_t x, int32_t y, Layer& layer, const std::shared_ptr<Map>& map)
+{
+  auto& tile = map->tilemap[tilemap_idx];
+  if (!tile.surface && !tile.sprite) {
+    logger->error("Tile surface was not allocated!");
+    DebugBreak();
+    return false;
+  }
+
+  LayerTile l;
+  l.index = tile_index;
+  l.dst.x = (layer.x + x) * map->tile_width;
+  l.dst.y = (layer.height - y - layer.y - 1) * map->tile_height;
+  l.dst.w = tile.src.w;
+  l.dst.h = tile.src.h;
+  l.flip_x = false;
+  l.flip_y = false;
+  l.flip_x = tile_index & FLIPPED_HORIZONTALLY_FLAG;
+  l.flip_y = tile_index & FLIPPED_VERTICALLY_FLAG;
+  l.rotation_deg = 0.0;
+  if (tile_index & FLIPPED_DIAGONALLY_FLAG) {
+    l.rotation_deg = 90.0;
+  }
+
+  l.tile = &map->tilemap[tilemap_idx];
+  l.type = l.tile->type;
+
+  if (l.tile->sprite) {
+    l.sprite = l.tile->sprite->clone();
+    l.sprite->flip_x = l.flip_x;
+    l.sprite->flip_y = l.flip_y;
+    l.sprite->rotation_deg = l.rotation_deg;
+    l.sprite->x = l.dst.x;
+    l.sprite->y = l.dst.y;
+  }
+
+  layer.renderable.emplace_back(l);
+  layer.layer_tile_lut[tile_offset] = l;
+  return true;
+}
+
+bool load_tilelayer(const picojson::value& pico_layer, const FileInfo& folder,
+                    const std::shared_ptr<Map>& map)
+{
+  Layer layer;
+  layer.height = U("height", pico_layer);
+  layer.width = U("width", pico_layer);
+  layer.name = S("name", pico_layer);
+  layer.x = I("x", pico_layer);
+  layer.y = I("y", pico_layer);
+
+  if (layer.name == "Player") {
+    auto layer_data = pico_layer.get("data").get<picojson::array>();
+    int32_t k = 0;
+    for (auto d : layer_data) {
+      auto tile_id = static_cast<uint32_t>(d.get<double>());
+      auto tilemap_idx = tile_id & CLEAR_FLIP;
+      if (tilemap_idx == 0) {
+        ++k;
         continue;
       }
+      map->player_spawn.x = (layer.x + (k % layer.width)) * map->tile_width;
+      map->player_spawn.y = layer.height * map->tile_height - (layer.y + k / layer.width + 1) * map->tile_height;
+      break;
+    }
+    return true;
+  }
 
-      std::string source_tile_type = "Non-Collidable";
-      if (source_tile_params.contains("type")) {
-        source_tile_type = S("type", source_tile_params);
+  layer.is_foreground = false;
+
+  auto layer_data = pico_layer.get("data").get<picojson::array>();
+  for (auto d : layer_data) {
+    auto tile_id = static_cast<uint32_t>(d.get<double>());
+    auto tilemap_idx = tile_id & CLEAR_FLIP;
+    layer.data.push_back(tile_id);
+    layer.tile_table.push_back(tilemap_idx);
+  }
+
+  for (uint32_t y = 0; y < layer.height; ++y) {
+    for (uint32_t x = 0; x < layer.width; ++x) {
+      uint32_t tile_offset = y * layer.width + x;
+      uint32_t tile_index = layer.data[tile_offset];
+      if (tile_index == 0) {
+        continue;
       }
-
-      auto& tilemap = map->tilemap[tile_off + key];
-      tilemap.type = source_tile_type;
-      tilemap.src.x = 0;
-      tilemap.src.y = 0;
-      tilemap.src.w = 0;
-      tilemap.src.h = 0;
-
-      std::shared_ptr<Sprite> sprite = nullptr;
-      auto has_properties = tile_properties.find(source_tile.first);
-      if (has_properties != tile_properties.end()) {
-        auto properties = has_properties->second.get<picojson::object>();
-        auto has_animation = properties.find("animation");
-        if (has_animation != properties.end()) {
-          const auto animation = has_animation->second.get<std::string>();
-          const auto animation_path = folder.from_root(animation);
-          sprite = Sprite::from_json(animation_path);
-          if (!sprite) {
-            logger->error("Failed to load sprite: {}", animation_path);
-            return nullptr;
-          }
-        }
-        tilemap.sprite = sprite;
-      } else {
-        auto source_tile_image_path = source_tile_image.file_path.string();
-        SDL_Surface* surface = IMG_Load(source_tile_image_path.c_str());
-        if (!surface) {
-          logger->error("Tileset at {} could not load {}", source_json, source_tile_image);
-          return nullptr;
-        }
-        tilemap.surface.reset(surface, SDLDeleter());
-        tilemap.src.w = surface->w;
-        tilemap.src.h = surface->h;
+      uint32_t tilemap_idx = tile_index & CLEAR_FLIP;
+      if (!load_tile(tilemap_idx, tile_index, tile_offset, x, y, layer, map)) {
+        return false;
       }
     }
   }
 
+  map->layers.push_back(layer);
+  return true;
+}
+
+}
+
+std::shared_ptr<Map> Map::load(const FileInfo& folder)
+{
+  auto map_json = folder / "map.json";
+  auto input = map_json.open();
+
+  if (!input) {
+    return nullptr;
+  }
+
+  picojson::value doc;
+  *input >> doc;
+
+  // These are small functions for unwrapping types
+  using parser::U;
+  using parser::S;
+  using parser::I;
+  using parser::B;
+ 
+  // These are the base criteria for our map and define a quick and
+  // efficient way for navigating the map for collisions
+  const auto map = std::make_shared<Map>();
+  map->height = U("height", doc);
+  map->width = U("width", doc);
+  map->tile_height = U("tileheight", doc);
+  map->tile_width = U("tilewidth", doc);
+  map->tilemap_texture_allocated = false;
+
+  // The layers represent both objects and tiles
+  auto layers = doc.get("layers").get<picojson::array>();
+
+  // We create a very sparse representation of the tiles by
+  // finding the maximum tile id through the entire loaded map
+  const auto max_tile_id = parser::find_max_tile_id(layers);
+  map->tilemap.resize(max_tile_id + 1);
+
+  // Iterate through each of the tilesets in the map and load
+  // them into the map->tilemap property
+  auto tileset_data = doc.get("tilesets").get<picojson::array>();
+  for (auto& tileset : tileset_data) {
+    if (!parser::load_tileset(tileset, folder, map, max_tile_id)) {
+      return nullptr;
+    }
+  }
+
+  // Iterate through each of the layers and load the objects for
+  // the map. This will include objects such as Parallax, Dialog, etc.
   for (auto& pico_layer : layers) {
     auto layer_type = S("type", pico_layer);
     if (layer_type != "objectgroup") {
@@ -182,131 +411,26 @@ std::shared_ptr<Map> Map::load(const FileInfo& folder)
     }
     auto objects = pico_layer.get("objects").get<picojson::array>();
     for (auto& object : objects) {
-      auto type = S("type", object);
-      auto properties = object.get("properties");
-      if (type == "Parallax") {
-        auto script_raw = S("script", properties);
-        auto script_path = folder.from_root(script_raw);
-        auto is_background = B("is_background", properties);
-        auto parallax = Parallax::from_toml(script_path);
-        auto width = U("width", object);
-        auto height = U("height", object);
-        auto x = U("x", object);
-        auto y = U("y", object);
-        if (!parallax) {
-          logger->error("Parallax at {} could not be loaded", script_raw);
-          return nullptr;
-        }
-        parallax->dst.x = x;
-        parallax->dst.y = y;
-        parallax->dst.w = width;
-        parallax->dst.h = height;
-        if (is_background) {
-          map->parallax_bg.push_back(parallax);
-        } else {
-          map->parallax_fg.push_back(parallax);
-        }
+      if (!parser::load_object(pico_layer, object, folder, map)) {
+        return nullptr;
       }
     }
   }
 
+  // Iterate through each of the layers and load the tiles for
+  // the map. These are fixed at a tile_width / tile_height grid and
+  // have limited (or rather well defined) actions in the world
   bool is_foreground = true;
   for (auto& pico_layer : layers) {
-    Layer layer;
     auto layer_type = S("type", pico_layer);
     if (layer_type != "tilelayer") {
       continue;
     }
-    layer.height = U("height", pico_layer);
-    layer.width = U("width", pico_layer);
-    layer.name = S("name", pico_layer);
-    layer.x = I("x", pico_layer);
-    layer.y = I("y", pico_layer);
-    if (layer.name == "Player") {
-      is_foreground = false;
-      player_layer_found = true;
-      auto layer_data = pico_layer.get("data").get<picojson::array>();
-      int32_t k = 0;
-      for (auto d : layer_data) {
-        auto tile_id = static_cast<uint32_t>(d.get<double>());
-        auto tilemap_idx = tile_id & CLEAR_FLIP;
-        if (tilemap_idx == 0) {
-          ++k;
-          continue;
-        }
-        map->player_spawn.x = (layer.x + (k % layer.width)) * map->tile_width;
-        map->player_spawn.y = layer.height * map->tile_height - (layer.y + k / layer.width + 1) * map->tile_height;
-        break;
-      }
-      continue;
+    if (!parser::load_tilelayer(pico_layer, folder, map)) {
+      logger->error("Failed to load tile layer");
+      return nullptr;
     }
-
-    layer.is_foreground = is_foreground;
-
-    auto layer_data = pico_layer.get("data").get<picojson::array>();
-    for (auto d : layer_data) {
-      auto tile_id = static_cast<uint32_t>(d.get<double>());
-      auto tilemap_idx = tile_id & CLEAR_FLIP;
-      layer.data.push_back(tile_id);
-      layer.tile_table.push_back(tilemap_idx);
-    }
-
-    for (uint32_t y = 0; y < layer.height; ++y) {
-      for (uint32_t x = 0; x < layer.width; ++x) {
-        uint32_t tile_offset = y * layer.width + x;
-        uint32_t tile_index = layer.data[tile_offset];
-        if (tile_index == 0) {
-          continue;
-        }
-
-        uint32_t tilemap_idx = tile_index & CLEAR_FLIP;
-
-        auto& tile = map->tilemap[tilemap_idx];
-        if (!tile.surface && !tile.sprite) {
-          logger->error("Tile surface was not allocated!");
-          DebugBreak();
-        }
-
-        LayerTile l;
-        l.index = tile_index;
-        l.dst.x = (layer.x + x) * map->tile_width;
-        l.dst.y = (layer.height - y - layer.y - 1) * map->tile_height;
-        l.dst.w = tile.src.w;
-        l.dst.h = tile.src.h;
-        l.flip_x = false;
-        l.flip_y = false;
-        l.flip_x = tile_index & FLIPPED_HORIZONTALLY_FLAG;
-        l.flip_y = tile_index & FLIPPED_VERTICALLY_FLAG;
-        l.rotation_deg = 0.0;
-        if (tile_index & FLIPPED_DIAGONALLY_FLAG) {
-          l.rotation_deg = 90.0;
-        }
-
-        l.tile = &map->tilemap[tilemap_idx];
-
-        if (l.tile->sprite) {
-          l.sprite = l.tile->sprite->clone();
-          l.sprite->flip_x = l.flip_x;
-          l.sprite->flip_y = l.flip_y;
-          l.sprite->rotation_deg = l.rotation_deg;
-          l.sprite->x = l.dst.x;
-          l.sprite->y = l.dst.y;
-        }
-
-        layer.renderable.emplace_back(l);
-        layer.layer_tile_lut[tile_offset] = l;
-      }
-    }
-
-    map->layers.push_back(layer);
   }
-
-  if (!player_layer_found) {
-    logger->error("Expected {} to have a 'Player' layer, but it does not.", map_json.file_path);
-    return nullptr;
-  }
-
-  map->tilemap_texture_allocated = false;
 
   return map;
 }
@@ -367,8 +491,8 @@ LayerTile* Map::intersects(const Entity* other, const Rect& bbox, const std::str
   return this->intersects(bbox, tile_type);
 }
 
-bool Map::intersect_precise(const LayerTile* layer_tile, const Layer& layer,
-                            int32_t check_x, int32_t check_y,
+bool Map::intersect_precise(const LayerTile* layer_tile, 
+                            int32_t tx, int32_t ty,
                             const Entity* other, const Rect& bbox,
                             bool use_entity_collision_frame)
 {
@@ -413,9 +537,6 @@ bool Map::intersect_precise(const LayerTile* layer_tile, const Layer& layer,
     other_frame->w,
     other_frame->h
   };
-
-  int32_t tx = check_x * tile_width;
-  int32_t ty = check_y * tile_height;
 
   // Bounding box of tile relative to the layer
   double ax0 = tx;
@@ -491,9 +612,28 @@ bool Map::intersect_precise(const LayerTile* layer_tile, const Layer& layer,
   return false;
 }
 
+void Map::activate_dialog(Entity* activator, LayerTile* tile)
+{
+  if (!activator->is_player()) {
+    return;
+  }
+  auto character = dynamic_cast<Character*>(activator);
+  active_dialog = tile->dialog;
+  active_dialog->start();
+  active_dialog->attach_controller(character->controller);
+}
+
+void Map::activate_tile(Entity* activator, LayerTile* tile)
+{
+  if (tile->dialog) {
+    this->activate_dialog(activator, tile);
+  }
+}
+
 LayerTile* Map::intersect_slow(const Entity* other, const Rect& bbox, const std::string& type)
 {
   bool use_collision = (type != "Death");
+
   // Is there a tile in this map that would occupy X/Y
   for (auto& layer : layers) {
     const int32_t x_off = layer.x * tile_width;
@@ -529,19 +669,33 @@ LayerTile* Map::intersect_slow(const Entity* other, const Rect& bbox, const std:
           continue;
         }
 
+        int32_t tx = x * tile_width;
+        int32_t ty = y * tile_height;
+
         // Check properties of tile type, instead of checking collision type
         auto layer_tile = &layer.layer_tile_lut[idx];
         if (layer_tile->tile->type == type) {
-          if (this->intersect_precise(layer_tile, layer, x, y, other, bbox_rel, use_collision)) {
+          if (this->intersect_precise(layer_tile, tx, ty, other, bbox_rel, use_collision)) {
             return layer_tile;
           }
         }
       }
     }
   }
+
+  for (size_t i = 0; i < objects.size(); ++i) {
+    auto& obj = objects[i];
+    int32_t tx = obj.dst.x;
+    int32_t ty = obj.dst.y;
+    if (obj.type == type) {
+      if (this->intersect_precise(&obj, tx, ty, other, bbox, use_collision)) {
+        return &objects[i];
+      }
+    }
+  }
+
   return nullptr;
 }
-
 
 LayerTile* Map::intersect_slow(const Rect& other_box, const std::string& tile_type)
 {
@@ -574,6 +728,14 @@ void Map::render(Renderer* renderer)
 
   for (const auto& layer : layers) {
     this->render_layer(renderer, layer);
+  }
+
+  for (const auto& obj : objects) {
+    obj.sprite->render(renderer);
+  }
+
+  if (active_dialog) {
+    active_dialog->render(renderer);
   }
 }
 

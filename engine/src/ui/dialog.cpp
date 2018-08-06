@@ -64,6 +64,22 @@ bool load_dialog_cache(const FileInfo& game_root)
   return true;
 }
 
+std::shared_ptr<Dialog> Dialog::from_easy_params(
+      const FileInfo& game_root,
+      const std::string& speaker, const std::string& expression,
+      const std::string& name, const std::string& text)
+{
+  std::stringstream is;
+  is << "[1]\n"
+     << "speaker = \"" << speaker << "\"\n"
+     << "expression = \"" << expression << "\"\n"
+     << "name = \"" << name << "\"\n"
+     << "text = \"" << text << "\"\n";
+
+  toml::ParseResult pr = toml::parse(is);
+  return Dialog::from_toml(game_root, pr);
+}
+
 std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path)
 {
   load_dialog_cache(toml_path);
@@ -74,12 +90,17 @@ std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path)
   }
 
   toml::ParseResult pr = toml::parse(*ifs);
-
   if (!pr.valid()) {
     logger->error("Failed to parse {} with reason {}", toml_relative, pr.errorReason);
     return nullptr;
   }
 
+  return Dialog::from_toml(toml_path, pr);
+}
+
+std::shared_ptr<Dialog> Dialog::from_toml(const FileInfo& toml_path, toml::ParseResult& pr)
+{
+  auto toml_relative = toml_path.file_relative;
   const toml::Value& v = pr.value;
 
   auto dialog = std::make_shared<Dialog>();
@@ -188,7 +209,7 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
 
   prompt->speaker->scale = 1.5;
   prompt->speaker->x = 15;
-  prompt->speaker->y = 25;
+  prompt->speaker->y = GAME_HEIGHT - 25;
   prompt->speaker->flip_x = true;
   prompt->section = section_name;
   prompt->speaker->absolute_positioning = true;
@@ -405,19 +426,18 @@ bool Dialog::start()
   return true;
 }
 
-bool Dialog::think(std::shared_ptr<Game>& game) const
+bool Dialog::render(Renderer* renderer) const
 {
   if (!active_prompt) {
     return false;
   }
 
   // Render dialog box
-  auto& renderer = game->renderer;
-  dialog_box->render(renderer.get());
+  dialog_box->render(renderer);
 
   // Render speaker
   auto& speaker = active_prompt->speaker;
-  speaker->render(renderer.get());
+  speaker->render(renderer);
 
   // Start rendering frame info
   auto& current_frame = speaker->current_animation->current_frame();
@@ -432,7 +452,7 @@ bool Dialog::think(std::shared_ptr<Game>& game) const
     dst.w = bbox.w;
     dst.h = bbox.h;
     dst.x = static_cast<int32_t>(speaker->x + current_frame.w + 16);
-    dst.y = 32;
+    dst.y = GAME_HEIGHT - 32;
     renderer->add_texture(texture, bbox, dst, 0.0, false, false, true);
   }
 
@@ -453,7 +473,7 @@ bool Dialog::think(std::shared_ptr<Game>& game) const
   // Available choices
   if (active_prompt->choices.size() > 1) {
     int32_t choice_x = 40;
-    int32_t choice_y = 100;
+    int32_t choice_y = GAME_HEIGHT - 200;
     for (int32_t i = 0; i < active_prompt->choices.size(); ++i) {
       auto& choice = active_prompt->choices[i];
       SDL_Rect dst;

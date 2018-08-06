@@ -30,6 +30,7 @@ namespace raptr
 Character::Character()
   : Entity()
 {
+  activate_tile = false;
   is_crouched = false;
   think_frame = 0;
   fast_fall_scale = 1.0;
@@ -290,6 +291,8 @@ bool Character::on_button_down(const ControllerState& state)
 {
   if (state.button == Button::a) {
     this->jump();
+  } else if (state.button == Button::b) {
+    this->activate_tile = true;
   } else if (state.button == Button::y) {
     this->turn_around();
   } else if (state.button == Button::x) {
@@ -773,6 +776,11 @@ void Character::think(std::shared_ptr<Game>& game)
 
   sprite->x = sprite_pos.x;
   sprite->y = sprite_pos.y;
+
+  if (activate_tile) {
+    game->interact_with_world(this);
+    activate_tile = false;
+  }
 
   if (is_scripted) {
     lua["think"](delta_us);

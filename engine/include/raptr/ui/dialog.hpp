@@ -13,6 +13,7 @@
 #include <raptr/common/filesystem.hpp>
 #include <raptr/input/controller.hpp>
 #include <raptr/ui/font.hpp>
+#include <toml.h>
 
 namespace toml
 {
@@ -78,6 +79,15 @@ public:
   */
   static std::shared_ptr<Dialog> from_toml(const FileInfo& path);
 
+  static std::shared_ptr<Dialog> from_toml(const FileInfo& game_root,
+                                           toml::ParseResult& result);
+
+  static std::shared_ptr<Dialog> from_easy_params(const FileInfo& game_root,
+                                                  const std::string& speaker,
+                                                  const std::string& expression,
+                                                  const std::string& name,
+                                                  const std::string& text);
+
   /*!
     Start the dialog
   */
@@ -86,7 +96,7 @@ public:
   /*!
     Start processing the dialog
   */
-  bool think(std::shared_ptr<Game>& game) const;
+  bool render(Renderer* renderer) const;
 
 private:
   /*!

@@ -46,6 +46,9 @@ struct CameraBasic
   int32_t min_y, max_y;
 };
 
+extern int32_t GAME_WIDTH;
+extern int32_t GAME_HEIGHT;
+
 class RenderInterface
 {
 public:
@@ -81,7 +84,7 @@ class RenderableTexture : public Renderable
 {
 public:
   //! The SDL texture that was generated, for examples see the Sprite class
-  std::shared_ptr<SDL_Texture> texture;
+  SDL_Texture* texture;
 
   //! The source rectangle within the texture to draw
   SDL_Rect src;
@@ -118,6 +121,28 @@ public:
   }
 
   bool render(Renderer* renderer, const CameraClip& camera) override;
+};
+
+class MemoryPool {
+public:
+  static constexpr size_t size = 1 * 1024 * 1024;
+
+  MemoryPool() : ptr(mem), off(0)
+  {
+  }
+
+  void* allocate(int mem_size)
+  {
+    assert((ptr + mem_size) <= (mem + sizeof mem) && "Pool exhausted!");
+    void* mem = ptr;
+    ptr += mem_size;
+    off += mem_size;
+    return mem;
+  }
+
+  char mem[size];
+  char* ptr;
+  size_t off;
 };
 
 /*!
@@ -231,7 +256,7 @@ public:
 
   //! The configuration that was used to create this Renderer
   std::shared_ptr<Config> config;
-  std::shared_ptr<Text> fps_text, num_obj_rendered_text;
+  std::shared_ptr<Text> fps_text, num_obj_rendered_text, mempool_text;
 
   //! How many frames have been rendered
   uint64_t total_frames_rendered;
@@ -262,8 +287,8 @@ public:
 
   //! A list of Renderable objects that will be rendered on the next run_frame()
   std::vector<std::shared_ptr<RenderInterface>> observing;
-  std::vector<std::shared_ptr<Renderable>> will_render_middle;
-  std::vector<std::shared_ptr<Renderable>> will_render_foreground;
+  std::vector<Renderable*> will_render_middle;
+  std::vector<Renderable*> will_render_foreground;
   std::vector<std::shared_ptr<Entity>> entities_followed;
   std::vector<std::shared_ptr<Parallax>> backgrounds;
   std::vector<std::shared_ptr<Parallax>> foregrounds;
@@ -278,5 +303,7 @@ public:
   int64_t frame_counter_time_start;
   int32_t frame_counter;
   float frame_fps;
+
+  MemoryPool texture_mem_pool;
 };
 } // namespace raptr

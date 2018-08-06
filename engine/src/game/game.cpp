@@ -684,7 +684,7 @@ bool Game::init_renderer()
     {
       while (!shutdown) {
         renderer->run_frame();
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
     });
   }
@@ -702,6 +702,16 @@ bool Game::init_sound()
   Mix_AllocateChannels(64);
 
   return true;
+}
+
+bool Game::interact_with_world(Entity* entity)
+{
+  auto tile = map->intersects(entity, "Interactive");
+  if (tile) {
+    map->activate_tile(entity, tile);
+    return true;
+  }
+  return false;
 }
 
 void Game::kill_character(const std::shared_ptr<Character>& character)
@@ -839,6 +849,9 @@ bool Game::process_engine_events()
         if (!use_threaded_renderer) {
           renderer->run_frame();
         }
+        clock::stop();
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        clock::start();
         this->kill_entity(entity);
       }
     }

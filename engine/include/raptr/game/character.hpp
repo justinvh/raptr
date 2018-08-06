@@ -177,6 +177,8 @@ public:
 
   bool is_crouched;
 
+  bool activate_tile;
+
   //! If true, then a multiplier is put against the acceleration downwards
   bool fast_fall;
 
