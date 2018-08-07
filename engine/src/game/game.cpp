@@ -252,24 +252,19 @@ void Game::handle_controller_event(const ControllerEvent& controller_event)
   int64_t delta_us = clock::ticks() - input_received_us;
   //logger->debug("Input took {}us to dispatch", delta_us);
 
+  bool is_start = ((e.type == SDL_CONTROLLERBUTTONDOWN &&
+                    e.cbutton.button == SDL_CONTROLLER_BUTTON_START) ||
+                   (e.type == SDL_KEYDOWN && 
+                    e.key.keysym.scancode == SDL_SCANCODE_RETURN));
+
   // Is this a new character?
-  if (e.type == SDL_CONTROLLERBUTTONDOWN &&
-    e.cbutton.button == SDL_CONTROLLER_BUTTON_START &&
-    controller_to_character.find(controller_id) == controller_to_character.end()) 
-  {
+  if (is_start && controller_to_character.find(controller_id) == controller_to_character.end()) {
     controllers_active.push_back(controllers[controller_id]);
     this->spawn_player(controller_id);
     return;
   }
 
-  if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP) {
-    controllers[controller_id]->process_event(e);
-  } else if (e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
-    auto& controller = controllers[controller_id];
-    if (!controller->is_gamepad()) {
-      controller->process_event(e);
-    }
-  }
+  controllers[controller_id]->process_event(e);
 
   delta_us = clock::ticks() - input_received_us;
   //logger->debug("Input took {}us to complete", delta_us);
@@ -437,7 +432,6 @@ std::shared_ptr<Character> Game::intersect_character(
   return found[0];
 }
 
-
 bool Game::init()
 {
   shutdown = false;
@@ -510,60 +504,7 @@ bool Game::init_controllers()
   }
 
   if (num_gamepads == 0) {
-
-    int32_t attempts = 60;
-    logger->error("No controllers connected. Waiting {}s for you to go find a controller. Hurry up.", attempts);
-    while (--attempts) {
-      SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
-      SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
-      for (int32_t i = 0; i < SDL_NumJoysticks(); ++i) {
-        if (SDL_IsGameController(i)) {
-          num_gamepads++;
-        }
-      }
-
-      if (num_gamepads) {
-        logger->info("Nice. Moving on.");
-        break;
-      }
-
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-
-      switch (attempts) {
-        case 55:
-          logger->error("Your controller has met a terrible fate, hasn't it? {}s left.", attempts);
-          break;
-        case 50:
-          logger->error("The world darkens as our player scrambles for a controller.");
-          break;
-        case 45:
-          logger->error("In the distance a soft cry is heard. That of our player's controller?");
-          break;
-        case 40:
-          logger->error(
-            "At this point, we fear for the player. Not for his health, but his disorganization.");
-          break;
-        case 30:
-          logger->error("Maybe it's not the player. Maybe they loaned their controller out. A true friend.");
-          break;
-        case 20:
-          logger->error("Nonsense. They would have exited by now.");
-          break;
-        case 10:
-          logger->error("The world darkens even more. There isn't much hope.");
-          break;
-        case 5:
-          logger->error("I hope you tried. I really hope you did.");
-          break;
-      }
-    }
-
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-  }
-
-  if (num_gamepads == 0) {
-    logger->error("Well, that's the most I can do. No controllers detected.");
-    return false;
+    logger->warn("There were no controllers detected...");
   }
 
   using std::placeholders::_1;
@@ -572,6 +513,9 @@ bool Game::init_controllers()
     const auto controller = Controller::open(game_path, i);
     controllers[controller->id()] = controller;
   }
+
+  // Register a keyboard controller as wlel
+  controllers[-1] = Controller::keyboard();
 
   return !controllers.empty();
 }
@@ -763,18 +707,21 @@ bool Game::poll_events()
     return false;
   }
 
+  bool is_controller = (
+    e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN ||
+    e.type == SDL_CONTROLLERBUTTONUP || e.type == SDL_JOYAXISMOTION ||
+    e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP
+  );
 
-  if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type ==
-    SDL_CONTROLLERBUTTONUP ||
-    e.type == SDL_JOYAXISMOTION || e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP) {
+  if (is_controller) {
     const int32_t controller_id = e.jdevice.which;
     auto controller_event = new ControllerEvent();
     controller_event->controller_id = controller_id;
     controller_event->sdl_event = e;
     this->add_event(controller_event);
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F1) {
+  } else if (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_F1) {
     renderer->toggle_fullscreen();
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F2) {
+  } else if (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_F2) {
     auto controller = controllers.begin();
     ++controller;
     auto x = characters[0]->pos_.x;
@@ -784,26 +731,31 @@ bool Game::poll_events()
       character->pos_.x = x;
       renderer->camera_follow(character);
     });
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F3) {
+  } else if (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_F3) {
     renderer->scale(static_cast<float>(renderer->current_ratio / 2.0f));
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F4) {
+  } else if (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_F4) {
     renderer->scale(1.0f);
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F5) {
+  } else if (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_F5) {
     clock::toggle();
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F6) {
+  } else if (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_F6) {
     const auto us = static_cast<int64_t>(1.0 / renderer->fps * 1e6);
     logger->debug("Stepping by {}ms", us / 1e3);
     clock::start();
     std::this_thread::sleep_for(std::chrono::microseconds(us));
     clock::stop();
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F7) {
+  } else if (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_F7) {
     this->kill_character(characters[0]);
-  } else if (e.type == SDL_KEYUP && e.key.keysym.scancode == SDL_SCANCODE_F8) {
+  } else if (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_F8) {
     if (this->default_show_collision_frames) {
       this->hide_collision_frames();
     } else {
       this->show_collision_frames();
     }
+  } else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
+    auto controller_event = new ControllerEvent();
+    controller_event->controller_id = -1;
+    controller_event->sdl_event = e;
+    this->add_event(controller_event);
   } else if (e.type == SDL_WINDOWEVENT) {
     if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
       this->shutdown = true;

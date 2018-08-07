@@ -15,6 +15,7 @@ static int32_t controller_id = 0;
 };
 
 namespace raptr {
+
 int32_t Controller::on_button_down(const ControllerCallback& callback, int32_t priority)
 {
   ControllerSaved saved = {++controller_id, priority, callback};
@@ -162,9 +163,109 @@ ControllerState state_from_joystick_event(ControllerState& state, SDL_GameContro
   return state;
 }
 
+void Controller::dispatch_from_keyboard(const SDL_Event& e)
+{
+  auto key = e.key.keysym.scancode;
+
+  // The key states for dispatch
+  auto is_down = e.type == SDL_KEYDOWN;
+  auto is_up = e.type == SDL_KEYUP;
+  auto key_released = sdl.keys[key] && is_up;
+  auto key_pressed = !sdl.keys[key] && is_down;
+  auto key_pressing = sdl.keys[key] && is_down;
+  auto button_pressed = false;
+
+  sdl.keys[key] = is_down;
+  state.x = 0.0;
+  state.y = 0.0;
+  state.angle = 0.0;
+  state.button = Button::not_set;
+  state.magnitude = 0.0;
+
+  if (sdl.keys[SDL_SCANCODE_W]) {
+    state.y = -1.0;
+    state.button = Button::a;
+    button_pressed = true;
+  }
+
+  if (sdl.keys[SDL_SCANCODE_F]) {
+    state.button = Button::b;
+    button_pressed = true;
+  }
+
+  if (sdl.keys[SDL_SCANCODE_S]) {
+    state.y = 1.0;
+  }
+
+  if (sdl.keys[SDL_SCANCODE_A]) {
+    state.x = -1.0;
+  }
+
+  if (sdl.keys[SDL_SCANCODE_D]) {
+    state.x = 1.0;
+  }
+
+  if (sdl.keys[SDL_SCANCODE_E]) {
+    button_pressed = true;
+    state.button = Button::y;
+    state.x = 1.0;
+  }
+
+  if (sdl.keys[SDL_SCANCODE_Q]) {
+    button_pressed = true;
+    state.button = Button::y;
+    state.x = -1.0;
+  }
+
+  if (sdl.keys[SDL_SCANCODE_SPACE]) {
+    button_pressed = true;
+    state.button = Button::x;
+  }
+
+  float magnitude = sqrt(state.x * state.x + state.y * state.y);
+  float angle = static_cast<float>(atan2(state.y, state.x) * 180.0f / M_PI);
+  if (angle < 0) {
+    angle += 360.0f;
+  }
+
+  state.magnitude = magnitude;
+  state.angle = angle;
+  state.joystick = -1;
+
+  // A button has been pressed or released
+  if (button_pressed) {
+    if (key_pressed) {
+      for (auto& callback : button_down_callbacks) {
+        if (!callback.callback(state)) {
+          break;
+        }
+      }
+    } else {
+      for (auto& callback : button_up_callbacks) {
+        if (!callback.callback(state)) {
+          break;
+        }
+      }
+    }
+
+  // Everything else is a left joystick event
+  } else {
+    for (auto& callback : left_joy_callbacks) {
+      if (!callback.callback(state)) {
+        break;
+      }
+    }
+  }
+}
+
 void Controller::process_event(const SDL_Event& e)
 {
+  auto type = e.type;
   switch (e.type) {
+    case SDL_KEYDOWN:
+    case SDL_KEYUP:
+      this->dispatch_from_keyboard(e);
+      break;
     case SDL_JOYBUTTONDOWN:
       state = state_from_button_event(state, sdl.joystick, e);
       for (auto& callback : button_down_callbacks) {
@@ -284,6 +385,7 @@ std::shared_ptr<Controller> Controller::open(const FileInfo& game_root, int cont
     SDL_free(mapping);
 
     auto controller = std::make_shared<Controller>();
+    controller->is_keyboard = false;
     controller->sdl.controller = sdl_controller;
     controller->sdl.joystick = SDL_GameControllerGetJoystick(sdl_controller);
     controller->sdl.controller_id = SDL_JoystickGetDeviceInstanceID(controller_id);
@@ -296,6 +398,7 @@ std::shared_ptr<Controller> Controller::open(const FileInfo& game_root, int cont
     return controller;
   }
   auto controller = std::make_shared<Controller>();
+  controller->is_keyboard = false;
   controller->sdl.controller = nullptr;
   controller->sdl.joystick = SDL_JoystickOpen(controller_id);
   controller->sdl.controller_id = SDL_JoystickGetDeviceInstanceID(controller_id);
@@ -303,6 +406,17 @@ std::shared_ptr<Controller> Controller::open(const FileInfo& game_root, int cont
   logger->info("Registered {} as a joystick with device id {}",
                SDL_JoystickName(controller->sdl.joystick),
                controller->sdl.controller_id);
+  return controller;
+}
+
+std::shared_ptr<Controller> Controller::keyboard()
+{
+  auto controller = std::make_shared<Controller>();
+  for (size_t i = 0; i < SDL_NUM_SCANCODES; ++i) {
+    controller->sdl.keys[i] = false;
+  }
+  controller->is_keyboard = true;
+  controller->sdl.controller_id = -1;
   return controller;
 }
 
@@ -319,6 +433,5 @@ void Controller::setup_lua_context(sol::state& state)
 {
   state.new_usertype<Controller>("Controller");
 }
-
 
 } // namespace raptr

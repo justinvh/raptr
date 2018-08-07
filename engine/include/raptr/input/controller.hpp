@@ -81,6 +81,7 @@ struct ControllerSaved
 class Controller : public std::enable_shared_from_this<Controller>
 {
 public:
+  void dispatch_from_keyboard(const SDL_Event& e);
   /*!
     Add a callback when a button is pressed down
     /param callback - The function to call when a button down event occurs
@@ -114,6 +115,11 @@ public:
     /return An instance of the Controller or an empty container if failed
   */
   static std::shared_ptr<Controller> open(const FileInfo& game_root, int32_t controller_id);
+
+  /*!
+   Emulate a controller with a keyboard
+  */
+  static std::shared_ptr<Controller> keyboard();
 
   /*!
     A convenience method that processes an SDL Event to dispatch controller-specific
@@ -164,8 +170,11 @@ private:
   {
     ~SDLInternal();
     int32_t controller_id;
+    bool keys[SDL_NUM_SCANCODES];
     SDL_GameController* controller;
     SDL_Joystick* joystick;
   } sdl;
+
+  bool is_keyboard;
 };
 } // namespace raptr
