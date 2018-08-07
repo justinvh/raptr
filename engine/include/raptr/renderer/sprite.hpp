@@ -129,9 +129,9 @@ public:
     /param path - An absolute path to a Aseprite JSON file
     /return An instance of the Sprite if it can be constructed
   */
-  static std::shared_ptr<Sprite> from_json(const FileInfo& path);
+  static std::shared_ptr<Sprite> from_json(const FileInfo& path, bool reload = false);
 
-  std::shared_ptr<Sprite> clone();
+  std::shared_ptr<Sprite> clone(bool reload = false);
 
   /*!
     Render this sprite to a provided renderer

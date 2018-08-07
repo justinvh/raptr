@@ -247,13 +247,12 @@ void Controller::dispatch_from_keyboard(const SDL_Event& e)
         }
       }
     }
+  }
 
   // Everything else is a left joystick event
-  } else {
-    for (auto& callback : left_joy_callbacks) {
-      if (!callback.callback(state)) {
-        break;
-      }
+  for (auto& callback : left_joy_callbacks) {
+    if (!callback.callback(state)) {
+      break;
     }
   }
 }

@@ -28,10 +28,10 @@ class Character : public Entity
 public:
   Character();
   ~Character() = default;
-  Character(const Character&) = default;
-  Character(Character&&) = default;
-  Character& operator=(const Character&) = default;
-  Character& operator=(Character&&) = default;
+  Character(const Character&) = delete;
+  Character(Character&&) = delete;
+  Character& operator=(const Character&) = delete;
+  Character& operator=(Character&&) = delete;
 
 public:
   typedef CharacterSpawnEvent SpawnEvent;
@@ -64,6 +64,7 @@ public:
     /return An instance of the character if found
   */
   static std::shared_ptr<Character> from_toml(const FileInfo& path);
+
   /*!
     Crouch, reducing friction
    */

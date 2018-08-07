@@ -103,19 +103,18 @@ bool Animation::register_sound_effect(int32_t frame, FileInfo wav, bool do_loop)
   return true;
 }
 
-std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
+std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path, bool reload)
 {
-  logger->info("Loading Sprite from {}", path.file_relative);
 
-  /*
-  auto in_cache = SPRITE_CACHE.find(path.file_relative);
-  if (in_cache != SPRITE_CACHE.end()) {
-    logger->info("Sprite is in cache!");
-    std::shared_ptr<Sprite> cached(new Sprite(*in_cache->second));
-    return cached;
+  if (!reload) {
+    auto in_cache = SPRITE_CACHE.find(path.file_relative);
+    if (in_cache != SPRITE_CACHE.end()) {
+      logger->info("Loading {} from cache", path.file_relative);
+      return in_cache->second->clone(false);
+    }
   }
-  */
 
+  logger->info("Loading a new sprite from {}", path.file_relative);
   auto sprite = std::make_shared<Sprite>();
   auto input = path.open();
 
@@ -264,10 +263,9 @@ std::shared_ptr<Sprite> Sprite::from_json(const FileInfo& path)
   sprite->render_in_foreground = false;
   sprite->set_animation("Idle");
 
-  //std::shared_ptr<Sprite> cache(new Sprite(*sprite));
-  //SPRITE_CACHE[path.file_relative] = cache;
+  SPRITE_CACHE[path.file_relative] = sprite;
 
-  return sprite;
+  return sprite->clone(false);
 }
 
 void Sprite::render(Renderer* renderer)
@@ -351,9 +349,71 @@ bool Sprite::set_animation(const std::string& name, bool hold_last_frame)
   return true;
 }
 
-std::shared_ptr<Sprite> Sprite::clone()
+std::shared_ptr<Sprite> Sprite::clone(bool reload)
 {
-  return Sprite::from_json(path);
+  if (reload) {
+    return Sprite::from_json(path, reload);
+  }
+
+  auto sprite = std::make_shared<Sprite>();
+
+  sprite->width = width;
+  sprite->height = height;
+  sprite->speed = speed;
+  sprite->surface = surface;
+  sprite->animations = animations;
+  sprite->current_animation = nullptr;
+
+  Animation* default_collision = nullptr;
+  for (auto& anim : sprite->animations) {
+    const auto& tag_name = anim.first;
+    if (tag_name == "Collision-Default") {
+      default_collision = &sprite->animations[tag_name];
+      break;
+    }
+  }
+
+  if (default_collision) {
+    for (auto& anim : sprite->animations) {
+      const auto& tag_name = anim.first;
+      const auto find_it = tag_name.find("Collision-");
+      if (find_it != std::string::npos) {
+        continue;
+      }
+      sprite->collision_frame_lut[tag_name] = default_collision;
+    }
+  }
+
+  for (auto& anim : sprite->animations) {
+    const auto& tag_name = anim.first;
+    const auto find_it = tag_name.find("Collision-");
+    if (find_it == std::string::npos) {
+      continue;
+    }
+    auto ref_name = tag_name.substr(tag_name.find('-') + 1);
+    if (ref_name == "Default") {
+      continue;
+    }
+    auto found = sprite->animations.find(ref_name);
+    if (found == sprite->animations.end()) {
+      return nullptr;
+    }
+    auto found_animation = &sprite->animations[tag_name];
+    sprite->collision_frame_lut[ref_name] = found_animation;
+  }
+
+  sprite->last_frame_tick = clock::ticks();
+  sprite->scale = scale;
+  sprite->flip_x = flip_x;
+  sprite->flip_y = flip_y;
+  sprite->rotation_deg = rotation_deg;
+  sprite->absolute_positioning = absolute_positioning;
+  sprite->blend_mode = blend_mode;
+  sprite->path = path;
+  sprite->render_in_foreground = render_in_foreground;
+  sprite->set_animation(current_animation->name);
+
+  return sprite;
 }
 
 bool Sprite::register_sound_effect(const std::string& name, int32_t frame, const FileInfo& wav, bool loop)
