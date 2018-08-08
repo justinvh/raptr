@@ -42,6 +42,7 @@ struct LayerTile
   std::string type;
   std::shared_ptr<Sprite> sprite;
   std::shared_ptr<Dialog> dialog;
+  std::string script;
   SDL_Rect dst;
   bool flip_x;
   bool flip_y;
@@ -68,7 +69,7 @@ public:
   void render(Renderer* renderer) override;
   void render_layer(Renderer* renderer, const Layer& layer);
   void think(std::shared_ptr<Game>& game);
-  void activate_tile(Entity* activator, LayerTile* tile);
+  void activate_tile(std::shared_ptr<Game>& game, Entity* activator, LayerTile* tile);
   void activate_dialog(Entity* activator, LayerTile* tile);
   LayerTile* intersects(const Entity* entity, const std::string& tile_type = "Collidable");
   LayerTile* intersects(const Entity* entity, const Rect& bbox, const std::string& tile_type = "Collidable");

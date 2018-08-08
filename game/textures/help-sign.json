@@ -1,69 +1,79 @@
 { "frames": [
    {
     "filename": "sign 0.aseprite",
-    "frame": { "x": 0, "y": 0, "w": 40, "h": 31 },
+    "frame": { "x": 0, "y": 0, "w": 40, "h": 48 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 31 },
-    "sourceSize": { "w": 40, "h": 31 },
-    "duration": 100
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 48 },
+    "sourceSize": { "w": 40, "h": 48 },
+    "duration": 500
    },
    {
     "filename": "sign 1.aseprite",
-    "frame": { "x": 40, "y": 0, "w": 40, "h": 31 },
+    "frame": { "x": 40, "y": 0, "w": 40, "h": 48 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 31 },
-    "sourceSize": { "w": 40, "h": 31 },
-    "duration": 300
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 48 },
+    "sourceSize": { "w": 40, "h": 48 },
+    "duration": 500
    },
    {
     "filename": "sign 2.aseprite",
-    "frame": { "x": 80, "y": 0, "w": 40, "h": 31 },
+    "frame": { "x": 80, "y": 0, "w": 40, "h": 48 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 31 },
-    "sourceSize": { "w": 40, "h": 31 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 48 },
+    "sourceSize": { "w": 40, "h": 48 },
     "duration": 300
    },
    {
     "filename": "sign 3.aseprite",
-    "frame": { "x": 0, "y": 31, "w": 40, "h": 31 },
+    "frame": { "x": 120, "y": 0, "w": 40, "h": 48 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 31 },
-    "sourceSize": { "w": 40, "h": 31 },
-    "duration": 100
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 48 },
+    "sourceSize": { "w": 40, "h": 48 },
+    "duration": 300
    },
    {
     "filename": "sign 4.aseprite",
-    "frame": { "x": 40, "y": 31, "w": 40, "h": 31 },
+    "frame": { "x": 160, "y": 0, "w": 40, "h": 48 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 31 },
-    "sourceSize": { "w": 40, "h": 31 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 48 },
+    "sourceSize": { "w": 40, "h": 48 },
     "duration": 100
    },
    {
     "filename": "sign 5.aseprite",
-    "frame": { "x": 80, "y": 31, "w": 40, "h": 31 },
+    "frame": { "x": 200, "y": 0, "w": 40, "h": 48 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 31 },
-    "sourceSize": { "w": 40, "h": 31 },
-    "duration": 1000
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 48 },
+    "sourceSize": { "w": 40, "h": 48 },
+    "duration": 800
+   },
+   {
+    "filename": "sign 6.aseprite",
+    "frame": { "x": 240, "y": 0, "w": 40, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 48 },
+    "sourceSize": { "w": 40, "h": 48 },
+    "duration": 800
    }
  ],
  "meta": {
   "app": "http://www.aseprite.org/",
   "version": "1.2.9-x64",
-  "image": "C:\\Users\\justi\\OneDrive\\Documents\\Visual Studio 2017\\Projects\\raptr\\game\\textures\\jungle\\help-sign.png",
+  "image": "C:\\Users\\justi\\projects\\raptr\\game\\textures\\help-sign.png",
   "format": "RGBA8888",
-  "size": { "w": 128, "h": 64 },
+  "size": { "w": 280, "h": 48 },
   "scale": "1",
   "frameTags": [
-   { "name": "Idle", "from": 0, "to": 0, "direction": "forward" },
-   { "name": "Happy", "from": 1, "to": 5, "direction": "forward" }
+   { "name": "Idle", "from": 0, "to": 1, "direction": "forward" },
+   { "name": "Happy", "from": 2, "to": 5, "direction": "forward" },
+   { "name": "Evil", "from": 6, "to": 6, "direction": "forward" }
   ],
   "layers": [
    { "name": "Layer", "opacity": 255, "blendMode": "normal" }

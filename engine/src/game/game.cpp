@@ -264,7 +264,19 @@ void Game::handle_controller_event(const ControllerEvent& controller_event)
     return;
   }
 
-  controllers[controller_id]->process_event(e);
+  auto& c = controllers[controller_id];
+  bool is_gamepad = c->is_gamepad();
+
+  if ((e.type == SDL_CONTROLLERAXISMOTION ||
+       e.type == SDL_CONTROLLERBUTTONDOWN ||
+       e.type == SDL_CONTROLLERBUTTONUP))
+  {
+    if (is_gamepad) {
+      c->process_event(e);
+    }
+  } else if (!is_gamepad) {
+    c->process_event(e);
+  }
 
   delta_us = clock::ticks() - input_received_us;
   //logger->debug("Input took {}us to complete", delta_us);
@@ -603,6 +615,7 @@ bool Game::init_lua()
 
   auto result = lua.script("print('Ring-ding-ding-ding-dingeringeding!')", handler);
   if (result.valid()) {
+    this->setup_lua_context(lua);
     logger->info("Good job, Lua!");
     return true;
   }
@@ -652,7 +665,7 @@ bool Game::interact_with_world(Entity* entity)
 {
   auto tile = map->intersects(entity, "Interactive");
   if (tile) {
-    map->activate_tile(entity, tile);
+    map->activate_tile(this->shared_from_this(), entity, tile);
     return true;
   }
   return false;
@@ -707,13 +720,19 @@ bool Game::poll_events()
     return false;
   }
 
-  bool is_controller = (
-    e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN ||
-    e.type == SDL_CONTROLLERBUTTONUP || e.type == SDL_JOYAXISMOTION ||
-    e.type == SDL_JOYBUTTONDOWN || e.type == SDL_JOYBUTTONUP
+  bool is_joystick = (
+    e.type == SDL_JOYAXISMOTION ||
+    e.type == SDL_JOYBUTTONDOWN ||
+    e.type == SDL_JOYBUTTONUP
   );
 
-  if (is_controller) {
+  bool is_controller = (
+    e.type == SDL_CONTROLLERAXISMOTION || 
+    e.type == SDL_CONTROLLERBUTTONDOWN || 
+    e.type == SDL_CONTROLLERBUTTONUP
+   );
+    
+  if (is_controller || is_joystick) {
     const int32_t controller_id = e.jdevice.which;
     auto controller_event = new ControllerEvent();
     controller_event->controller_id = controller_id;
@@ -801,9 +820,11 @@ bool Game::process_engine_events()
         if (!use_threaded_renderer) {
           renderer->run_frame();
         }
+        /*
         clock::stop();
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
         clock::start();
+        */
         this->kill_entity(entity);
       }
     }

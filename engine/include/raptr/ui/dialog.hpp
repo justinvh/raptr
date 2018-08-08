@@ -30,7 +30,7 @@ class Renderer;
 struct DialogCharacter
 {
   std::string name;
-  std::string font_name;
+  std::string font_family;
   int32_t font_size;
 };
 

@@ -1,14 +1,14 @@
 [[dialog]]
 character = "raptor"
-font = "default"
-size = 15
+font_family = "default"
+font_size = 15
 
 [[dialog]]
 character = "help-sign"
-font = "default"
-size = 15
+font_family = "default"
+font_size = 20
 
 [[dialog]]
 character = "raptor-lady"
-font = "default"
-size = 15
+font_family = "default"
+font_size = 15

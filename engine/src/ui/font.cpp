@@ -56,9 +56,9 @@ bool load_registry(const FileInfo& game_root)
     std::string rel_path = v.get<std::string>("path");
     FileInfo full_path = game_root.from_root(fs::path("fonts") / rel_path);
     std::string full_path_str = full_path.file_path.string();
-    logger->info("Loading 8-24px {} from fonts/{}", name, rel_path);
+    logger->info("Loading 8-64px {} from fonts/{}", name, rel_path);
 
-    for (int i = 8; i <= 24; ++i) {
+    for (int i = 8; i <= 64; ++i) {
       // Load the font
       auto ttf = TTF_OpenFont(full_path_str.c_str(), i);
       if (!ttf) {
@@ -125,10 +125,11 @@ std::shared_ptr<Text> Text::create(const FileInfo& game_root,
   }
 
   auto text_obj = std::make_shared<Text>();
-  const auto renderable = TTF_RenderText_Solid(
+  const auto renderable = TTF_RenderText_Blended_Wrapped(
     ttf->second.get(),
     text.c_str(),
-    fg
+    fg,
+    max_width
   );
 
   text_obj->surface.reset(renderable);

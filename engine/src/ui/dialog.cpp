@@ -53,9 +53,9 @@ bool load_dialog_cache(const FileInfo& game_root)
   const toml::Array& registry_values = v.find("dialog")->as<toml::Array>();
   for (const toml::Value& v : registry_values) {
     std::string name = v.get<std::string>("character");
-    std::string font_name = v.get<std::string>("font");
-    int32_t font_size = v.get<int32_t>("size");
-    DialogCharacter dc = {name, font_name, font_size};
+    std::string font_family = v.get<std::string>("font_family");
+    int32_t font_size = v.get<int32_t>("font_size");
+    DialogCharacter dc = {name, font_family, font_size};
     CHARACTER_DIALOG_CACHE[name] = dc;
     logger->debug("Registered {} dialog defaults", name);
   }
@@ -76,6 +76,7 @@ std::shared_ptr<Dialog> Dialog::from_easy_params(
      << "name = \"" << name << "\"\n"
      << "text = \"" << text << "\"\n";
 
+  load_dialog_cache(game_root);
   toml::ParseResult pr = toml::parse(is);
   return Dialog::from_toml(game_root, pr);
 }
@@ -172,7 +173,7 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     "key",
     "value",
     "button",
-    "font_name",
+    "font_family",
     "font_size"
   };
 
@@ -207,12 +208,13 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     return false;
   }
 
-  prompt->speaker->scale = 1.5;
-  prompt->speaker->x = 15;
-  prompt->speaker->y = GAME_HEIGHT - 25;
-  prompt->speaker->flip_x = true;
+  auto& s = prompt->speaker;
+  s->scale = 2.0;
+  s->x = 40;
+  s->y = GAME_HEIGHT - s->height * s->scale - 42;
+  s->flip_x = true;
+  s->absolute_positioning = true;
   prompt->section = section_name;
-  prompt->speaker->absolute_positioning = true;
 
   std::string animation_name = dict["expression"]->as<std::string>();
   if (!prompt->speaker->set_animation(animation_name)) {
@@ -275,7 +277,7 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
   if (has_defaults) {
     char_defaults = char_map->second;
   } else {
-    char_defaults.font_name = "default";
+    char_defaults.font_family = "default";
     char_defaults.font_size = 15;
   }
 
@@ -284,18 +286,18 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     font_size = dict["font_size"]->as<int32_t>();
   }
 
-  std::string font_name = char_defaults.font_name;
-  if (dict.find("font_name") != dict.end()) {
-    font_name = dict["font_name"]->as<std::string>();
+  std::string font_family = char_defaults.font_family;
+  if (dict.find("font_family") != dict.end()) {
+    font_family = dict["font_family"]->as<std::string>();
   }
 
   SDL_Color text_color = {255, 255, 255, 255};
   SDL_Color hover_color = {0, 255, 0, 255};
   SDL_Color bg_color = {0, 0, 0, 255};
-  int32_t max_width = 400;
+  int32_t max_width = 550;
 
   auto game_root = toml_path.from_root("");
-  prompt->r_text = Text::create(game_root, font_name,
+  prompt->r_text = Text::create(game_root, font_family,
                                 prompt->text, font_size, text_color,
                                 max_width);
 
@@ -305,7 +307,7 @@ bool Dialog::parse_toml(const toml::Value* v, DialogPrompt* prompt, const std::v
     return false;
   }
 
-  prompt->r_name = Text::create(game_root, font_name,
+  prompt->r_name = Text::create(game_root, font_family,
                                 prompt->name, font_size, text_color,
                                 max_width);
 
@@ -451,8 +453,8 @@ bool Dialog::render(Renderer* renderer) const
     auto& bbox = text->bbox;
     dst.w = bbox.w;
     dst.h = bbox.h;
-    dst.x = static_cast<int32_t>(speaker->x + current_frame.w + 16);
-    dst.y = GAME_HEIGHT - 32;
+    dst.x = static_cast<int32_t>(speaker->x + current_frame.w * speaker->scale + 10);
+    dst.y = GAME_HEIGHT - text->surface->h - 35;
     renderer->add_texture(texture, bbox, dst, 0.0, false, false, true);
   }
 
@@ -466,14 +468,14 @@ bool Dialog::render(Renderer* renderer) const
     dst.w = bbox.w;
     dst.h = bbox.h;
     dst.x = 32;
-    dst.y = 8;
+    dst.y = GAME_HEIGHT - text->surface->h + 2;
     renderer->add_texture(texture, bbox, dst, 0.0, false, false, true);
   }
 
   // Available choices
   if (active_prompt->choices.size() > 1) {
     int32_t choice_x = 40;
-    int32_t choice_y = GAME_HEIGHT - 200;
+    int32_t choice_y = 300;
     for (int32_t i = 0; i < active_prompt->choices.size(); ++i) {
       auto& choice = active_prompt->choices[i];
       SDL_Rect dst;
@@ -486,7 +488,7 @@ bool Dialog::render(Renderer* renderer) const
       dst.x = choice_x;
       dst.y = choice_y;
       renderer->add_texture(texture, bbox, dst, 0.0, false, false, true);
-      choice_y += 24;
+      choice_y -= 24;
     }
   }
 

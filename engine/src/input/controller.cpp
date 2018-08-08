@@ -207,19 +207,21 @@ void Controller::dispatch_from_keyboard(const SDL_Event& e)
 
   if (sdl.keys[SDL_SCANCODE_E]) {
     button_pressed = true;
-    state.button = Button::y;
+    state.button = Button::x;
     state.x = 1.0;
   }
 
   if (sdl.keys[SDL_SCANCODE_Q]) {
     button_pressed = true;
-    state.button = Button::y;
+    state.button = Button::x;
     state.x = -1.0;
   }
 
   if (sdl.keys[SDL_SCANCODE_SPACE]) {
     button_pressed = true;
-    state.button = Button::x;
+    state.button = Button::y;
+    state.x = 0;
+    state.y = 0;
   }
 
   float magnitude = sqrt(state.x * state.x + state.y * state.y);

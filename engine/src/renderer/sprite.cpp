@@ -412,6 +412,7 @@ std::shared_ptr<Sprite> Sprite::clone(bool reload)
   sprite->path = path;
   sprite->render_in_foreground = render_in_foreground;
   sprite->set_animation(current_animation->name);
+  sprite->texture = texture;
 
   return sprite;
 }

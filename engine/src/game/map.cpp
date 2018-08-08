@@ -18,9 +18,6 @@ const uint32_t FLIPPED_DIAGONALLY_FLAG = 1 << 29;
 const uint32_t CLEAR_FLIP = ~(FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG);
 };
 
-
-
-
 namespace raptr
 {
 
@@ -116,7 +113,12 @@ bool load_tileset(const picojson::value& tileset,
 
   *source_input >> source_doc;
   auto source_tiles = source_doc.get("tiles").get<picojson::object>();
-  auto tile_properties = source_doc.get("tileproperties").get<picojson::object>();
+  picojson::object tile_properties;
+
+  if (source_doc.contains("tileproperties")) {
+    tile_properties = source_doc.get("tileproperties").get<picojson::object>();
+  }
+
   for (auto& source_tile : source_tiles) {
     auto key = std::stoi(source_tile.first);
     auto source_tile_params = source_tile.second;
@@ -245,6 +247,43 @@ bool load_dialog(const picojson::value& layer,
   return true;
 }
 
+bool load_lua_script(const picojson::value& layer,
+                     const picojson::value& object, 
+                     const FileInfo& folder,
+                     const std::shared_ptr<Map>& map)
+{
+  auto properties = object.get("properties");
+  auto script = S("script", properties);
+  auto sprite_path = folder.from_root(S("sprite", properties));
+
+  auto sprite = Sprite::from_json(sprite_path);
+  if (!sprite) {
+    return false;
+  }
+
+  LayerTile obj;
+  obj.script = script;
+  obj.sprite = sprite;
+  obj.type = "Interactive";
+
+  auto width = U("width", object);
+  auto height = U("height", object);
+  auto x = U("x", object);
+  auto y = U("y", object);
+
+  obj.dst.x = x;
+  obj.dst.y = (map->height * map->tile_height - y);
+  obj.sprite->x = obj.dst.x;
+  obj.sprite->y = obj.dst.y;
+  obj.dst.w = width;
+  obj.dst.h = height;
+  obj.flip_x = false;
+  obj.flip_y = false;
+
+  map->objects.push_back(std::move(obj));
+  return true;
+}
+
 bool load_object(const picojson::value& layer, const picojson::value& object, const FileInfo& folder,
                  const std::shared_ptr<Map>& map)
 {
@@ -253,6 +292,8 @@ bool load_object(const picojson::value& layer, const picojson::value& object, co
     return load_parallax(object, folder, map);
   } else if (type == "Dialog") {
     return load_dialog(layer, object, folder, map);
+  } else if (type == "LuaScript") {
+    return load_lua_script(layer, object, folder, map);
   }
 
   logger->warn("Unrecognized object type in map: {}", type);
@@ -623,10 +664,12 @@ void Map::activate_dialog(Entity* activator, LayerTile* tile)
   active_dialog->attach_controller(character->controller);
 }
 
-void Map::activate_tile(Entity* activator, LayerTile* tile)
+void Map::activate_tile(std::shared_ptr<Game>& game, Entity* activator, LayerTile* tile)
 {
   if (tile->dialog) {
     this->activate_dialog(activator, tile);
+  } else if (!tile->script.empty()) {
+    game->lua.safe_script(tile->script);
   }
 }
 
