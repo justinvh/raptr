@@ -5,7 +5,7 @@ set(TEST_SOURCES simple.cpp)
 add_executable(raptr-tests ${TEST_SOURCES})
 set_property(TARGET raptr-tests PROPERTY PROJECT_LABEL "Engine Tests")
 set_target_properties(raptr-tests PROPERTIES FOLDER "Support")
-target_link_libraries(raptr-tests RaptrDependencies Catch2::Catch raptr-engine)
+target_link_libraries(raptr-tests RaptrDependencies Catch2::Catch2 raptr-engine)
 
 ParseAndAddCatchTests(raptr-tests RAPTR_TESTS)
 
