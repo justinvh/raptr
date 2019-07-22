@@ -6,7 +6,7 @@
 #pragma once
 
 #include <memory>
-#include <sol.hpp>
+#include <sol/sol.hpp>
 
 #include <raptr/game/entity.hpp>
 #include <raptr/common/filesystem.hpp>

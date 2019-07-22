@@ -9,7 +9,7 @@
 #include <string>
 #include <mutex>
 #include <sstream>
-#include <sol.hpp>
+#include <sol/sol.hpp>
 #include <thread>
 
 namespace raptr

@@ -84,57 +84,59 @@ void Game::setup_lua_context(sol::state& state)
   Trigger::setup_lua_context(state);
   Renderer::setup_lua_context(state);
 
-  state.new_usertype<Game>("Game",
-    "controllers", &Game::controllers_active,
-    "get_actor", &Game::get_entity<Actor>,
-    "get_entity", &Game::get_entity<Entity>,
-    "get_character", &Game::get_entity<Character>,
-    "remove_entity_by_key", &Game::remove_entity_by_key,
-    "remove_entity", &Game::remove_entity,
-    "show_collision_frames", &Game::show_collision_frames,
-    "hide_collision_frames", &Game::hide_collision_frames,
-    "set_gravity", &Game::set_gravity,
-    "load_map", &Game::load_map,
-    "kill", &Game::kill_entity,
-    "reload_map", [&](Game& game)
-    {
-      if (!game.map) {
-        logger->error("There is no map to reload");
-        return;
-      }
-      game.load_map(game.map->name);
-    },
-    "play_sound", [&](Game& game, std::string path) -> bool
-    {
-      const auto sound_path = game.game_path.from_root(path);
-      if (!fs::exists(sound_path.file_path)) {
-        logger->warn("Sound {} does not exist", sound_path);
-        return false;
-      }
 
-      play_sound(sound_path);
-      return true;
-    },
+  sol::usertype<Game> gtable = state.new_usertype<Game>("Game");
 
-    "spawn_trigger", [&](Game& game,
-                         sol::table trigger_params, 
-                         sol::protected_function lua_on_init, 
-                         sol::protected_function lua_on_enter, 
-                         sol::protected_function lua_on_exit) -> void
-    {
-      game.lua_trigger_wrapper(state, trigger_params, lua_on_init, lua_on_enter, lua_on_exit);
-    },
+  gtable["controllers"] = &Game::controllers_active;
+  gtable["get_actor"] = &Game::get_entity<Actor>;
+  gtable["get_entity"] = &Game::get_entity<Entity>;
+  gtable["get_character"] = &Game::get_entity<Character>;
+  gtable["remove_entity_by_key"] = &Game::remove_entity_by_key;
+  gtable["remove_entity"] = &Game::remove_entity;
+  gtable["show_collision_frames"] = &Game::show_collision_frames;
+  gtable["hide_collision_frames"] = &Game::hide_collision_frames;
+  gtable["set_gravity"] = &Game::set_gravity;
+  gtable["kill"] = &Game::kill_entity;
+  gtable["reload_map"] = [&](Game& game) 
+  {
+	  if (!game.map) {
+		  logger->error("There is no map to reload");
+		  return;
+	  }
+	  game.load_map(game.map->name);
+  };
+  
+  gtable["play_sound"] = [&](Game& game, std::string path) -> bool
+  {
+	  const auto sound_path = game.game_path.from_root(path);
+	  if (!fs::exists(sound_path.file_path)) {
+		  logger->warn("Sound {} does not exist", sound_path);
+		  return false;
+	  }
 
-    "renderer", &Game::renderer,
-    "characters", [&](Game& game, int32_t n) -> std::shared_ptr<Character>
-    {
-      if ((n - 1) >= game.characters.size()) {
-        return std::shared_ptr<Character>();
-      }
+	  play_sound(sound_path);
+	  return true;
+  };
 
-      return game.characters[n - 1];
-    }
-  );
+  gtable["spawn_trigger"] = [&](Game& game,
+	  sol::table trigger_params,
+	  sol::protected_function lua_on_init,
+	  sol::protected_function lua_on_enter,
+	  sol::protected_function lua_on_exit) -> void
+  {
+	  game.lua_trigger_wrapper(state, trigger_params, lua_on_init, lua_on_enter, lua_on_exit);
+  };
+
+  gtable["renderer"] = &Game::renderer;
+
+  gtable["characters"] = [&](Game& game, int32_t n) -> std::shared_ptr<Character>
+  {
+	  if ((n - 1) >= game.characters.size()) {
+		  return std::shared_ptr<Character>();
+	  }
+
+	  return game.characters[n - 1];
+  };
 
   state["__filename__"] = "REPL";
 

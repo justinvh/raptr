@@ -8,7 +8,7 @@
 #include <functional>
 #include <vector>
 #include <memory>
-#include <sol.hpp>
+#include <sol/sol.hpp>
 #include <initializer_list>
 #include <raptr/common/filesystem.hpp>
 

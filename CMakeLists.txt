@@ -43,7 +43,7 @@ target_link_libraries(RaptrDependencies INTERFACE
     sdl2_mixer::sdl2_mixer
     discord_rpc::discord_rpc
     crossguid
-    sol2
+    sol2::sol2
     ${OPENGL_LIBRARIES}
     ${LUA_LIBRARIES}
     ${SDL2_LIBRARIES} 

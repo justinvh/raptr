@@ -11,7 +11,7 @@
 
 #include <SDL_opengl.h>
 
-#include <sol.hpp>
+#include <sol/sol.hpp>
 #include <raptr/common/filesystem.hpp>
 #include <raptr/renderer/camera.hpp>
 

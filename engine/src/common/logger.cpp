@@ -1,4 +1,5 @@
 #include <raptr/common/logging.hpp>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <experimental/filesystem>
 
 namespace raptr

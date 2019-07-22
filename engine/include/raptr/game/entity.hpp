@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <sol.hpp>
+#include <sol/sol.hpp>
 #include <raptr/common/rect.hpp>
 #include <raptr/network/snapshot.hpp>
 #include <raptr/renderer/renderer.hpp>

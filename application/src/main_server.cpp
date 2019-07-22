@@ -23,14 +23,14 @@ int main(int argc, char** argv)
       ("q,quiet", "Quiet the logger")
       ("g,game", "Game root path", cxxopts::value<std::string>()->default_value("../../game"));
 
-  options.parse(argc, argv);
+  auto args = options.parse(argc, argv);
 
-  if (options["quiet"].count()) {
+  if (args["quiet"].count()) {
     spdlog::set_level(spdlog::level::info);
   }
 
   {
-    std::string game_root = options["game"].as<std::string>();
+    std::string game_root = args["game"].as<std::string>();
     raptr::Server server(game_root, "127.0.0.1:7272");
     server.fps = 20;
 

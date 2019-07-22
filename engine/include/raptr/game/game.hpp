@@ -14,7 +14,7 @@
 #include <thread>
 #include <algorithm>
 
-#include <sol.hpp>
+#include <sol/sol.hpp>
 #include <crossguid/guid.hpp>
 
 #include <raptr/common/filesystem.hpp>
