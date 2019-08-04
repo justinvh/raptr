@@ -42,7 +42,10 @@ int main(int argc, char** argv)
     cxxopts::Options options("raptr",
         "You're a dinosaur without feathers struggling to understand your place in the world.");
 
-    options.add_options()("q,quiet", "Quiet the logger")("g,game", "Game root path", cxxopts::value<std::string>()->default_value("../../game"));
+    options.add_options()
+		("q,quiet", "Quiet the logger")
+		("g,game", "Game root path", cxxopts::value<std::string>()->default_value("../../game"))
+	;
 
     auto args = options.parse(argc, argv);
 
