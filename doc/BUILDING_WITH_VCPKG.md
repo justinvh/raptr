@@ -8,7 +8,8 @@ You will want to first install [vcpkg from Microsoft](https://github.com/Microso
 | catch2         | Unit testing |                                
 | crossguid      | GUID for entities in the game |               
 | cxxopts        | Command-line parsing |                        
-| discord-rpc    | Integration with Discord |                        
+| discord-rpc    | Integration with Discord |                    
+| doxygen        | Documentation |
 | fmt            | Used with spdlog for .format() like strings|  
 | freetype       | Font support in the UI |
 | libjpeg-turbo  | Texture support |
@@ -42,8 +43,10 @@ $ git checkout 178517052f42d428bb2f304946e635d3c1f318e9 -- ports/fmt
 Notice that this is a `x64-windows` triplet.
 
 ```
-$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install discord-rpc sdl2 sdl2-image sdl2-mixer sdl2-net sdl2-ttf picojson cxxopts spdlog tinytoml catch2 crossguid
+$ %USERPROFILE%\vcpkg\vcpkg.exe --triplet x64-windows install discord-rpc sdl2 sdl2-image sdl2-mixer sdl2-net sdl2-ttf picojson cxxopts spdlog tinytoml catch2 crossguid lua sol2 doxygen
 ```
+
+If you are building documentation, then you will need [doxygen] and [dot].
 
 ### 3. Point CMake to the Toolchain file
 
@@ -56,3 +59,6 @@ $ cmake -DCMAKE_TOOLCHAIN_FILE:PATH="%USERPROFILE%/vcpkg/scripts/buildsystems/vc
 ```
 
 And launch the solution. Build with Visual Studio!
+
+[doxygen]: http://www.doxygen.nl/download.html
+[dot]: https://graphviz.gitlab.io/download/
