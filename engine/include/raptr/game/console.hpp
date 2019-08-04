@@ -5,40 +5,38 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
-#include <string>
 #include <mutex>
-#include <sstream>
 #include <sol/sol.hpp>
+#include <sstream>
+#include <string>
 #include <thread>
+#include <vector>
 
-namespace raptr
-{
+namespace raptr {
 
-class Console
-{
+class Console {
 public:
-  Console();
-  ~Console();
+    Console();
+    ~Console();
 
-  template <class T>
-  void add(const std::string& command, const T& func)
-  {
-    lua.set_function(command, func);
-  }
+    template <class T>
+    void add(const std::string& command, const T& func)
+    {
+        lua.set_function(command, func);
+    }
 
-  void push(const std::string& command);
-  void process_commands();
-  void think();
-  void show_options(const std::string& options);
+    void push(const std::string& command);
+    void process_commands();
+    void think();
+    void show_options(const std::string& options);
 
 public:
-  bool shutdown;
-  sol::state lua;
-  std::thread think_thread;
-  std::mutex mutex;
-  std::vector<std::string> commands;
-  std::string last_command;
+    bool shutdown;
+    sol::state lua;
+    std::thread think_thread;
+    std::mutex mutex;
+    std::vector<std::string> commands;
+    std::string last_command;
 };
-  
+
 }

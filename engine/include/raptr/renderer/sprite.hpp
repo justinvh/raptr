@@ -6,50 +6,47 @@
 */
 #pragma once
 
-#include <vector>
-#include <string>
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include <SDL.h>
 #include <SDL_surface.h>
 
 #include <raptr/common/filesystem.hpp>
 
-namespace raptr
-{
+namespace raptr {
 class Renderer;
 
 /*!
   A simple object for describing a frame in animation
 */
-struct AnimationFrame
-{
-  //! The name of the animation as described in the Aseprite JSON
-  std::string name;
+struct AnimationFrame {
+    //! The name of the animation as described in the Aseprite JSON
+    std::string name;
 
-  //! The positional offsets of the texture spritesheet
-  int32_t x, y, w, h;
+    //! The positional offsets of the texture spritesheet
+    int32_t x, y, w, h;
 
-  //! How long the frame should hold before continuing to the next
-  uint32_t duration;
+    //! How long the frame should hold before continuing to the next
+    uint32_t duration;
 
-  //! The teeter pixel is the most down and left pixel occuped by the sprite
-  int32_t teeter_px;
+    //! The teeter pixel is the most down and left pixel occuped by the sprite
+    int32_t teeter_px;
 
-  bool has_sound_effect;
-  FileInfo sound_effect;
+    bool has_sound_effect;
+    FileInfo sound_effect;
 };
 
 /*!
   These enumerations match what Asesprite can animate
 */
-enum class AnimationDirection
-{
-  forward,
-  backward,
-  ping_pong
+enum class AnimationDirection {
+    forward,
+    backward,
+    ping_pong
 };
 
 /*!
@@ -57,58 +54,56 @@ enum class AnimationDirection
   frame, the animation direction, and what speed it should play the animation at
   (as a multiplier to the duration of the frames themselves)
 */
-class Animation
-{
+class Animation {
 public:
-  //! The animation name as described by the "Tag" of the spritesheet
-  std::string name;
+    //! The animation name as described by the "Tag" of the spritesheet
+    std::string name;
 
-  //! If true, then animation will stop on the last frame
-  bool hold_last_frame;
+    //! If true, then animation will stop on the last frame
+    bool hold_last_frame;
 
-  //! A state variable to track if the animation should go backwards
-  bool ping_backwards;
+    //! A state variable to track if the animation should go backwards
+    bool ping_backwards;
 
-  //! Current frame tracking for the frame and its frame numbers
-  int32_t frame, from, to;
+    //! Current frame tracking for the frame and its frame numbers
+    int32_t frame, from, to;
 
-  //! A list of AnimationFrames that will be used to retrieve x,y,w,h cuts into the spritesheet
-  std::vector<AnimationFrame> frames;
+    //! A list of AnimationFrames that will be used to retrieve x,y,w,h cuts into the spritesheet
+    std::vector<AnimationFrame> frames;
 
-  //! How the animation will iterate through frames
-  AnimationDirection direction;
+    //! How the animation will iterate through frames
+    AnimationDirection direction;
 
-  //! A speed multiplier against the duration of the frames (1.0 == same speed)
-  float speed;
+    //! A speed multiplier against the duration of the frames (1.0 == same speed)
+    float speed;
 
-  bool sound_effect_loop;
-  bool sound_effect_has_played;
-
+    bool sound_effect_loop;
+    bool sound_effect_has_played;
 
 public:
-  /*!
+    /*!
     Retrieve the current AnimationFrame based on what "frame" is at
     /return The current AnimationFrame
   */
-  AnimationFrame& current_frame();
+    AnimationFrame& current_frame();
 
-  /*!
+    /*!
     AnimationFrames have a duration. If the time between this clock time and
     first time has exceeded the duration of the frame, then the frame will be advanced.
     /param clock_ms - The clock::ticks() milliseconds
     /param speed_multiplier - Play animations faster
     /return Whether the frame was advanced
   */
-  bool next(int64_t clock_us, double speed_multiplier = 1.0);
+    bool next(int64_t clock_us, double speed_multiplier = 1.0);
 
-  /*!
+    /*!
     Register a sound effect that plays with an animation
     /param name - The animation to register against
     /param wav - The full path to the wav file to play
     /param loop - Whether to loop the sound effect, or only play it
     when the animation has changed
   */
-  bool register_sound_effect(int32_t frame, FileInfo wav, bool do_loop);
+    bool register_sound_effect(int32_t frame, FileInfo wav, bool do_loop);
 };
 
 //! A mapping of Animation names to the Animation themselves
@@ -121,99 +116,98 @@ using AnimationTable = std::map<std::string, Animation>;
   /see StaticMesh
   /see Character
 */
-class Sprite
-{
+class Sprite {
 public:
-  /*!
+    /*!
     Create a new Sprite object from a Asesprite JSON file
     /param path - An absolute path to a Aseprite JSON file
     /return An instance of the Sprite if it can be constructed
   */
-  static std::shared_ptr<Sprite> from_json(const FileInfo& path, bool reload = false);
+    static std::shared_ptr<Sprite> from_json(const FileInfo& path, bool reload = false);
 
-  std::shared_ptr<Sprite> clone(bool reload = false);
+    std::shared_ptr<Sprite> clone(bool reload = false);
 
-  /*!
+    /*!
     Render this sprite to a provided renderer
     /param renderer - The Renderer that this sprite should render to
   */
-  void render(Renderer* renderer);
+    void render(Renderer* renderer);
 
-  /*!
+    /*!
     Change the current animation to a different one by name, such as "Idle" or "Walk"
     /param name - The name of the animation, such as "Idle" or "Walk"
     /param hold_last_frame - Whether the last frame of the animation should be held, instead of cycled
     /return Whether the animation could be set
   */
-  bool set_animation(const std::string& name, bool hold_last_frame = false);
+    bool set_animation(const std::string& name, bool hold_last_frame = false);
 
-  /*!
+    /*!
     Check if a given animation exists
     /param name - The name of the animation to check
     /return Whether the animation exists
   */
-  bool has_animation(const std::string& name);
+    bool has_animation(const std::string& name);
 
-  Animation* collision_animation(const std::string& name) const;
+    Animation* collision_animation(const std::string& name) const;
 
-  /*!
+    /*!
     Register a sound effect that plays with an animation
     /param name - The animation to register against
     /param wav - The full path to the wav file to play
     /param loop - Whether to loop the sound effect, or only play it
                   when the animation has changed
    */
-  bool register_sound_effect(const std::string& name, int32_t frame, const FileInfo& wav, bool loop);
+    bool register_sound_effect(const std::string& name, int32_t frame, const FileInfo& wav, bool loop);
 
 public:
-  //! A mapping of animation names to the animation itself
-  AnimationTable animations;
+    //! A mapping of animation names to the animation itself
+    AnimationTable animations;
 
-  //! The width and height of the Spritesheet
-  int32_t width, height;
+    //! The width and height of the Spritesheet
+    int32_t width, height;
 
-  //! The constructed SDL_Surface from the spritesheet
-  std::shared_ptr<SDL_Surface> surface;
+    //! The constructed SDL_Surface from the spritesheet
+    std::shared_ptr<SDL_Surface> surface;
 
-  //! The constructed SDL_Texture from the SDL_Surface of the spritesheet
-  std::shared_ptr<SDL_Texture> texture;
+    //! The constructed SDL_Texture from the SDL_Surface of the spritesheet
+    std::shared_ptr<SDL_Texture> texture;
 
-  //! A convenince to track the current running animation
-  Animation* current_animation;
+    //! A convenince to track the current running animation
+    Animation* current_animation;
 
-  //! The rotation angle of the sprite
-  float rotation_deg;
+    //! The rotation angle of the sprite
+    float rotation_deg;
 
-  //! Whether the sprite should  be flipped along an axis
-  bool flip_x, flip_y;
+    //! Whether the sprite should  be flipped along an axis
+    bool flip_x, flip_y;
 
-  //! The x and y position of the sprite in the world
-  double x, y;
+    //! The x and y position of the sprite in the world
+    double x, y;
 
-  //! The width and height scale multipliers
-  double scale;
+    //! The width and height scale multipliers
+    double scale;
 
-  //! Playback speed
-  double speed;
+    //! Playback speed
+    double speed;
 
-  //! When the Sprite was last rendered
-  int64_t last_frame_tick;
+    //! When the Sprite was last rendered
+    int64_t last_frame_tick;
 
-  //! Absolute positioning
-  bool absolute_positioning;
+    //! Absolute positioning
+    bool absolute_positioning;
 
-  //! Blend mode of the sprite
-  SDL_BlendMode blend_mode;
+    //! Blend mode of the sprite
+    SDL_BlendMode blend_mode;
 
-  //! If set, then rendering will be in front of everything
-  bool render_in_foreground;
+    //! If set, then rendering will be in front of everything
+    bool render_in_foreground;
 
-  //! Path this sprite is from
-  FileInfo path;
+    //! Path this sprite is from
+    FileInfo path;
 
-  //! Specific frame used for collisions
-  bool show_collision_frame;
-  std::map<std::string, Animation*> collision_frame_lut;
-  Animation* current_collision;
+    //! Specific frame used for collisions
+    bool show_collision_frame;
+    std::map<std::string, Animation*> collision_frame_lut;
+    Animation* current_collision;
 };
 } // namespace raptr

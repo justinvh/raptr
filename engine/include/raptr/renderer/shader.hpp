@@ -1,39 +1,36 @@
 #pragma once
 
-#include <raptr/common/filesystem.hpp>
 #include <cstdint>
+#include <raptr/common/filesystem.hpp>
 
-namespace raptr
-{
+namespace raptr {
 
-class Shader
-{
+class Shader {
 public:
-  Shader(const FileInfo& shader_path)
-    : path(shader_path) {  }
-  virtual ~Shader() = default;
-  virtual int32_t type() = 0;
+    Shader(const FileInfo& shader_path)
+        : path(shader_path)
+    {
+    }
+    virtual ~Shader() = default;
+    virtual int32_t type() = 0;
 
 public:
-  FileInfo path;
+    FileInfo path;
 };
 
-class FragmentShader : public Shader
-{
-  int32_t type() { return GL_FRAGMENT_SHADER; }
+class FragmentShader : public Shader {
+    int32_t type() { return GL_FRAGMENT_SHADER; }
 };
 
-class VertexShader : public Shader
-{
-  int32_t type() { return GL_VERTEX_SHADER; }
+class VertexShader : public Shader {
+    int32_t type() { return GL_VERTEX_SHADER; }
 };
 
-class ShaderProgram
-{
+class ShaderProgram {
 public:
-  ShaderProgram(const FileInfo& shader_toml);
-  FragmentShader frag;
-  VertexShader vert;
+    ShaderProgram(const FileInfo& shader_toml);
+    FragmentShader frag;
+    VertexShader vert;
 };
 
 }

@@ -1,84 +1,81 @@
-#include <string>
 #include <cxxopts.hpp>
+#include <string>
 
-#include <raptr/game/game.hpp>
 #include <raptr/common/logging.hpp>
+#include <raptr/game/game.hpp>
 #include <raptr/network/server.hpp>
 
 #include <discord_rpc.h>
 
-namespace
-{
+namespace {
 auto logger = raptr::_get_logger(__FILE__);
 static const char* discord_application_id = "472884672112623616";
 };
 
 void discord_init()
 {
-  DiscordEventHandlers handlers;
-  memset(&handlers, 0, sizeof(handlers));
-  Discord_Initialize(discord_application_id, &handlers, 1, nullptr);
+    DiscordEventHandlers handlers;
+    memset(&handlers, 0, sizeof(handlers));
+    Discord_Initialize(discord_application_id, &handlers, 1, nullptr);
 }
 
 void discord_update_presence()
 {
-  DiscordRichPresence discordPresence;
-  memset(&discordPresence, 0, sizeof(discordPresence));
-  discordPresence.state = "Engine Development";
-  discordPresence.details = "Platforming Around";
-  discordPresence.largeImageKey = "raptr-happy_png";
-  discordPresence.largeImageText = "Raptr";
-  discordPresence.partySize = 1;
-  discordPresence.partyMax = 1;
-  Discord_UpdatePresence(&discordPresence);
+    DiscordRichPresence discordPresence;
+    memset(&discordPresence, 0, sizeof(discordPresence));
+    discordPresence.state = "Engine Development";
+    discordPresence.details = "Platforming Around";
+    discordPresence.largeImageKey = "raptr-happy_png";
+    discordPresence.largeImageText = "Raptr";
+    discordPresence.partySize = 1;
+    discordPresence.partyMax = 1;
+    Discord_UpdatePresence(&discordPresence);
 }
 
 int main(int argc, char** argv)
 {
-  spdlog::set_level(spdlog::level::debug);
-  uint32_t time_start_ms = SDL_GetTicks();
+    spdlog::set_level(spdlog::level::debug);
+    uint32_t time_start_ms = SDL_GetTicks();
 
-  logger->info("Hello from raptr!");
+    logger->info("Hello from raptr!");
 
-  cxxopts::Options options("raptr",
-                           "You're a dinosaur without feathers struggling to understand your place in the world.");
+    cxxopts::Options options("raptr",
+        "You're a dinosaur without feathers struggling to understand your place in the world.");
 
-  options.add_options()
-      ("q,quiet", "Quiet the logger")
-      ("g,game", "Game root path", cxxopts::value<std::string>()->default_value("../../game"));
+    options.add_options()("q,quiet", "Quiet the logger")("g,game", "Game root path", cxxopts::value<std::string>()->default_value("../../game"));
 
-  auto args = options.parse(argc, argv);
+    auto args = options.parse(argc, argv);
 
-  if (args["quiet"].count()) {
-    spdlog::set_level(spdlog::level::info);
-  }
-
-  {
-    raptr::Server server("127.0.0.1:7272");
-    server.fps = 20;
-
-    const std::string game_root = args["game"].as<std::string>();
-    auto game = raptr::Game::create(game_root);
-    server.attach(game);
-
-    if (!server.connect()) {
-      logger->error("Failed to connect to server!");
-      return -1;
+    if (args["quiet"].count()) {
+        spdlog::set_level(spdlog::level::info);
     }
 
-    discord_init();
-    discord_update_presence();
+    {
+        raptr::Server server("127.0.0.1:7272");
+        server.fps = 20;
 
-    server.run();
-  }
+        const std::string game_root = args["game"].as<std::string>();
+        auto game = raptr::Game::create(game_root);
+        server.attach(game);
 
-  Discord_ClearPresence();
+        if (!server.connect()) {
+            logger->error("Failed to connect to server!");
+            return -1;
+        }
 
-  const auto time_end_ms = SDL_GetTicks();
-  const auto time_played = static_cast<uint32_t>((time_end_ms - time_start_ms) / 1000.0);
+        discord_init();
+        discord_update_presence();
 
-  logger->info("Okay, quitting. You played for {}s. Bye Bye. Press enter to exit.", time_played);
-  std::cin.get();
+        server.run();
+    }
 
-  return 0;
+    Discord_ClearPresence();
+
+    const auto time_end_ms = SDL_GetTicks();
+    const auto time_played = static_cast<uint32_t>((time_end_ms - time_start_ms) / 1000.0);
+
+    logger->info("Okay, quitting. You played for {}s. Bye Bye. Press enter to exit.", time_played);
+    std::cin.get();
+
+    return 0;
 }

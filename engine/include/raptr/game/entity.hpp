@@ -4,18 +4,17 @@
 */
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <memory>
-#include <string>
-#include <vector>
-#include <array>
-#include <sol/sol.hpp>
 #include <raptr/common/rect.hpp>
 #include <raptr/network/snapshot.hpp>
 #include <raptr/renderer/renderer.hpp>
+#include <sol/sol.hpp>
+#include <string>
+#include <vector>
 
-namespace raptr
-{
+namespace raptr {
 
 constexpr double magic_feel_good_number = 3;
 constexpr double pixels_to_meters = 0.05 / magic_feel_good_number;
@@ -39,212 +38,210 @@ typedef std::array<unsigned char, 16> GUID;
   an Entity is something you should care about as a player.
 */
 class Entity : public RenderInterface,
-               public Serializable, 
-               public std::enable_shared_from_this<Entity>
-{
+               public Serializable,
+               public std::enable_shared_from_this<Entity> {
 public:
-  Entity();
-  Entity(const Entity&) = default;
-  Entity(Entity&&) = default;
-  Entity& operator=(const Entity&) = default;
-  Entity& operator=(Entity&&) = default;
-  virtual ~Entity() = default;
+    Entity();
+    Entity(const Entity&) = default;
+    Entity(Entity&&) = default;
+    Entity& operator=(const Entity&) = default;
+    Entity& operator=(Entity&&) = default;
+    virtual ~Entity() = default;
 
 public:
-
-  /*!
+    /*!
     Returns the bounding box for this entity
     \return An rectangle containing the entity
   */
-  virtual Rect bbox() const = 0;
+    virtual Rect bbox() const = 0;
 
-  /*!
+    /*!
     Returns the bounds of the entity
     */
-  virtual Bounds bounds() const
-  {
-    const auto& bbox = this->bbox();
-    return {bbox.x, bbox.x + bbox.w, bbox.y, bbox.y + bbox.h};
-  }
+    virtual Bounds bounds() const
+    {
+        const auto& bbox = this->bbox();
+        return { bbox.x, bbox.x + bbox.w, bbox.y, bbox.y + bbox.h };
+    }
 
-  virtual void add_child(std::shared_ptr<Entity> child);
-  virtual void remove_child(const std::shared_ptr<Entity>& child);
+    virtual void add_child(std::shared_ptr<Entity> child);
+    virtual void remove_child(const std::shared_ptr<Entity>& child);
 
-  virtual void set_parent(std::shared_ptr<Entity> new_parent);
+    virtual void set_parent(std::shared_ptr<Entity> new_parent);
 
-  /*!
+    /*!
     Returns the unique id for this entity in the world
     \return a 32-bit signed integer representing a unique entity id
   */
-  virtual const std::array<unsigned char, 16>& guid() const;
+    virtual const std::array<unsigned char, 16>& guid() const;
 
-  virtual std::string guid_str() const;
+    virtual std::string guid_str() const;
 
-  /*!
+    /*!
   Returns true if this static mesh intersects with another entity
   \param other - The entity that this entity will attempt to intersect against
   \return Whether an intersection occured
   */
-  virtual bool intersects(const Entity* other) const;
-  virtual bool intersects(const Rect& bbox) const;
-  virtual bool intersects(const Entity* other, const Rect& bbox) const;
+    virtual bool intersects(const Entity* other) const;
+    virtual bool intersects(const Rect& bbox) const;
+    virtual bool intersects(const Entity* other, const Rect& bbox) const;
 
-  /*!
+    /*!
   A fast bounding box intersection
   \param other - The entity this entity will attempt to intersect against
   \return Whether an intersection occured
   */
-  virtual bool intersect_fast(const Rect& bbox) const;
+    virtual bool intersect_fast(const Rect& bbox) const;
 
-  /*!
+    /*!
   A slower per-pixel bounding box intersection test
   \param other - THe entity this entity will attempt to intersect against
   \return Whether an intersection occured
   */
-  virtual bool intersect_slow(const Rect& bbox) const;
-  virtual bool intersect_slow(const Entity* other, const Rect& bbox) const;
+    virtual bool intersect_slow(const Rect& bbox) const;
+    virtual bool intersect_slow(const Entity* other, const Rect& bbox) const;
 
-  static void setup_lua_context(sol::state& state);
+    static void setup_lua_context(sol::state& state);
 
-  virtual AnimationFrame* collision_frame() const;
+    virtual AnimationFrame* collision_frame() const;
 
-  /*!
+    /*!
     This method will determine how the entity interacts with the game.
     This include computing position, velocity, and acceleration updates; how the game elements
     interact with the entity; rendering it;
     \param game - An instance of the game to retrieve event states, such as the current renderer
   */
-  virtual void think(std::shared_ptr<Game>& game) = 0;
+    virtual void think(std::shared_ptr<Game>& game) = 0;
 
-  /*!
+    /*!
     Given the current position, velocity, and acceleration, where does this entity *want* to go in X
     \return The rectangle this entity *wants* to occupy in the X direction
   */
-  virtual Rect want_position_x(int64_t delta_us);
+    virtual Rect want_position_x(int64_t delta_us);
 
-  /*!
+    /*!
     Given the current position, velocity, and acceleration, where does this entity *want* to go in Y
     \return The rectangle this entity *wants* to occupy in the Y direction
   */
-  virtual Rect want_position_y(int64_t delta_us);
+    virtual Rect want_position_y(int64_t delta_us);
 
-  /*!
+    /*!
     Return the current position of the entity
     \return A double-precision point of the Entity position
   */
-  virtual Point& position_rel()
-  {
-    return pos_;
-  }
-
-  virtual const Point& position_rel() const
-  {
-    return pos_;
-  }
-
-  virtual Point position_abs() const
-  {
-    if (parent) {
-      return parent->position_abs() + pos_;
+    virtual Point& position_rel()
+    {
+        return pos_;
     }
-    return pos_;
-  }
 
-  /*!
+    virtual const Point& position_rel() const
+    {
+        return pos_;
+    }
+
+    virtual Point position_abs() const
+    {
+        if (parent) {
+            return parent->position_abs() + pos_;
+        }
+        return pos_;
+    }
+
+    /*!
     Return the current velocity of the entity
     \return A double-precision point of the Entity velocity
   */
-  virtual Point& velocity_rel()
-  {
-    return vel_;
-  }
-
-  virtual const Point& velocity_rel() const
-  {
-    return vel_;
-  }
-
-  virtual Point velocity_abs() const
-  {
-    if (parent) {
-      return parent->velocity_abs() + vel_;
+    virtual Point& velocity_rel()
+    {
+        return vel_;
     }
-    return vel_;
-  }
 
-  /*!
+    virtual const Point& velocity_rel() const
+    {
+        return vel_;
+    }
+
+    virtual Point velocity_abs() const
+    {
+        if (parent) {
+            return parent->velocity_abs() + vel_;
+        }
+        return vel_;
+    }
+
+    /*!
     Return the current acceleration of the entity
     \return A double-precision point of the Entity acceleration
   */
-  virtual Point& acceleration_rel()
-  {
-    return acc_;
-  }
-
-  virtual const Point& acceleration_rel() const
-  {
-    return acc_;
-  }
-
-  virtual Point acceleration_abs() const
-  {
-    if (parent) {
-      return parent->acceleration_abs() + acc_;
+    virtual Point& acceleration_rel()
+    {
+        return acc_;
     }
-    return acc_;
-  }
 
-  virtual void add_velocity(double x_kmh, double y_kmh);
+    virtual const Point& acceleration_rel() const
+    {
+        return acc_;
+    }
 
-  virtual void add_acceleration(double x_ms2, double y_ms2);
+    virtual Point acceleration_abs() const
+    {
+        if (parent) {
+            return parent->acceleration_abs() + acc_;
+        }
+        return acc_;
+    }
 
-  virtual bool is_player() const;
+    virtual void add_velocity(double x_kmh, double y_kmh);
 
-  virtual void show_collision_frame();
+    virtual void add_acceleration(double x_ms2, double y_ms2);
 
-  virtual void hide_collision_frame();
+    virtual bool is_player() const;
 
-  void serialize(std::vector<NetField>& list) override = 0;
+    virtual void show_collision_frame();
 
-  bool deserialize(const std::vector<NetField>& fields) override = 0;
+    virtual void hide_collision_frame();
+
+    void serialize(std::vector<NetField>& list) override = 0;
+
+    bool deserialize(const std::vector<NetField>& fields) override = 0;
 
 public:
-  std::shared_ptr<Entity> parent;
-  std::vector<std::shared_ptr<Entity>> children;
+    std::shared_ptr<Entity> parent;
+    std::vector<std::shared_ptr<Entity>> children;
 
-  double gravity_ps2;
+    double gravity_ps2;
 
-  //! The name of the entity
-  std::string name;
+    //! The name of the entity
+    std::string name;
 
-  //! The unique ID of the entity
-  std::array<unsigned char, 16> guid_;
+    //! The unique ID of the entity
+    std::array<unsigned char, 16> guid_;
 
-  //! Is collision possible?
-  bool collidable;
+    //! Is collision possible?
+    bool collidable;
 
-  //! The current position
-  Point pos_;
+    //! The current position
+    Point pos_;
 
-  //! The current velocity
-  Point vel_;
+    //! The current velocity
+    Point vel_;
 
-  //! The current acceleration
-  Point acc_;
+    //! The current acceleration
+    Point acc_;
 
-  //! How long the entity has been falling in milliseconds, if any
-  int64_t fall_time_us;
+    //! How long the entity has been falling in milliseconds, if any
+    int64_t fall_time_us;
 
-  //! Collision test per pixel
-  bool do_pixel_collision_test;
+    //! Collision test per pixel
+    bool do_pixel_collision_test;
 
-  //! If true this entity is dead and won't collide anymore
-  bool is_dead;
+    //! If true this entity is dead and won't collide anymore
+    bool is_dead;
 
-  //! The sprite that is used to render this character
-  std::shared_ptr<Sprite> sprite;
+    //! The sprite that is used to render this character
+    std::shared_ptr<Sprite> sprite;
 
-  int64_t think_rate_us;
-  int64_t last_think_time_us;
+    int64_t think_rate_us;
+    int64_t last_think_time_us;
 };
 } // namespace raptr

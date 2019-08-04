@@ -3,86 +3,83 @@
   This module provides overloads to SDL_Rect functions for double Rect and Point objects
  */
 
-#pragma warning(disable: 4244)
+#pragma warning(disable : 4244)
 
 #pragma once
 
-namespace raptr
-{
+namespace raptr {
 //! A double precision point
-struct Point
-{
-  double x, y;
+struct Point {
+    double x, y;
 
-  Point operator+(const Point& other) const
-  {
-    return {x + other.x, y + other.y};
-  }
+    Point operator+(const Point& other) const
+    {
+        return { x + other.x, y + other.y };
+    }
 
-  Point operator-(const Point& other) const
-  {
-    return {x - other.x, y - other.y};
-  }
+    Point operator-(const Point& other) const
+    {
+        return { x - other.x, y - other.y };
+    }
 
-  Point& operator+=(const Point& other)
-  {
-    x += other.x;
-    y += other.y;
-    return *this;
-  }
+    Point& operator+=(const Point& other)
+    {
+        x += other.x;
+        y += other.y;
+        return *this;
+    }
 
-  Point& operator-=(const Point& other)
-  {
-    x -= other.x;
-    y -= other.y;
-    return *this;
-  }
+    Point& operator-=(const Point& other)
+    {
+        x -= other.x;
+        y -= other.y;
+        return *this;
+    }
 
-  bool operator==(const Point& other) const
-  {
-    return std::fabs(other.x - x) < 1e-5 && std::fabs(other.y - y) < 1e-5;
-  }
+    bool operator==(const Point& other) const
+    {
+        return std::fabs(other.x - x) < 1e-5 && std::fabs(other.y - y) < 1e-5;
+    }
 };
 
 //! A double precision rectangle
-struct Rect
-{
-  Rect() = default;
-  Rect(double x_, double y_, double w_, double h_)
-    : x(x_), y(y_), w(w_), h(h_)
-  {
-  }
+struct Rect {
+    Rect() = default;
+    Rect(double x_, double y_, double w_, double h_)
+        : x(x_)
+        , y(y_)
+        , w(w_)
+        , h(h_)
+    {
+    }
 
-  double x, y, w, h;
+    double x, y, w, h;
 
-  Rect operator-(const Point& other) const
-  {
-    return Rect(x - other.x, y - other.y, w, h);
-  }
+    Rect operator-(const Point& other) const
+    {
+        return Rect(x - other.x, y - other.y, w, h);
+    }
 
-  bool operator==(const Rect& other) const
-  {
-    return std::fabs(other.x - x) < 1e-5 &&
-        std::fabs(other.y - y) < 1e-5 &&
-        std::fabs(other.w - w) < 1e-5 &&
-        std::fabs(other.h - h) < 1e-5;
-  }
+    bool operator==(const Rect& other) const
+    {
+        return std::fabs(other.x - x) < 1e-5 && std::fabs(other.y - y) < 1e-5 && std::fabs(other.w - w) < 1e-5 && std::fabs(other.h - h) < 1e-5;
+    }
 };
 
-
 //! A bounds object
-struct Bounds
-{
-  Bounds() = default;
+struct Bounds {
+    Bounds() = default;
 
-  Bounds(double x1, double x2, double y1, double y2)
-  {
-    min[0] = x1; min[1] = y1;
-    max[0] = x2; max[1] = y2;
-  }
+    Bounds(double x1, double x2, double y1, double y2)
+    {
+        min[0] = x1;
+        min[1] = y1;
+        max[0] = x2;
+        max[1] = y2;
+    }
 
-  double min[2];
-  double max[2];
+    double min[2];
+    double max[2];
 };
 
 /*! If a Rect has no width or has no height, then it is considered empty
@@ -93,7 +90,7 @@ struct Bounds
 */
 inline bool SDL_RectEmpty(const Rect* r, double EPS = 1e-5)
 {
-  return !r || r->w <= EPS || r->h <= EPS ? true : false;
+    return !r || r->w <= EPS || r->h <= EPS ? true : false;
 }
 
 /*! Checks for equality between two double-precision rectangles
@@ -105,10 +102,9 @@ inline bool SDL_RectEmpty(const Rect* r, double EPS = 1e-5)
 */
 inline bool SDL_RectEquals(const Rect* a, const Rect* b, double EPS = 1e-5)
 {
-  return a && b && a->x - b->x < EPS && a->y - b->y < EPS &&
-         a->w - b->w < EPS && a->h - b->h < EPS
-           ? true
-           : false;
+    return a && b && a->x - b->x < EPS && a->y - b->y < EPS && a->w - b->w < EPS && a->h - b->h < EPS
+        ? true
+        : false;
 }
 
 /*! Horizontally and vertically intersect two rectangles and store the result
@@ -120,33 +116,33 @@ inline bool SDL_RectEquals(const Rect* a, const Rect* b, double EPS = 1e-5)
 */
 inline bool SDL_IntersectRect(const Rect* A, const Rect* B, Rect* result)
 {
-  double Amin, Amax, Bmin, Bmax;
+    double Amin, Amax, Bmin, Bmax;
 
-  /* Horizontal intersection */
-  Amin = A->x;
-  Amax = Amin + A->w;
-  Bmin = B->x;
-  Bmax = Bmin + B->w;
-  if (Bmin > Amin)
-    Amin = Bmin;
-  result->x = Amin;
-  if (Bmax < Amax)
-    Amax = Bmax;
-  result->w = Amax - Amin;
+    /* Horizontal intersection */
+    Amin = A->x;
+    Amax = Amin + A->w;
+    Bmin = B->x;
+    Bmax = Bmin + B->w;
+    if (Bmin > Amin)
+        Amin = Bmin;
+    result->x = Amin;
+    if (Bmax < Amax)
+        Amax = Bmax;
+    result->w = Amax - Amin;
 
-  /* Vertical intersection */
-  Amin = A->y;
-  Amax = Amin + A->h;
-  Bmin = B->y;
-  Bmax = Bmin + B->h;
-  if (Bmin > Amin)
-    Amin = Bmin;
-  result->y = Amin;
-  if (Bmax < Amax)
-    Amax = Bmax;
-  result->h = Amax - Amin;
+    /* Vertical intersection */
+    Amin = A->y;
+    Amax = Amin + A->h;
+    Bmin = B->y;
+    Bmax = Bmin + B->h;
+    if (Bmin > Amin)
+        Amin = Bmin;
+    result->y = Amin;
+    if (Bmax < Amax)
+        Amax = Bmax;
+    result->h = Amax - Amin;
 
-  return !SDL_RectEmpty(result);
+    return !SDL_RectEmpty(result);
 }
 
 /*! Returns true if there was a horizontal or vertical intersection of two rectangles
@@ -157,46 +153,44 @@ inline bool SDL_IntersectRect(const Rect* A, const Rect* B, Rect* result)
 */
 inline bool SDL_HasIntersection(const Rect* A, const Rect* B)
 {
-  double Amin, Amax, Bmin, Bmax;
+    double Amin, Amax, Bmin, Bmax;
 
-  /* Horizontal intersection */
-  Amin = A->x;
-  Amax = Amin + A->w;
-  Bmin = B->x;
-  Bmax = Bmin + B->w;
-  if (Bmin > Amin)
-    Amin = Bmin;
-  if (Bmax < Amax)
-    Amax = Bmax;
-  if (Amax <= Amin)
-    return false;
+    /* Horizontal intersection */
+    Amin = A->x;
+    Amax = Amin + A->w;
+    Bmin = B->x;
+    Bmax = Bmin + B->w;
+    if (Bmin > Amin)
+        Amin = Bmin;
+    if (Bmax < Amax)
+        Amax = Bmax;
+    if (Amax <= Amin)
+        return false;
 
-  /* Vertical intersection */
-  Amin = A->y;
-  Amax = Amin + A->h;
-  Bmin = B->y;
-  Bmax = Bmin + B->h;
-  if (Bmin > Amin)
-    Amin = Bmin;
-  if (Bmax < Amax)
-    Amax = Bmax;
-  if (Amax <= Amin)
-    return false;
+    /* Vertical intersection */
+    Amin = A->y;
+    Amax = Amin + A->h;
+    Bmin = B->y;
+    Bmax = Bmin + B->h;
+    if (Bmin > Amin)
+        Amin = Bmin;
+    if (Bmax < Amax)
+        Amax = Bmax;
+    if (Amax <= Amin)
+        return false;
 
-  return true;
+    return true;
 }
 
-inline
-std::ostream& operator<<(std::ostream& os, const raptr::Point& point)
+inline std::ostream& operator<<(std::ostream& os, const raptr::Point& point)
 {
-  os << "Point<" << point.x << "," << point.y << ">";
-  return os;
+    os << "Point<" << point.x << "," << point.y << ">";
+    return os;
 }
 
-inline
-std::ostream& operator<<(std::ostream& os, const raptr::Rect& point)
+inline std::ostream& operator<<(std::ostream& os, const raptr::Rect& point)
 {
-  os << "Rect<" << point.x << "," << point.y << "," << point.w << "," << point.h << ">";
-  return os;
+    os << "Rect<" << point.x << "," << point.y << "," << point.w << "," << point.h << ">";
+    return os;
 }
 } // namespace raptr

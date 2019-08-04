@@ -2,9 +2,8 @@
 
 #include <raptr/common/filesystem.hpp>
 
-namespace raptr
-{
+namespace raptr {
 
 void play_sound(const FileInfo& path);
-  
+
 } // namespace raptr

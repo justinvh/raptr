@@ -1,7 +1,6 @@
 #include <raptr/network/snapshot.hpp>
 
-namespace raptr
-{
+namespace raptr {
 void Network::serialize()
 {
 }

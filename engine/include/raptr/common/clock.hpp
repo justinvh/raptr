@@ -1,10 +1,9 @@
 #pragma once
 
-#include <cstdint>
 #include <chrono>
+#include <cstdint>
 
-namespace raptr::clock
-{
+namespace raptr::clock {
 typedef std::chrono::high_resolution_clock Time;
 typedef decltype(Time::now) TimePoint;
 int64_t ticks();
